@@ -1,0 +1,2342 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>Профиль | Созвездие</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap"
+          rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F5F2FC;
+            color: #1F1A2E;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+            border-bottom: 1px solid #eee;
+        }
+
+        .header-container {
+            max-width: 1300px;
+            width: 90%;
+            margin: 0 auto;
+        }
+
+        @media (min-width: 1400px) {
+            .header-container {
+                width: 70%;
+            }
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 1.9rem;
+            letter-spacing: -0.5px;
+            color: #1F1A2E;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .menu-btn-black {
+            background: #1F1A2E;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            color: white;
+        }
+
+        .menu-btn-black:hover {
+            background: #3B2E5E;
+            transform: scale(0.97);
+        }
+
+        .search-wrapper {
+            flex: 1;
+            max-width: 360px;
+            min-width: 200px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 20px;
+            border-radius: 60px;
+            border: 1.5px solid #E0D9F0;
+            background: white;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .pick-header-btn, .login-header-btn {
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .pick-header-btn {
+            background: #1F1A2E;
+            border: none;
+            color: white;
+        }
+
+        .login-header-btn {
+            background: transparent;
+            border: 1.5px solid #1F1A2E;
+            color: #1F1A2E;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1F1A2E;
+            background: #F0EEF5;
+            padding: 8px 16px;
+            border-radius: 40px;
+            cursor: pointer;
+        }
+
+        .header-bottom {
+            padding: 10px 0;
+            border-top: 1px solid rgba(139, 92, 246, 0.15);
+            overflow-x: auto;
+            white-space: nowrap;
+        }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-between;
+            gap: 32px;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .bottom-nav span {
+            cursor: pointer;
+            transition: 0.2s;
+            padding: 6px 0;
+            border-bottom: 2px solid transparent;
+            color: #2D2440;
+        }
+
+        .mobile-menu-drop {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 999;
+        }
+
+        @media (max-width: 900px) {
+            .header-top {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .search-wrapper {
+                order: 3;
+                width: 100%;
+                max-width: 100%;
+                margin-top: 8px;
+            }
+        }
+
+        .profile-container {
+            max-width: 1300px;
+            width: 90%;
+            margin: 140px auto 60px;
+        }
+
+        @media (min-width: 1400px) {
+            .profile-container {
+                width: 70%;
+            }
+        }
+
+        .settings-title {
+            font-size: 2rem;
+            font-weight: 800;
+            margin-bottom: 32px;
+            color: #1F1A2E;
+            text-align: left;
+        }
+
+        .tabs-container {
+            border-bottom: 2px solid #E0D9F0;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 48px;
+        }
+
+        .tab-btn {
+            background: none;
+            border: none;
+            padding: 12px 0;
+            font-size: 1rem;
+            font-weight: 600;
+            color: #8A859D;
+            cursor: pointer;
+            transition: 0.2s;
+            position: relative;
+            font-family: inherit;
+        }
+
+        .tab-btn.active {
+            color: #F97316;
+        }
+
+        .active-line {
+            position: absolute;
+            bottom: -2px;
+            height: 2px;
+            background: #F97316;
+            transition: left 0.3s ease, width 0.3s ease;
+        }
+
+        .info-blocks {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .info-card {
+            background: white;
+            border-radius: 28px;
+            padding: 32px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.05);
+        }
+
+        .info-card h3 {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            color: #1F1A2E;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 24px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .form-field {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .form-field label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: #6B6B7A;
+            margin-bottom: 6px;
+        }
+
+        .form-field input, .form-field select {
+            width: 100%;
+            padding: 12px 16px;
+            border-radius: 16px;
+            border: 1.5px solid #E0D9F0;
+            font-family: inherit;
+            font-size: 0.95rem;
+            background: white;
+            transition: 0.2s;
+        }
+
+        .form-field input:focus, .form-field select:focus {
+            outline: none;
+            border-color: #844DF5;
+        }
+
+        .avatar-section {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .avatar-placeholder {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #844DF5, #6D28D9);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 2rem;
+            font-weight: 700;
+        }
+
+        .avatar-upload {
+            color: #844DF5;
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .save-btn {
+            background: #1F1A2E;
+            color: white;
+            border: none;
+            padding: 12px 32px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: 0.2s;
+            margin-top: 16px;
+            width: auto;
+            display: inline-block;
+        }
+
+        .save-btn:hover {
+            background: #844DF5;
+        }
+
+        .btn-center {
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .password-block {
+            max-width: 500px;
+        }
+
+        .password-block .form-field {
+            margin-bottom: 24px;
+        }
+
+        .logout-btn {
+            background: transparent;
+            border: 1.5px solid #E5484D;
+            color: #E5484D;
+            margin-left: 16px;
+        }
+
+        .logout-btn:hover {
+            background: #E5484D;
+            color: white;
+        }
+
+        @media (max-width: 700px) {
+            .form-row {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .tabs {
+                gap: 24px;
+            }
+
+            .profile-container {
+                margin-top: 180px;
+            }
+        }
+
+        footer {
+            background: #25262C;
+            color: #ece8f4;
+            margin-top: 60px;
+            padding: 60px 0 30px;
+        }
+
+        .footer-content {
+            max-width: 1300px;
+            margin: 0 auto;
+            padding: 0 5%;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            gap: 40px;
+        }
+
+        @media (min-width: 1400px) {
+            .footer-content {
+                width: 70%;
+                padding: 0;
+            }
+        }
+
+        .footer-col {
+            flex: 1;
+            min-width: 180px;
+        }
+
+        .footer-col h4 {
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .footer-col p, .footer-col a {
+            color: #e6e2ee;
+            line-height: 1.7;
+            text-decoration: none;
+            display: block;
+            margin-bottom: 10px;
+        }
+
+        .footer-col a:hover {
+            color: #C4B5FD;
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 18px;
+            margin-top: 15px;
+        }
+
+        .social-icons a {
+            background: #121119;
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #CBC3E6;
+            transition: 0.2s;
+        }
+
+        .social-icons a:hover {
+            background: #8B5CF6;
+            transform: translateY(-3px);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 40px;
+            margin-top: 40px;
+            border-top: 1px solid #2A253E;
+        }
+
+        /* ===== ОБНОВЛЕННЫЕ СТИЛИ ХЕДЕРА С АДАПТИВОМ ===== */
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+            border-bottom: 1px solid #eee;
+        }
+
+        .header-container {
+            max-width: 1300px;
+            width: 90%;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        @media (min-width: 1400px) {
+            .header-container {
+                width: 70%;
+                padding: 0;
+            }
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 1.9rem;
+            letter-spacing: -0.5px;
+            color: #1F1A2E;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .menu-btn-black {
+            background: #1F1A2E;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .menu-btn-black:hover {
+            background: #3B2E5E;
+            transform: scale(0.97);
+        }
+
+        .search-wrapper {
+            flex: 1;
+            max-width: 360px;
+            min-width: 200px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 20px;
+            border-radius: 60px;
+            border: 1.5px solid #E0D9F0;
+            background: white;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #8B5CF6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .pick-header-btn {
+            background: #1F1A2E;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-family: inherit;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .pick-header-btn:hover {
+            background: #3B2E5E;
+        }
+
+        .login-header-btn {
+            background: transparent;
+            border: 1.5px solid #1F1A2E;
+            padding: 10px 28px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-family: inherit;
+            color: #1F1A2E;
+            white-space: nowrap;
+        }
+
+        .login-header-btn:hover {
+            background: #F0EEF5;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1F1A2E;
+            background: #F0EEF5;
+            padding: 8px 16px;
+            border-radius: 40px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .header-bottom {
+            padding: 10px 0;
+            border-top: 1px solid rgba(139, 92, 246, 0.15);
+            overflow-x: visible;
+            white-space: normal;
+        }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-between;
+            gap: 32px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            flex-wrap: wrap;
+        }
+
+        .bottom-nav span {
+            cursor: pointer;
+            transition: 0.2s;
+            padding: 6px 0;
+            border-bottom: 2px solid transparent;
+            color: #2D2440;
+            white-space: nowrap;
+        }
+
+        .bottom-nav span:hover {
+            border-bottom-color: #A78BFA;
+            color: #6D28D9;
+        }
+
+        .mobile-menu-drop {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 999;
+        }
+
+        .mobile-menu-drop span {
+            font-size: 1.1rem;
+            padding: 8px 0;
+            cursor: pointer;
+            border-bottom: 1px solid #f0eef5;
+        }
+
+        .mobile-menu-drop span:hover {
+            color: #8B5CF6;
+        }
+
+        /* ===== АДАПТИВ ДЛЯ ПЛАНШЕТОВ (768px - 1024px) ===== */
+        @media (max-width: 1024px) and (min-width: 769px) {
+            .header-container {
+                width: 95%;
+                padding: 0 16px;
+            }
+
+            .header-top {
+                gap: 16px;
+            }
+
+            .logo-area {
+                gap: 20px;
+            }
+
+            .logo {
+                font-size: 1.6rem;
+            }
+
+            .menu-btn-black {
+                padding: 8px 20px;
+                font-size: 0.85rem;
+            }
+
+            .search-wrapper {
+                max-width: 280px;
+                min-width: 180px;
+            }
+
+            .search-input {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+            }
+
+            .pick-header-btn,
+            .login-header-btn {
+                padding: 8px 18px;
+                font-size: 0.85rem;
+            }
+
+            .user-name {
+                padding: 6px 14px;
+                font-size: 0.85rem;
+            }
+
+            .bottom-nav {
+                gap: 24px;
+                font-size: 0.85rem;
+                justify-content: center;
+            }
+        }
+
+        /* ===== АДАПТИВ ДЛЯ ТЕЛЕФОНОВ (до 768px) ===== */
+        @media (max-width: 768px) {
+            .header-container {
+                width: 100%;
+                padding: 0 12px;
+            }
+
+            .header-top {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 0;
+                flex-wrap: nowrap;
+            }
+
+            .logo-area {
+                gap: 12px;
+                flex-shrink: 0;
+            }
+
+            .logo {
+                font-size: 1.3rem;
+                white-space: nowrap;
+            }
+
+            .menu-btn-black {
+                padding: 6px 14px;
+                font-size: 0.75rem;
+                white-space: nowrap;
+            }
+
+            /* Скрываем поиск на телефонах */
+            .search-wrapper {
+                display: none;
+            }
+
+            .header-actions {
+                gap: 8px;
+                flex-shrink: 0;
+            }
+
+            .pick-header-btn {
+                padding: 6px 12px;
+                font-size: 0.7rem;
+                white-space: nowrap;
+            }
+
+            .login-header-btn {
+                padding: 6px 12px;
+                font-size: 0.7rem;
+                white-space: nowrap;
+            }
+
+            .user-name {
+                padding: 5px 10px;
+                font-size: 0.7rem;
+                white-space: nowrap;
+            }
+
+            /* Нижняя навигация - без скролла, с переносом */
+            .header-bottom {
+                padding: 8px 0;
+                overflow-x: visible;
+            }
+
+            .bottom-nav {
+                gap: 12px;
+                font-size: 0.7rem;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .bottom-nav span {
+                padding: 4px 8px;
+                white-space: nowrap;
+            }
+        }
+
+        /* ===== ДЛЯ ОЧЕНЬ МАЛЕНЬКИХ ТЕЛЕФОНОВ (до 480px) ===== */
+        @media (max-width: 480px) {
+            .header-container {
+                padding: 0 8px;
+            }
+
+            .logo {
+                font-size: 1.1rem;
+            }
+
+            .menu-btn-black {
+                padding: 5px 10px;
+                font-size: 0.65rem;
+            }
+
+            .pick-header-btn {
+                padding: 5px 10px;
+                font-size: 0.65rem;
+            }
+
+            .login-header-btn {
+                padding: 5px 10px;
+                font-size: 0.65rem;
+            }
+
+            .user-name {
+                padding: 4px 8px;
+                font-size: 0.65rem;
+            }
+
+            .logo-area {
+                gap: 8px;
+            }
+
+            .header-actions {
+                gap: 6px;
+            }
+
+            .bottom-nav {
+                gap: 8px;
+                font-size: 0.6rem;
+            }
+
+            .bottom-nav span {
+                padding: 3px 6px;
+            }
+        }
+
+        /* ===== АЛЬТЕРНАТИВНЫЙ ВАРИАНТ ДЛЯ ТЕЛЕФОНОВ В ГОРИЗОНТАЛЬНОЙ ОРИЕНТАЦИИ ===== */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .header-top {
+                flex-direction: row;
+                flex-wrap: nowrap;
+            }
+
+            .logo {
+                font-size: 1.2rem;
+            }
+
+            .search-wrapper {
+                display: none; /* Все равно скрываем поиск */
+            }
+
+            .header-bottom {
+                display: block;
+            }
+
+            .bottom-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+            }
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+            border-bottom: 1px solid #eee;
+        }
+
+        .header-container {
+            max-width: 1300px;
+            width: 90%;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        @media (min-width: 1400px) {
+            .header-container {
+                width: 70%;
+                padding: 0;
+            }
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 1.9rem;
+            letter-spacing: -0.5px;
+            color: #1F1A2E;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .menu-btn-black {
+            background: #1F1A2E;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .menu-btn-black:hover {
+            background: #3B2E5E;
+            transform: scale(0.97);
+        }
+
+        .search-wrapper {
+            flex: 1;
+            max-width: 360px;
+            min-width: 200px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 20px;
+            border-radius: 60px;
+            border: 1.5px solid #E0D9F0;
+            background: white;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #8B5CF6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .pick-header-btn {
+            background: #1F1A2E;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-family: inherit;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .pick-header-btn:hover {
+            background: #3B2E5E;
+        }
+
+        .login-header-btn {
+            background: transparent;
+            border: 1.5px solid #1F1A2E;
+            padding: 10px 28px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-family: inherit;
+            color: #1F1A2E;
+            white-space: nowrap;
+        }
+
+        .login-header-btn:hover {
+            background: #F0EEF5;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1F1A2E;
+            background: #F0EEF5;
+            padding: 8px 16px;
+            border-radius: 40px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .header-bottom {
+            padding: 10px 0;
+            border-top: 1px solid rgba(139, 92, 246, 0.15);
+            overflow-x: visible;
+            white-space: normal;
+        }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-between;
+            gap: 32px;
+            font-weight: 500;
+            font-size: 0.95rem;
+            flex-wrap: wrap;
+        }
+
+        .bottom-nav span {
+            cursor: pointer;
+            transition: 0.2s;
+            padding: 6px 0;
+            border-bottom: 2px solid transparent;
+            color: #2D2440;
+            white-space: nowrap;
+        }
+
+        .bottom-nav span:hover {
+            border-bottom-color: #A78BFA;
+            color: #6D28D9;
+        }
+
+        .mobile-menu-drop {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            width: 100%;
+            background: white;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.1);
+            padding: 24px;
+            display: none;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 999;
+        }
+
+        .mobile-menu-drop span {
+            font-size: 1.1rem;
+            padding: 8px 0;
+            cursor: pointer;
+            border-bottom: 1px solid #f0eef5;
+        }
+
+        .mobile-menu-drop span:hover {
+            color: #8B5CF6;
+        }
+
+        /* ===== АДАПТИВ ДЛЯ ПЛАНШЕТОВ (768px - 1024px) ===== */
+        @media (max-width: 1024px) and (min-width: 769px) {
+            .header-container {
+                width: 95%;
+                padding: 0 16px;
+            }
+
+            .header-top {
+                gap: 16px;
+            }
+
+            .logo-area {
+                gap: 20px;
+            }
+
+            .logo {
+                font-size: 1.6rem;
+            }
+
+            .menu-btn-black {
+                padding: 8px 20px;
+                font-size: 0.85rem;
+            }
+
+            .search-wrapper {
+                max-width: 280px;
+                min-width: 180px;
+            }
+
+            .search-input {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+            }
+
+            .pick-header-btn,
+            .login-header-btn {
+                padding: 8px 18px;
+                font-size: 0.85rem;
+            }
+
+            .user-name {
+                padding: 6px 14px;
+                font-size: 0.85rem;
+            }
+
+            .bottom-nav {
+                gap: 24px;
+                font-size: 0.85rem;
+                justify-content: center;
+            }
+        }
+
+        /* ===== АДАПТИВ ДЛЯ ТЕЛЕФОНОВ (до 768px) ===== */
+        @media (max-width: 768px) {
+            .header-container {
+                width: 100%;
+                padding: 0 12px;
+            }
+
+            .header-top {
+                flex-direction: row;
+                justify-content: space-between;
+                align-items: center;
+                gap: 12px;
+                padding: 10px 0;
+                flex-wrap: nowrap;
+            }
+
+            .logo-area {
+                gap: 12px;
+                flex-shrink: 0;
+            }
+
+            .logo {
+                font-size: 1.3rem;
+                white-space: nowrap;
+            }
+
+            .menu-btn-black {
+                padding: 6px 14px;
+                font-size: 0.75rem;
+                white-space: nowrap;
+            }
+
+            /* Скрываем поиск на телефонах */
+            .search-wrapper {
+                display: none;
+            }
+
+            .header-actions {
+                gap: 8px;
+                flex-shrink: 0;
+            }
+
+            .pick-header-btn {
+                padding: 6px 12px;
+                font-size: 0.7rem;
+                white-space: nowrap;
+            }
+
+            .login-header-btn {
+                padding: 6px 12px;
+                font-size: 0.7rem;
+                white-space: nowrap;
+            }
+
+            .user-name {
+                padding: 5px 10px;
+                font-size: 0.7rem;
+                white-space: nowrap;
+            }
+
+            /* Нижняя навигация - без скролла, с переносом */
+            .header-bottom {
+                padding: 8px 0;
+                overflow-x: visible;
+            }
+
+            .bottom-nav {
+                gap: 12px;
+                font-size: 0.7rem;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+
+            .bottom-nav span {
+                padding: 4px 8px;
+                white-space: nowrap;
+            }
+        }
+
+        /* ===== ДЛЯ ОЧЕНЬ МАЛЕНЬКИХ ТЕЛЕФОНОВ (до 480px) ===== */
+        @media (max-width: 480px) {
+            .header-container {
+                padding: 0 8px;
+            }
+
+            .logo {
+                font-size: 1.1rem;
+            }
+
+            .menu-btn-black {
+                padding: 5px 10px;
+                font-size: 0.65rem;
+            }
+
+            .pick-header-btn {
+                padding: 5px 10px;
+                font-size: 0.65rem;
+            }
+
+            .login-header-btn {
+                padding: 5px 10px;
+                font-size: 0.65rem;
+            }
+
+            .user-name {
+                padding: 4px 8px;
+                font-size: 0.65rem;
+            }
+
+            .logo-area {
+                gap: 8px;
+            }
+
+            .header-actions {
+                gap: 6px;
+            }
+
+            .bottom-nav {
+                gap: 8px;
+                font-size: 0.6rem;
+            }
+
+            .bottom-nav span {
+                padding: 3px 6px;
+            }
+        }
+
+        /* ===== АЛЬТЕРНАТИВНЫЙ ВАРИАНТ ДЛЯ ТЕЛЕФОНОВ В ГОРИЗОНТАЛЬНОЙ ОРИЕНТАЦИИ ===== */
+        @media (max-width: 768px) and (orientation: landscape) {
+            .header-top {
+                flex-direction: row;
+                flex-wrap: nowrap;
+            }
+
+            .logo {
+                font-size: 1.2rem;
+            }
+
+            .search-wrapper {
+                display: none; /* Все равно скрываем поиск */
+            }
+
+            .header-bottom {
+                display: block;
+            }
+
+            .bottom-nav {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 15px;
+            }
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(16px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            z-index: 1000;
+            border-bottom: 1px solid #eee;
+        }
+
+        .header-container {
+            max-width: 1300px;
+            width: 90%;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        @media (min-width: 1400px) {
+            .header-container {
+                width: 70%;
+                padding: 0;
+            }
+        }
+
+        .header-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            gap: 24px;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 1.9rem;
+            letter-spacing: -0.5px;
+            color: #1F1A2E;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .menu-btn-black {
+            background: #1F1A2E;
+            border: none;
+            padding: 10px 28px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: 0.2s;
+            font-family: inherit;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .menu-btn-black:hover {
+            background: #3B2E5E;
+            transform: scale(0.97);
+        }
+
+        .search-wrapper {
+            flex: 1;
+            max-width: 360px;
+            min-width: 200px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 20px;
+            border-radius: 60px;
+            border: 1.5px solid #E0D9F0;
+            background: white;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .search-input:focus {
+            border-color: #8B5CF6;
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .pick-header-btn {
+            background: #1F1A2E;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 40px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-family: inherit;
+            color: white;
+            white-space: nowrap;
+        }
+
+        .pick-header-btn:hover {
+            background: #3B2E5E;
+        }
+
+        .login-header-btn {
+            background: transparent;
+            border: 1.5px solid #1F1A2E;
+            padding: 10px 28px;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            cursor: pointer;
+            font-family: inherit;
+            color: #1F1A2E;
+            white-space: nowrap;
+        }
+
+        .login-header-btn:hover {
+            background: #F0EEF5;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1F1A2E;
+            background: #F0EEF5;
+            padding: 8px 16px;
+            border-radius: 40px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        /* Нижняя навигация - видна только на десктопе */
+        .header-bottom {
+            padding: 10px 0;
+            border-top: 1px solid rgba(139, 92, 246, 0.15);
+        }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-between;
+            gap: 32px;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .bottom-nav span {
+            cursor: pointer;
+            transition: 0.2s;
+            padding: 6px 0;
+            border-bottom: 2px solid transparent;
+            color: #2D2440;
+            white-space: nowrap;
+        }
+
+        .bottom-nav span:hover {
+            border-bottom-color: #A78BFA;
+            color: #6D28D9;
+        }
+
+        /* Мобильное меню (выезжающее) */
+        .mobile-menu-drop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            background: white;
+            box-shadow: 0 20px 35px rgba(0, 0, 0, 0.1);
+            padding: 100px 24px 40px;
+            transform: translateX(-100%);
+            transition: transform 0.3s ease-in-out;
+            z-index: 999;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .mobile-menu-drop.open {
+            transform: translateX(0);
+        }
+
+        .mobile-menu-drop span {
+            font-size: 1.2rem;
+            padding: 16px 0;
+            cursor: pointer;
+            border-bottom: 1px solid #f0eef5;
+            font-weight: 500;
+            color: #1F1A2E;
+            display: block;
+            text-align: center;
+        }
+
+        .mobile-menu-drop span:hover {
+            color: #8B5CF6;
+            background: #F9F7FF;
+            transition: all 0.2s;
+        }
+
+        /* ===== АДАПТИВ ДЛЯ ПЛАНШЕТОВ И ТЕЛЕФОНОВ ===== */
+        @media (max-width: 1024px) {
+            /* Скрываем нижнюю навигацию */
+            .header-bottom {
+                display: none;
+            }
+
+            /* Скрываем поиск */
+            .search-wrapper {
+                display: none;
+            }
+
+            /* Адаптируем верхнюю строку */
+            .header-top {
+                justify-content: space-between;
+                gap: 12px;
+            }
+
+            .logo {
+                font-size: 1.4rem;
+            }
+
+            .menu-btn-black {
+                padding: 8px 18px;
+                font-size: 0.85rem;
+            }
+
+            .pick-header-btn,
+            .login-header-btn {
+                padding: 8px 16px;
+                font-size: 0.85rem;
+            }
+
+            .user-name {
+                padding: 6px 12px;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .logo {
+                font-size: 1.2rem;
+            }
+
+            .menu-btn-black {
+                padding: 6px 14px;
+                font-size: 0.75rem;
+            }
+
+            .pick-header-btn {
+                padding: 6px 12px;
+                font-size: 0.7rem;
+            }
+
+            .login-header-btn {
+                padding: 6px 12px;
+                font-size: 0.7rem;
+            }
+
+            .user-name {
+                padding: 5px 10px;
+                font-size: 0.7rem;
+            }
+
+            .header-actions {
+                gap: 8px;
+            }
+
+            .logo-area {
+                gap: 12px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo {
+                font-size: 1rem;
+            }
+
+            .menu-btn-black {
+                padding: 5px 10px;
+                font-size: 0.7rem;
+            }
+
+            .pick-header-btn {
+                padding: 5px 8px;
+                font-size: 0.65rem;
+            }
+
+            .login-header-btn {
+                padding: 5px 8px;
+                font-size: 0.65rem;
+            }
+
+            .user-name {
+                padding: 4px 8px;
+                font-size: 0.65rem;
+            }
+        }
+
+        @media (min-width: 1400px) {
+            .header-container,
+            .container,
+            .stories-container,
+            .footer-content {
+                width: 70%;
+                padding: 0;
+            }
+
+            .hero-content h1 {
+                font-size: 4rem;
+            }
+
+            .hero-content p {
+                font-size: 1.5rem;
+            }
+
+            .stat-number {
+                font-size: 3.5rem;
+            }
+
+            .big-card-title {
+                font-size: 3.5rem;
+            }
+
+            .big-card-text {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header-top {
+                flex-wrap: nowrap;
+                margin-left: -20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .footer-content {
+                flex-direction: column;
+                gap: 30px;
+                padding: 0 20px;
+            }
+
+            .social-icons {
+                justify-self: center;
+            }
+
+            .footer-col {
+                flex: 1;
+                text-align: center;
+                min-width: auto;
+            }
+
+        }
+
+        /* ===== ФИКСАЦИЯ ФУТЕРА ВНИЗУ ===== */
+        html, body {
+            height: 100%;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        main {
+            flex: 1;
+        }
+
+        footer {
+            margin-top: 0;
+            position: relative;
+            width: 100%;
+        }
+
+        /* Убираем лишний margin-top у footer */
+        footer {
+            margin-top: auto;
+        }
+    </style>
+</head>
+<body>
+<script>
+    // Быстрая проверка авторизации при загрузке
+    (function () {
+        const isLoggedIn = sessionStorage.getItem('isLoggedIn');
+        const savedUserName = sessionStorage.getItem('userName');
+        const authButtons = document.getElementById('authButtons');
+        const userMenu = document.getElementById('userMenu');
+        const userNameDisplay = document.getElementById('userNameDisplay');
+
+        if (isLoggedIn === 'true' && savedUserName) {
+            if (authButtons) authButtons.style.display = 'none';
+            if (userMenu) {
+                userMenu.style.display = 'block';
+                if (userNameDisplay) userNameDisplay.textContent = savedUserName;
+            }
+        }
+
+        // Асинхронно проверяем на сервере
+        fetch('/api/me')
+            .then(res => res.json())
+            .then(data => {
+                if (data.user && data.user.id) {
+                    if (authButtons) authButtons.style.display = 'none';
+                    if (userMenu) {
+                        userMenu.style.display = 'block';
+                        if (userNameDisplay) {
+                            userNameDisplay.textContent = data.user.full_name.split(' ')[0];
+                        }
+                    }
+                    sessionStorage.setItem('isLoggedIn', 'true');
+                    sessionStorage.setItem('userName', data.user.full_name.split(' ')[0]);
+                } else {
+                    if (authButtons) authButtons.style.display = 'flex';
+                    if (userMenu) userMenu.style.display = 'none';
+                    sessionStorage.removeItem('isLoggedIn');
+                    sessionStorage.removeItem('userName');
+                }
+            })
+            .catch(err => console.error('Auth error:', err));
+    })();
+</script>
+<header class="header">
+    <div class="header-container">
+        <div class="header-top">
+            <div class="logo-area">
+                <div class="logo" onclick="window.location.href='/'">СОЗВЕЗДИЕ</div>
+                <button class="menu-btn-black" id="menuToggleBtn">Меню</button>
+            </div>
+            <div class="search-wrapper">
+                <input type="text" class="search-input" id="searchInput" placeholder="Найти отряд по названию">
+            </div>
+            <div class="header-actions" id="headerActions">
+                <button class="pick-header-btn" id="pickHeaderBtn">Подобрать отряд</button>
+                <div id="authButtons">
+                    <button class="login-header-btn" id="loginHeaderBtn">Войти</button>
+                </div>
+                <div id="userMenu" style="display: none;">
+                    <span class="user-name" id="userNameDisplay"></span>
+                </div>
+            </div>
+        </div>
+        <div class="header-bottom">
+            <div class="bottom-nav" id="bottomNav">
+                <span data-page="about">О нас</span>
+                <span data-page="directions">Направления</span>
+                <span data-page="squads">Отряды</span>
+                <span data-page="create">Создавай</span>
+                <span data-page="interactive">Интерактивы</span>
+                <span data-page="contacts">Контакты</span>
+            </div>
+        </div>
+    </div>
+    <div class="mobile-menu-drop" id="mobileMenuDrop">
+        <span data-page="about">О нас</span>
+        <span data-page="directions">Направления</span>
+        <span data-page="squads">Отряды</span>
+        <span data-page="create">Создавай</span>
+        <span data-page="interactive">Интерактивы</span>
+        <span data-page="contacts">Контакты</span>
+    </div>
+</header>
+
+<main>
+    <div class="profile-container" id="profileContainer" style="display: none;">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h1 class="settings-title">Настройка</h1>
+            <button class="save-btn logout-btn" id="logoutBtn">Выйти</button>
+        </div>
+        <div class="tabs-container" id="tabsContainer">
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="personal">Персональная информация</button>
+                <button class="tab-btn" data-tab="password">Пароль</button>
+                <button class="tab-btn" data-tab="applications">Мои заявки</button>
+            </div>
+            <div class="active-line" id="activeLine"></div>
+        </div>
+
+        <div id="personalTab" class="info-blocks">
+            <div class="info-card">
+                <div class="avatar-section">
+                    <div class="avatar-placeholder" id="avatarPlaceholder">А</div>
+                    <span class="avatar-upload" id="uploadAvatarBtn"><i class="fas fa-camera"></i> Загрузить фото</span>
+                    <input type="file" id="avatarInput" accept="image/*" style="display: none;">
+                </div>
+                <h3>Личная информация</h3>
+                <div class="form-row">
+                    <div class="form-field"><label>Фамилия</label><input type="text" id="lastName"></div>
+                    <div class="form-field"><label>Имя</label><input type="text" id="firstName"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field"><label>Дата рождения</label><input type="date" id="birthDate"></div>
+                    <div class="form-field"><label>Класс</label><select id="classSelect">
+                        <option value="">Выберите класс</option>
+                        <option>5 класс</option>
+                        <option>6 класс</option>
+                        <option>7 класс</option>
+                        <option>8 класс</option>
+                        <option>9 класс</option>
+                        <option>10 класс</option>
+                        <option>11 класс</option>
+                        <option>Студент</option>
+                    </select></div>
+                </div>
+                <div class="btn-center">
+                    <button class="save-btn" id="savePersonalBtn">Сохранить</button>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3>Контакты</h3>
+                <div class="form-row">
+                    <div class="form-field"><label>Номер телефона</label><input type="tel" id="phone"></div>
+                    <div class="form-field"><label>Телефон родителя</label><input type="tel" id="parentPhone"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field"><label>Email</label><input type="email" id="email"></div>
+                </div>
+                <div class="btn-center">
+                    <button class="save-btn" id="saveContactsBtn">Сохранить</button>
+                </div>
+            </div>
+
+            <div class="info-card">
+                <h3>Образовательное учреждение</h3>
+                <div class="form-row">
+                    <div class="form-field"><label>Страна</label><input type="text" id="country"></div>
+                    <div class="form-field"><label>Регион</label><input type="text" id="region"></div>
+                    <div class="form-field"><label>Населённый пункт</label><input type="text" id="city"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-field"><label>Название ОУ</label><input type="text" id="schoolName"></div>
+                    <div class="form-field"><label>Номер ОУ</label><input type="text" id="schoolNumber"></div>
+                </div>
+                <div class="btn-center">
+                    <button class="save-btn" id="saveSchoolBtn">Сохранить</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="passwordTab" class="info-blocks" style="display: none;">
+            <div class="info-card password-block">
+                <h3>Смена пароля</h3>
+                <div class="form-field"><label>Текущий пароль</label><input type="password" id="currentPwd"
+                                                                            placeholder="Введите текущий пароль"></div>
+                <div class="form-field"><label>Новый пароль</label><input type="password" id="newPwd"
+                                                                          placeholder="Введите новый пароль"></div>
+                <div class="form-field"><label>Подтверждение пароля</label><input type="password" id="confirmPwd"
+                                                                                  placeholder="Повторите новый пароль">
+                </div>
+                <div class="btn-center">
+                    <button class="save-btn" id="savePasswordBtn">Сменить пароль</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="applicationsTab" class="info-blocks" style="display: none;">
+            <div class="info-card">
+                <h3>Мои заявки в отряды</h3>
+                <div id="applicationsList" style="display: flex; flex-direction: column; gap: 16px;">
+                    <p style="color: #6B6B7A; text-align: center;">Загрузка...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="notLoggedIn"
+         style="display: flex; justify-content: center; align-items: center; min-height: 60vh; flex-direction: column; gap: 20px;">
+        <h2>Вы не авторизованы</h2>
+        <p>Пожалуйста, войдите или зарегистрируйтесь для доступа к профилю</p>
+        <button class="save-btn" onclick="window.location.href='/register.html'">Войти</button>
+    </div>
+</main>
+
+<footer>
+    <div class="footer-content">
+        <div class="footer-col">
+            <h4><i class="fas fa-campground"></i> Созвездие</h4>
+            <p>Лучшие каникулы твоей жизни. Создаём воспоминания с 2015 года.</p>
+            <div class="social-icons">
+                <a href="#"><i class="fab fa-vk"></i></a>
+            </div>
+        </div>
+        <div class="footer-col">
+            <h4>Информация</h4>
+            <a href="/about.html">О нас</a>
+            <a href="#">Направления</a>
+            <a href="#">Интерактивы</a>
+        </div>
+        <div class="footer-col">
+            <h4>Отрядам</h4>
+            <a href="#">Отряды</a>
+            <a href="#">Направления</a>
+            <a href="#">Создавай</a>
+        </div>
+        <div class="footer-col">
+            <h4>Контакты</h4>
+            <p>8 800 555 35 35</p>
+            <p>hello@sozvezdie.ru</p>
+            <p>Москва, ул. Лагерная, 12</p>
+        </div>
+    </div>
+    <div class="footer-bottom">
+        <p>© 2026 Созвездие. Все права защищены.</p>
+    </div>
+</footer>
+
+<script>
+    let currentUser = null;
+
+    async function checkAuth() {
+        try {
+            const response = await fetch('/api/me');
+            const data = await response.json();
+            if (data.user) {
+                currentUser = data.user;
+                document.getElementById('profileContainer').style.display = 'block';
+                document.getElementById('notLoggedIn').style.display = 'none';
+                document.getElementById('userNameDisplay').textContent = currentUser.full_name.split(' ')[0];
+                document.getElementById('userNameDisplay').style.display = 'block';
+                document.getElementById('authButtons').style.display = 'none';
+                loadProfileData();
+                loadApplications();
+            } else {
+                document.getElementById('profileContainer').style.display = 'none';
+                document.getElementById('notLoggedIn').style.display = 'flex';
+                document.getElementById('authButtons').style.display = 'flex';
+                document.getElementById('userMenu').style.display = 'none';
+            }
+        } catch (error) {
+            console.error('Ошибка проверки авторизации:', error);
+        }
+    }
+
+    async function loadProfileData() {
+        try {
+            const response = await fetch('/api/me');
+            const data = await response.json();
+            if (data.user) {
+                const user = data.user;
+                const nameParts = user.full_name.split(' ');
+                document.getElementById('firstName').value = nameParts[0] || '';
+                document.getElementById('lastName').value = nameParts.slice(1).join(' ') || '';
+                document.getElementById('birthDate').value = user.birth_date || '';
+                document.getElementById('classSelect').value = user.class || '';
+                document.getElementById('phone').value = user.phone || '';
+                document.getElementById('parentPhone').value = user.parent_phone || '';
+                document.getElementById('email').value = user.email || '';
+                document.getElementById('country').value = user.country || 'Россия';
+                document.getElementById('region').value = user.region || '';
+                document.getElementById('city').value = user.city || '';
+                document.getElementById('schoolName').value = user.school_name || '';
+                document.getElementById('schoolNumber').value = user.school_number || '';
+
+                const avatarPlaceholder = document.getElementById('avatarPlaceholder');
+                if (user.avatar) {
+                    avatarPlaceholder.style.backgroundImage = `url(${user.avatar})`;
+                    avatarPlaceholder.style.backgroundSize = 'cover';
+                    avatarPlaceholder.textContent = '';
+                } else {
+                    avatarPlaceholder.textContent = (user.full_name.charAt(0) || 'А').toUpperCase();
+                }
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки профиля:', error);
+        }
+    }
+
+    async function loadApplications() {
+        try {
+            const response = await fetch('/api/my-applications');
+            const data = await response.json();
+            const container = document.getElementById('applicationsList');
+            if (data.applications && data.applications.length > 0) {
+                container.innerHTML = data.applications.map(app => `
+                    <div style="background: #F9F6FF; border-radius: 20px; padding: 20px; border-left: 4px solid #844DF5;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap;">
+                            <div>
+                                <strong style="font-size: 1.1rem;">${app.squad_name}</strong>
+                                <p style="color: #6B6B7A; margin-top: 5px;">Дата: ${new Date(app.created_at).toLocaleDateString()}</p>
+                            </div>
+                            <span style="padding: 5px 15px; border-radius: 20px; font-size: 0.85rem; background: ${getStatusColor(app.status)}">${getStatusText(app.status)}</span>
+                        </div>
+                        <p style="margin-top: 10px; color: #4A4A5A;">${app.full_name}, ${app.class}</p>
+                        <p style="color: #6B6B7A;">Телефон: ${app.phone}</p>
+                        ${app.comment ? `<p style="margin-top: 10px; color: #844DF5;">Комментарий: ${app.comment}</p>` : ''}
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = '<p style="color: #6B6B7A; text-align: center;">У вас пока нет заявок</p>';
+            }
+        } catch (error) {
+            console.error('Ошибка загрузки заявок:', error);
+        }
+    }
+
+    function getStatusColor(status) {
+        switch (status) {
+            case 'pending':
+                return '#F59E0B';
+            case 'approved':
+                return '#10B981';
+            case 'rejected':
+                return '#EF4444';
+            default:
+                return '#6B6B7A';
+        }
+    }
+
+    function getStatusText(status) {
+        switch (status) {
+            case 'pending':
+                return 'На рассмотрении';
+            case 'approved':
+                return 'Одобрено';
+            case 'rejected':
+                return 'Отклонено';
+            default:
+                return status;
+        }
+    }
+
+    async function savePersonal() {
+        const data = {
+            firstName: document.getElementById('firstName').value,
+            lastName: document.getElementById('lastName').value,
+            birthDate: document.getElementById('birthDate').value,
+            class: document.getElementById('classSelect').value
+        };
+        try {
+            const response = await fetch('/api/profile', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('Личная информация сохранена!');
+                loadProfileData();
+            } else {
+                alert('Ошибка сохранения');
+            }
+        } catch (error) {
+            alert('Ошибка сервера');
+        }
+    }
+
+    async function saveContacts() {
+        const data = {
+            phone: document.getElementById('phone').value,
+            parentPhone: document.getElementById('parentPhone').value,
+            email: document.getElementById('email').value
+        };
+        try {
+            const response = await fetch('/api/profile', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('Контакты сохранены!');
+            } else {
+                alert('Ошибка сохранения');
+            }
+        } catch (error) {
+            alert('Ошибка сервера');
+        }
+    }
+
+    async function saveSchool() {
+        const data = {
+            country: document.getElementById('country').value,
+            region: document.getElementById('region').value,
+            city: document.getElementById('city').value,
+            schoolName: document.getElementById('schoolName').value,
+            schoolNumber: document.getElementById('schoolNumber').value
+        };
+        try {
+            const response = await fetch('/api/profile', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('Данные об учреждении сохранены!');
+            } else {
+                alert('Ошибка сохранения');
+            }
+        } catch (error) {
+            alert('Ошибка сервера');
+        }
+    }
+
+    async function changePassword() {
+        const currentPwd = document.getElementById('currentPwd').value;
+        const newPwd = document.getElementById('newPwd').value;
+        const confirmPwd = document.getElementById('confirmPwd').value;
+
+        if (!currentPwd || !newPwd || !confirmPwd) {
+            alert('Заполните все поля');
+            return;
+        }
+        if (newPwd !== confirmPwd) {
+            alert('Новый пароль и подтверждение не совпадают');
+            return;
+        }
+        if (newPwd.length < 4) {
+            alert('Пароль должен быть не менее 4 символов');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/change-password', {
+                method: 'PUT',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({currentPassword: currentPwd, newPassword: newPwd, confirmPassword: confirmPwd})
+            });
+            const result = await response.json();
+            if (result.success) {
+                alert('Пароль успешно изменён!');
+                document.getElementById('currentPwd').value = '';
+                document.getElementById('newPwd').value = '';
+                document.getElementById('confirmPwd').value = '';
+            } else {
+                alert(result.error || 'Ошибка смены пароля');
+            }
+        } catch (error) {
+            alert('Ошибка сервера');
+        }
+    }
+
+    async function logout() {
+        try {
+            await fetch('/api/logout', {method: 'POST'});
+            window.location.href = '/';
+        } catch (error) {
+            console.error('Ошибка выхода:', error);
+            window.location.href = '/';
+        }
+    }
+
+    // Табы
+    const tabsContainer = document.getElementById('tabsContainer');
+    const tabBtns = document.querySelectorAll('.tab-btn');
+    const activeLine = document.getElementById('activeLine');
+    const personalTab = document.getElementById('personalTab');
+    const passwordTab = document.getElementById('passwordTab');
+    const applicationsTab = document.getElementById('applicationsTab');
+
+    function updateLine(activeBtn) {
+        const containerRect = tabsContainer.getBoundingClientRect();
+        const btnRect = activeBtn.getBoundingClientRect();
+        const relativeLeft = btnRect.left - containerRect.left;
+        activeLine.style.left = `${relativeLeft}px`;
+        activeLine.style.width = `${btnRect.width}px`;
+    }
+
+    function switchTab(tabId) {
+        personalTab.style.display = 'none';
+        passwordTab.style.display = 'none';
+        applicationsTab.style.display = 'none';
+
+        if (tabId === 'personal') personalTab.style.display = 'flex';
+        else if (tabId === 'password') passwordTab.style.display = 'flex';
+        else if (tabId === 'applications') applicationsTab.style.display = 'flex';
+
+        tabBtns.forEach(btn => {
+            if (btn.dataset.tab === tabId) {
+                btn.classList.add('active');
+                updateLine(btn);
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+    }
+
+    tabBtns.forEach(btn => {
+        btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+    });
+
+    document.getElementById('savePersonalBtn')?.addEventListener('click', savePersonal);
+    document.getElementById('saveContactsBtn')?.addEventListener('click', saveContacts);
+    document.getElementById('saveSchoolBtn')?.addEventListener('click', saveSchool);
+    document.getElementById('savePasswordBtn')?.addEventListener('click', changePassword);
+    document.getElementById('logoutBtn')?.addEventListener('click', logout);
+
+    // Аватар
+    document.getElementById('uploadAvatarBtn')?.addEventListener('click', () => {
+        document.getElementById('avatarInput').click();
+    });
+    document.getElementById('avatarInput')?.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('avatar', file);
+        try {
+            const response = await fetch('/api/upload-avatar', {method: 'POST', body: formData});
+            const result = await response.json();
+            if (result.success) {
+                alert('Аватар загружен!');
+                loadProfileData();
+            } else {
+                alert('Ошибка загрузки');
+            }
+        } catch (error) {
+            alert('Ошибка сервера');
+        }
+    });
+
+    // Навигация
+    function initNavigation() {
+        const navItems = document.querySelectorAll('[data-page]');
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                const page = item.getAttribute('data-page');
+                switch (page) {
+                    case 'about':
+                        window.location.href = '/about.html';
+                        break;
+                    case 'directions':
+                        alert('Раздел "Направления" в разработке');
+                        break;
+                    case 'squads':
+                        window.location.href = '/';
+                        break;
+                    case 'create':
+                        alert('Раздел "Создавай" в разработке');
+                        break;
+                    case 'interactive':
+                        alert('Раздел "Интерактивы" в разработке');
+                        break;
+                    case 'contacts':
+                        document.querySelector('footer').scrollIntoView({behavior: 'smooth'});
+                        break;
+                }
+                mobileDrop.style.display = 'none';
+            });
+        });
+    }
+
+    const menuBtn = document.getElementById('menuToggleBtn');
+    const mobileMenu = document.getElementById('mobileMenuDrop');
+
+    function openMobileMenu() {
+        mobileMenu.classList.add('open');
+        document.body.classList.add('menu-open');
+    }
+
+    function closeMobileMenu() {
+        mobileMenu.classList.remove('open');
+        document.body.classList.remove('menu-open');
+    }
+
+    function toggleMobileMenu() {
+        if (mobileMenu.classList.contains('open')) {
+            closeMobileMenu();
+        } else {
+            openMobileMenu();
+        }
+    }
+
+    if (menuBtn && mobileMenu) {
+        menuBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleMobileMenu();
+        });
+
+        // Закрытие при клике на пункт меню
+        const menuItems = mobileMenu.querySelectorAll('span');
+        menuItems.forEach(item => {
+            item.addEventListener('click', () => {
+                closeMobileMenu();
+            });
+        });
+
+        // Закрытие при клике вне меню
+        document.addEventListener('click', (e) => {
+            if (mobileMenu.classList.contains('open')) {
+                if (!mobileMenu.contains(e.target) && !menuBtn.contains(e.target)) {
+                    closeMobileMenu();
+                }
+            }
+        });
+
+        // Закрытие при ESC
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && mobileMenu.classList.contains('open')) {
+                closeMobileMenu();
+            }
+        });
+    }
+
+    function initNavigation() {
+        const navItems = document.querySelectorAll('[data-page]');
+        navItems.forEach(item => {
+            item.addEventListener('click', (e) => {
+                const page = item.getAttribute('data-page');
+                switch (page) {
+                    case 'about':
+                        window.location.href = '/about.html';
+                        break;
+                    case 'directions':
+                        alert('Раздел "Направления" в разработке');
+                        break;
+                    case 'squads':
+                        document.getElementById('squadsGrid').scrollIntoView({behavior: 'smooth'});
+                        break;
+                    case 'create':
+                        alert('Раздел "Создавай" в разработке');
+                        break;
+                    case 'interactive':
+                        alert('Раздел "Интерактивы" в разработке');
+                        break;
+                    case 'contacts':
+                        document.querySelector('footer').scrollIntoView({behavior: 'smooth'});
+                        break;
+                    default:
+                        break;
+                }
+                closeMobileMenu();
+            });
+        });
+    }
+
+    document.getElementById('pickHeaderBtn')?.addEventListener('click', () => {
+        window.location.href = '/test.html';
+    });
+    document.getElementById('heroTestBtn')?.addEventListener('click', () => {
+        window.location.href = '/test.html';
+    });
+    document.getElementById('pickSquadBtn')?.addEventListener('click', () => {
+        window.location.href = '/test.html';
+    });
+    document.getElementById('loginHeaderBtn')?.addEventListener('click', () => {
+        window.location.href = '/register.html';
+    });
+
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') alert(`Поиск: ${searchInput.value}`);
+        });
+    }
+
+    initNavigation();
+    checkAuth();
+</script>
+</body>
+</html>
