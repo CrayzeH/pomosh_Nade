@@ -6,26 +6,48 @@ const session = require('express-session');
 const SQLiteStore = require('connect-sqlite3')(session);
 const multer = require('multer');
 const fs = require('fs');
+const os = require('os');
 const crypto = require('crypto');
 const https = require('https');
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT) || 3000;
+const HOST = '0.0.0.0';
 
 // =============================================
 // НАСТРОЙКА ПУТЕЙ
 // =============================================
 
-
 const publicDir = path.join(__dirname, 'public');
-if (!fs.existsSync(publicDir)) {
-    fs.mkdirSync(publicDir);
+const dataDir = process.env.APP_DATA_DIR || process.env.DATA_DIR || path.join(os.tmpdir(), 'sozvezdie-data');
+const dbPath = process.env.DB_PATH || path.join(dataDir, 'soz.db');
+const uploadsRootDir = path.join(dataDir, 'uploads');
+const avatarUploadDir = path.join(uploadsRootDir, 'avatars');
+
+function ensureDir(dirPath) {
+    if (!fs.existsSync(dirPath)) {
+        fs.mkdirSync(dirPath, { recursive: true });
+    }
 }
+
+function ensureWritableDb(sourcePath, targetPath) {
+    if (!fs.existsSync(targetPath) && fs.existsSync(sourcePath)) {
+        fs.copyFileSync(sourcePath, targetPath);
+    }
+}
+
+if (!fs.existsSync(publicDir)) {
+    fs.mkdirSync(publicDir, { recursive: true });
+}
+ensureDir(dataDir);
+ensureDir(uploadsRootDir);
+ensureDir(avatarUploadDir);
+ensureWritableDb(path.join(__dirname, 'soz.db'), dbPath);
 
 // =============================================
 // ПОДКЛЮЧЕНИЕ К БД
 // =============================================
-const db = new sqlite3.Database('./soz.db', (err) => {
+const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
         console.error('Ошибка подключения к БД:', err.message);
     } else {
@@ -33,45 +55,35 @@ const db = new sqlite3.Database('./soz.db', (err) => {
     }
 });
 
-app.get('/', (req, res) => {
-  res.send('Hello world');
-});
-
-app.listen(PORT, '0.0.0.0', () => {
-  console.log('Server started on port', PORT);
-});
-
 // =============================================
 // MIDDLEWARE
 // =============================================
+app.set('trust proxy', 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(publicDir));
-
+app.use('/uploads', express.static(uploadsRootDir));
 app.use(express.static(path.join(__dirname, 'public/css')));
 
 // Настройка сессий
 app.use(session({
-    store: new SQLiteStore({ db: 'sessions.db', table: 'sessions' }),
+    store: new SQLiteStore({ dir: dataDir, db: 'sessions.db', table: 'sessions' }),
     secret: 'sozvezdie_secret_key_2026',
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: true,  // ← МЕНЯЕМ на true для HTTPS
+        secure: process.env.NODE_ENV === 'production',
         maxAge: 1000 * 60 * 60 * 24,
         httpOnly: true,
-        sameSite: 'lax'  // ← Добавляем
+        sameSite: 'lax'
     }
 }));
 
 // Настройка загрузки файлов (аватары)
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, 'public/uploads/avatars');
-        if (!fs.existsSync(uploadDir)) {
-            fs.mkdirSync(uploadDir, { recursive: true });
-        }
-        cb(null, uploadDir);
+        ensureDir(avatarUploadDir);
+        cb(null, avatarUploadDir);
     },
     filename: (req, file, cb) => {
         const uniqueName = Date.now() + '-' + Math.round(Math.random() * 1E9) + path.extname(file.originalname);
@@ -920,13 +932,14 @@ app.get('/group_ever.html', (req, res) => {
 // =============================================
 // ЗАПУСК СЕРВЕРА
 // =============================================
-app.listen(PORT, () => {
-    console.log(`Сервер запущен на http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+    console.log(`Сервер слушает ${HOST}:${PORT}`);
+    console.log(`Рабочая папка данных: ${dataDir}`);
     console.log(`Доступные страницы:`);
-    console.log(`  - http://localhost:${PORT}/`);
-    console.log(`  - http://localhost:${PORT}/about.html`);
-    console.log(`  - http://localhost:${PORT}/register.html`);
-    console.log(`  - http://localhost:${PORT}/test.html`);
-    console.log(`  - http://localhost:${PORT}/group_wings.html`);
-    console.log(`  - http://localhost:${PORT}/profile.html (требуется авторизация)`);
+    console.log(`  - /`);
+    console.log(`  - /about.html`);
+    console.log(`  - /register.html`);
+    console.log(`  - /test.html`);
+    console.log(`  - /group_wings.html`);
+    console.log(`  - /profile.html (требуется авторизация)`);
 });
