@@ -49,9 +49,10 @@ app.use(session({
     resave: false,
     saveUninitialized: false,
     cookie: {
-        secure: false, // для разработки (http)
-        maxAge: 1000 * 60 * 60 * 24, // 24 часа
-        httpOnly: true
+        secure: true,  // ← МЕНЯЕМ на true для HTTPS
+        maxAge: 1000 * 60 * 60 * 24,
+        httpOnly: true,
+        sameSite: 'lax'  // ← Добавляем
     }
 }));
 
