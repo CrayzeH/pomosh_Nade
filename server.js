@@ -504,6 +504,106 @@ app.get('/api/squads/:shortName', (req, res) => {
     );
 });
 
+app.get('/api/squad-page/:shortName', (req, res) => {
+    const { shortName } = req.params;
+
+    db.get(
+        `SELECT s.*, sp.hero_kicker, sp.hero_title, sp.hero_image, sp.hero_image_alt, sp.hero_bullets,
+                sp.achievement_primary_text, sp.achievement_secondary_text, sp.trust_title,
+                sp.trust_primary_bg_image, sp.cta_title, sp.cta_subtitle, sp.path_title,
+                sp.guide_title, sp.structure_title, sp.primary_color, sp.dark_color,
+                sp.soft_color, sp.light_color
+         FROM squads s
+         JOIN squad_page_content sp ON sp.squad_id = s.id
+         WHERE s.short_name = ? AND s.is_active = 1`,
+        [shortName],
+        (err, squad) => {
+            if (err) {
+                return res.status(500).json({ error: 'Ошибка сервера' });
+            }
+            if (!squad) {
+                return res.status(404).json({ error: 'Страница отряда не найдена' });
+            }
+
+            db.all(
+                `SELECT title, body, color_role FROM squad_page_trust_cards
+                 WHERE squad_id = ? ORDER BY order_index`,
+                [squad.id],
+                (err, trustCards) => {
+                    if (err) {
+                        return res.status(500).json({ error: 'Ошибка сервера' });
+                    }
+
+                    db.all(
+                        `SELECT title, body, image FROM squad_page_structure_steps
+                         WHERE squad_id = ? ORDER BY order_index`,
+                        [squad.id],
+                        (err, structureSteps) => {
+                            if (err) {
+                                return res.status(500).json({ error: 'Ошибка сервера' });
+                            }
+
+                            db.all(
+                                `SELECT role, name, body, image FROM squad_page_team_members
+                                 WHERE squad_id = ? AND is_active = 1 ORDER BY order_index`,
+                                [squad.id],
+                                (err, teamMembers) => {
+                                    if (err) {
+                                        return res.status(500).json({ error: 'Ошибка сервера' });
+                                    }
+
+                                    let heroBullets = [];
+                                    try {
+                                        heroBullets = JSON.parse(squad.hero_bullets || '[]');
+                                    } catch (parseError) {
+                                        heroBullets = [];
+                                    }
+
+                                    res.json({
+                                        squad: {
+                                            id: squad.id,
+                                            name: squad.name,
+                                            shortName: squad.short_name,
+                                            title: squad.title,
+                                            description: squad.description,
+                                            icon: squad.icon,
+                                            colors: {
+                                                primary: squad.primary_color,
+                                                dark: squad.dark_color,
+                                                soft: squad.soft_color,
+                                                light: squad.light_color
+                                            }
+                                        },
+                                        page: {
+                                            heroKicker: squad.hero_kicker,
+                                            heroTitle: squad.hero_title,
+                                            heroImage: squad.hero_image,
+                                            heroImageAlt: squad.hero_image_alt,
+                                            heroBullets,
+                                            achievementPrimaryText: squad.achievement_primary_text,
+                                            achievementSecondaryText: squad.achievement_secondary_text,
+                                            trustTitle: squad.trust_title,
+                                            trustPrimaryBgImage: squad.trust_primary_bg_image,
+                                            ctaTitle: squad.cta_title,
+                                            ctaSubtitle: squad.cta_subtitle,
+                                            pathTitle: squad.path_title,
+                                            guideTitle: squad.guide_title,
+                                            structureTitle: squad.structure_title,
+                                            trustCards,
+                                            structureSteps,
+                                            teamMembers
+                                        }
+                                    });
+                                }
+                            );
+                        }
+                    );
+                }
+            );
+        }
+    );
+});
+
 // =============================================
 // API: ЗАЯВКИ
 // =============================================
@@ -898,6 +998,14 @@ app.get('/auth.html', (req, res) => {
 
 app.get('/test.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'test.html'));
+});
+
+app.get('/test-page', (req, res) => {
+    res.sendFile(path.join(__dirname, 'test-page.html'));
+});
+
+app.get('/squad/:shortName', (req, res) => {
+    res.sendFile(path.join(__dirname, 'test-page.html'));
 });
 
 app.get('/group_wings.html', (req, res) => {

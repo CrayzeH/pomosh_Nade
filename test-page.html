@@ -1,0 +1,2049 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Тестовая страница отряда</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dela+Gothic+One&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"/>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --green: #2f9717;
+            --green-dark: #236f12;
+            --green-soft: #83de66;
+            --mint: #d9ffd1;
+            --lavender: #efe4ff;
+            --ink: #060608;
+            --muted: #6b6b73;
+            --blue-card: #dff4ff;
+            --yellow-card: #fff86d;
+            --orange-card: #ffd091;
+            --page-max: 70vw;
+            --side-pad: clamp(18px, 4vw, 72px);
+            --hero-font: "Stolzl", Inter, Arial, sans-serif;
+        }
+
+        body {
+            font-family: Inter, sans-serif;
+            color: var(--ink);
+            background: #fff;
+            overflow-x: hidden;
+            padding-top: 118px;
+        }
+
+        h1,
+        h2,
+        h3,
+        .brand-font {
+            font-family: "Dela Gothic One", Inter, sans-serif;
+            font-weight: 400;
+            letter-spacing: 0;
+        }
+
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+            background: rgba(255, 255, 255, 0.96);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid #eee;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+        }
+
+        .header-container {
+            max-width: 1300px;
+            width: 90%;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 12px 0;
+        }
+
+        .logo-area {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .logo {
+            font-weight: 900;
+            font-size: 1.9rem;
+            color: #1F1A2E;
+            white-space: nowrap;
+            cursor: pointer;
+        }
+
+        .menu-btn-black,
+        .pick-header-btn {
+            border: 0;
+            border-radius: 40px;
+            background: #1F1A2E;
+            color: white;
+            padding: 10px 24px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .menu-btn-black {
+            padding: 10px 28px;
+        }
+
+        .search-wrapper {
+            flex: 1;
+            max-width: 360px;
+            min-width: 200px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 20px;
+            border: 1.5px solid #E0D9F0;
+            border-radius: 60px;
+            background: white;
+            font-family: inherit;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .header-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .login-header-btn {
+            border: 1.5px solid #1F1A2E;
+            border-radius: 40px;
+            background: transparent;
+            color: #1F1A2E;
+            padding: 10px 28px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .header-bottom {
+            padding: 10px 0;
+            border-top: 1px solid rgba(139, 92, 246, 0.15);
+        }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-between;
+            gap: 32px;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .bottom-nav span {
+            color: #2D2440;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .page-shell {
+            width: min(var(--page-max), calc(100% - clamp(36px, 8vw, 144px)));
+            margin: 0 auto;
+        }
+
+        .hero {
+            position: relative;
+            padding: clamp(44px, 4.7vw, 76px) 0 0;
+            overflow: hidden;
+        }
+
+        .hero-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) clamp(340px, 24.2vw, 465px);
+            gap: clamp(20px, 1.65vw, 32px);
+            justify-content: stretch;
+            align-items: stretch;
+        }
+
+        .hero-copy {
+            display: flex;
+            min-height: 100%;
+            flex-direction: column;
+        }
+
+        .hero-kicker {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: clamp(500px, 31.5vw, 605px);
+            height: clamp(36px, 2.25vw, 44px);
+            margin-bottom: clamp(26px, 2.25vw, 44px);
+            padding: 0 42px;
+            color: #fff;
+            background: var(--green);
+            clip-path: polygon(7% 0, 93% 0, 100% 50%, 93% 100%, 7% 100%, 0 50%);
+            font-family: var(--hero-font);
+            font-weight: 800;
+            font-size: clamp(15px, 0.9vw, 18px);
+            line-height: 1;
+            white-space: nowrap;
+        }
+
+        .hero h1 {
+            max-width: none;
+            font-family: var(--hero-font);
+            font-weight: 900;
+            font-size: clamp(42px, 3.05vw, 58px);
+            line-height: 1.12;
+            margin-bottom: clamp(28px, 2.4vw, 46px);
+        }
+
+        .hero-title-line {
+            white-space: nowrap;
+        }
+
+        .hero-list {
+            display: grid;
+            gap: clamp(17px, 1.15vw, 24px);
+            max-width: 780px;
+            list-style: none;
+            margin-bottom: clamp(30px, 2.5vw, 50px);
+        }
+
+        .hero-list li {
+            position: relative;
+            padding-left: 42px;
+            font-family: var(--hero-font);
+            font-weight: 800;
+            font-size: clamp(20px, 1.34vw, 25.5px);
+            line-height: 1.08;
+        }
+
+        .hero-list li::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 0.2em;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--green);
+        }
+
+        .hero-actions {
+            width: min(100%, 720px);
+            margin-top: auto;
+            display: grid;
+            gap: 16px;
+        }
+
+        .primary-btn,
+        .outline-btn {
+            border-radius: 999px;
+            min-height: clamp(50px, 3vw, 58px);
+            padding: 0 clamp(28px, 3.2vw, 54px);
+            font-family: var(--hero-font);
+            font-weight: 800;
+            font-size: clamp(20px, 1.4vw, 26px);
+            cursor: pointer;
+        }
+
+        .primary-btn {
+            border: 3px solid var(--green);
+            color: #fff;
+            background: var(--green);
+        }
+
+        .outline-btn {
+            border: 3px solid var(--green);
+            color: var(--green);
+            background: #fff;
+        }
+
+        .hero-photo {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 465 / 685;
+            min-height: 0;
+            border: 3px solid var(--green);
+            border-radius: 22px;
+            overflow: hidden;
+        }
+
+        .hero-photo::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                repeating-linear-gradient(135deg, rgba(255,255,255,0.42) 0 8px, transparent 8px 24px),
+                radial-gradient(circle at 70% 15%, rgba(255,255,255,0.5), transparent 36%);
+        }
+
+        .hero-photo img {
+            position: absolute;
+            inset: auto 0 0;
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+            object-position: center bottom;
+        }
+
+        .achievement-band {
+            position: relative;
+            margin-top: clamp(104px, 8vw, 152px);
+            background: var(--lavender);
+        }
+
+        .achievement-grid {
+            width: 70vw;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: clamp(12px, 1vw, 20px);
+            transform: translateY(-46px);
+        }
+
+        .achievement {
+            position: relative;
+            min-height: clamp(104px, 6.6vw, 128px);
+            border: 3px solid var(--green);
+            border-radius: 24px;
+            padding: 20px clamp(28px, 2.4vw, 46px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            background: #fff;
+            font-family: var(--hero-font);
+            font-weight: 900;
+            font-size: clamp(22px, 1.45vw, 28px);
+            line-height: 1.08;
+        }
+
+        .achievement-icon {
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: clamp(38px, 3.2vw, 58px);
+            height: clamp(38px, 3.2vw, 58px);
+            object-fit: contain;
+            transform: translate(-50%, -74%);
+            z-index: 2;
+        }
+
+        .achievement.green {
+            color: #fff;
+            background: var(--green);
+        }
+
+        .section {
+            padding: clamp(48px, 5.5vw, 92px) 0;
+        }
+
+        .section-title {
+            margin-bottom: clamp(34px, 4vw, 66px);
+            text-align: center;
+            font-family: var(--hero-font);
+            font-weight: 900;
+            font-size: clamp(38px, 3.5vw, 68px);
+            line-height: 1.08;
+        }
+
+        #trust {
+            width: 70vw;
+        }
+
+        .trust-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: clamp(20px, 2.1vw, 40px);
+        }
+
+        .trust-card {
+            min-height: clamp(250px, 19.8vw, 380px);
+            padding: clamp(24px, 1.85vw, 36px);
+            border-radius: 24px;
+            box-shadow: 6px 7px 0 rgba(0, 0, 0, 0.16);
+            overflow: hidden;
+        }
+
+        .trust-card h3 {
+            margin-bottom: clamp(16px, 1.15vw, 24px);
+            font-family: var(--hero-font);
+            font-weight: 900;
+            font-size: clamp(24px, 1.65vw, 32px);
+            line-height: 1.18;
+        }
+
+        .trust-card p {
+            font-family: var(--hero-font);
+            font-weight: 800;
+            font-size: clamp(17px, 1.16vw, 22px);
+            line-height: 1.16;
+        }
+
+        .trust-main {
+            position: relative;
+            grid-column: 1 / 8;
+            color: #000;
+            background: var(--green);
+        }
+
+        .trust-main h3,
+        .trust-main p {
+            position: relative;
+            z-index: 1;
+            max-width: 60%;
+        }
+
+        .trust-main::after {
+            content: "♣";
+            position: absolute;
+            right: -22px;
+            top: 50%;
+            transform: translateY(-50%) rotate(7deg);
+            color: rgba(0, 0, 0, 0.22);
+            font-size: clamp(260px, 22vw, 430px);
+            line-height: 1;
+        }
+
+        .trust-main.has-bg {
+            background-position: center;
+            background-size: cover;
+        }
+
+        .trust-main.has-bg::after {
+            display: none;
+        }
+
+        .trust-main.has-bg h3,
+        .trust-main.has-bg p {
+            color: #fff;
+        }
+
+        .trust-wide {
+            grid-column: 8 / 13;
+            background: #efe4ff;
+        }
+
+        .trust-wide h3,
+        .trust-small h3 {
+            text-align: center;
+        }
+
+        .trust-wide {
+            padding-inline: clamp(22px, 1.65vw, 32px);
+        }
+
+        .trust-small {
+            padding-inline: clamp(24px, 1.8vw, 36px);
+        }
+
+        .trust-wide p,
+        .trust-small p {
+            font-size: clamp(17px, 1.16vw, 22px);
+            line-height: 1.16;
+        }
+
+        .trust-small {
+            grid-column: span 4;
+            min-height: clamp(330px, 20vw, 390px);
+        }
+
+        .trust-blue {
+            grid-column: 1 / 5;
+        }
+
+        .trust-yellow {
+            grid-column: 5 / 9;
+        }
+
+        .trust-orange {
+            grid-column: 9 / 13;
+        }
+
+        .trust-small h3 {
+            max-width: 96%;
+            font-size: clamp(24px, 1.65vw, 32px);
+        }
+
+        .trust-small p {
+            max-width: 94%;
+        }
+
+        .trust-blue {
+            background: var(--blue-card);
+        }
+
+        .trust-yellow {
+            background: var(--yellow-card);
+        }
+
+        .trust-orange {
+            background: var(--orange-card);
+        }
+
+        .cta-strip {
+            background: var(--green);
+            color: #fff;
+        }
+
+        .cta-inner {
+            width: 70vw;
+            min-height: clamp(148px, 8.2vw, 158px);
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: clamp(18px, 2vw, 38px);
+        }
+
+        .cta-star {
+            width: clamp(122px, 8vw, 154px);
+            aspect-ratio: 1;
+            background: url("/images/cta-star.png") center / contain no-repeat;
+        }
+
+        .cta-copy h2 {
+            font-family: var(--hero-font);
+            font-weight: 900;
+            font-size: clamp(30px, 2.3vw, 44px);
+            line-height: 1.05;
+        }
+
+        .cta-copy p {
+            margin-top: clamp(18px, 1.2vw, 24px);
+            font-family: var(--hero-font);
+            font-weight: 800;
+            font-size: clamp(24px, 1.65vw, 32px);
+            line-height: 1.05;
+        }
+
+        .cta-btn {
+            min-width: clamp(230px, 16.5vw, 318px);
+            min-height: clamp(52px, 3.1vw, 60px);
+            padding: 0 34px;
+            border: 0;
+            border-radius: 999px;
+            background: #fff;
+            color: #000;
+            font-family: var(--hero-font);
+            font-size: clamp(18px, 1.25vw, 24px);
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .path-section {
+            position: relative;
+            background: var(--lavender);
+            padding: clamp(150px, 10vw, 192px) 0 clamp(72px, 5vw, 96px);
+        }
+
+        .path-section::before {
+            content: "";
+            position: absolute;
+            inset: 0 0 auto;
+            height: clamp(92px, 6.4vw, 124px);
+            background: #fff;
+            clip-path: polygon(
+                0 0,
+                0 82%,
+                1.25% 100%,
+                2.5% 82%,
+                3.75% 100%,
+                5% 82%,
+                6.25% 100%,
+                7.5% 82%,
+                8.75% 100%,
+                10% 82%,
+                11.25% 100%,
+                12.5% 82%,
+                13.75% 100%,
+                15% 82%,
+                16.25% 100%,
+                17.5% 82%,
+                18.75% 100%,
+                20% 82%,
+                21.25% 100%,
+                22.5% 82%,
+                23.75% 100%,
+                25% 82%,
+                26.25% 100%,
+                27.5% 82%,
+                28.75% 100%,
+                30% 82%,
+                31.25% 100%,
+                32.5% 82%,
+                33.75% 100%,
+                35% 82%,
+                36.25% 100%,
+                37.5% 82%,
+                38.75% 100%,
+                40% 82%,
+                41.25% 100%,
+                42.5% 82%,
+                43.75% 100%,
+                45% 82%,
+                46.25% 100%,
+                47.5% 82%,
+                48.75% 100%,
+                50% 82%,
+                51.25% 100%,
+                52.5% 82%,
+                53.75% 100%,
+                55% 82%,
+                56.25% 100%,
+                57.5% 82%,
+                58.75% 100%,
+                60% 82%,
+                61.25% 100%,
+                62.5% 82%,
+                63.75% 100%,
+                65% 82%,
+                66.25% 100%,
+                67.5% 82%,
+                68.75% 100%,
+                70% 82%,
+                71.25% 100%,
+                72.5% 82%,
+                73.75% 100%,
+                75% 82%,
+                76.25% 100%,
+                77.5% 82%,
+                78.75% 100%,
+                80% 82%,
+                81.25% 100%,
+                82.5% 82%,
+                83.75% 100%,
+                85% 82%,
+                86.25% 100%,
+                87.5% 82%,
+                88.75% 100%,
+                90% 82%,
+                91.25% 100%,
+                92.5% 82%,
+                93.75% 100%,
+                95% 82%,
+                96.25% 100%,
+                97.5% 82%,
+                98.75% 100%,
+                100% 82%,
+                100% 0
+            );
+        }
+
+        .path-title {
+            width: 70vw;
+            max-width: none;
+            margin: 0 auto clamp(72px, 5vw, 96px);
+            font-family: var(--hero-font);
+            font-weight: 900;
+            font-size: clamp(36px, 3.25vw, 62px);
+            line-height: 1.12;
+            text-align: center;
+        }
+
+        .path-card {
+            width: 70vw;
+            margin: 0 auto;
+            padding: clamp(38px, 3vw, 58px);
+            display: grid;
+            grid-template-columns: minmax(0, 1.28fr) minmax(340px, 0.72fr);
+            gap: clamp(42px, 4vw, 78px);
+            background: #fff;
+        }
+
+        .guide h3 {
+            max-width: 820px;
+            font-family: var(--hero-font);
+            font-weight: 900;
+            font-size: clamp(28px, 2.3vw, 44px);
+            line-height: 1.15;
+            margin-bottom: clamp(30px, 2.5vw, 48px);
+        }
+
+        .guide ul {
+            display: grid;
+            gap: clamp(26px, 2vw, 38px);
+            list-style: none;
+            font-family: var(--hero-font);
+            font-weight: 800;
+            font-size: clamp(17px, 1.35vw, 26px);
+            line-height: 1.16;
+        }
+
+        .guide li {
+            position: relative;
+            padding-left: clamp(48px, 3vw, 60px);
+        }
+
+        .guide li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            top: -0.12em;
+            width: clamp(32px, 2.2vw, 42px);
+            height: clamp(32px, 2.2vw, 42px);
+            border-radius: 50%;
+            display: grid;
+            place-items: center;
+            color: #fff;
+            background: var(--green);
+            font-family: Inter, sans-serif;
+            font-weight: 900;
+            font-size: clamp(20px, 1.4vw, 27px);
+            content: "\2713";
+        }
+
+        .form-card {
+            align-self: start;
+            display: grid;
+            gap: clamp(16px, 1.1vw, 22px);
+            padding-top: clamp(8px, 1vw, 18px);
+        }
+
+        .form-card label {
+            font-family: var(--hero-font);
+            font-weight: 800;
+            font-size: clamp(11px, 0.72vw, 14px);
+            line-height: 1.15;
+        }
+
+        .form-card input {
+            height: clamp(58px, 3.5vw, 68px);
+            border: 1.5px solid #cfd2d9;
+            border-radius: 8px;
+            padding: 0 clamp(18px, 1.3vw, 26px);
+            background: #f4f5f7;
+            color: #333;
+            font-family: Inter, sans-serif;
+            font-size: clamp(17px, 1.1vw, 21px);
+        }
+
+        .form-field {
+            display: grid;
+            gap: 6px;
+        }
+
+        .form-card input:focus {
+            border-color: var(--green);
+            outline: 3px solid rgba(47, 151, 23, 0.15);
+        }
+
+        .form-card input.is-invalid {
+            border-color: #d93025;
+            outline: 3px solid rgba(217, 48, 37, 0.12);
+        }
+
+        .field-error {
+            min-height: 14px;
+            color: #d93025;
+            font-family: Inter, sans-serif;
+            font-size: 12px;
+            font-weight: 700;
+            line-height: 1.15;
+        }
+
+        .form-note {
+            display: flex;
+            gap: 12px;
+            align-items: flex-start;
+            font-family: var(--hero-font);
+            font-weight: 800;
+            font-size: clamp(10px, 0.72vw, 14px);
+            line-height: 1.12;
+        }
+
+        .form-note input {
+            width: 26px;
+            height: 26px;
+            flex: 0 0 auto;
+        }
+
+        .form-card button {
+            height: clamp(58px, 3.5vw, 68px);
+            margin-top: clamp(12px, 1vw, 22px);
+            border: 0;
+            border-radius: 999px;
+            color: #fff;
+            background: var(--green);
+            font-family: var(--hero-font);
+            font-size: clamp(20px, 1.55vw, 30px);
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .form-card button:disabled {
+            opacity: 0.7;
+            cursor: wait;
+        }
+
+        .form-status {
+            min-height: 20px;
+            font-family: var(--hero-font);
+            font-size: clamp(12px, 0.82vw, 16px);
+            font-weight: 800;
+            line-height: 1.2;
+        }
+
+        .form-status.success {
+            color: var(--green);
+        }
+
+        .form-status.error {
+            color: #d93025;
+        }
+
+        .structure-list {
+            display: grid;
+            gap: clamp(42px, 3.8vw, 72px);
+            width: 70vw;
+            margin: 0 auto;
+        }
+
+        .structure-card {
+            position: relative;
+            width: 100%;
+            min-height: clamp(230px, 15.2vw, 292px);
+            padding: clamp(38px, 3vw, 58px) clamp(48px, 3.5vw, 68px);
+            background: var(--green);
+            transform: rotate(-3deg);
+            overflow: hidden;
+        }
+
+        .structure-card:nth-child(2) {
+            color: #000;
+            background: var(--green-soft);
+            transform: rotate(0deg);
+        }
+
+        .structure-card:nth-child(3) {
+            background: var(--green);
+            transform: rotate(3deg);
+        }
+
+        body.squad-white-panels .structure-card,
+        body.squad-white-panels .team-card {
+            color: #fff;
+        }
+
+        .structure-card h3 {
+            font-family: var(--hero-font);
+            font-weight: 900;
+            z-index: 999;
+            font-size: clamp(42px, 3.3vw, 64px);
+            line-height: 1.05;
+        }
+
+        .structure-card p {
+            max-width: 78%;
+            margin-top: clamp(10px, 0.9vw, 18px);
+            font-family: var(--hero-font);
+            font-weight: 800;
+            font-size: clamp(20px, 1.45vw, 28px);
+            line-height: 1.12;
+        }
+
+        .structure-art {
+            position: absolute;
+            right: 36px;
+            top: 26px;
+            width: clamp(190px, 15vw, 288px);
+            height: clamp(120px, 9vw, 172px);
+            border-radius: 12px;
+            transform: rotate(8deg);
+            display: grid;
+            place-items: center;
+            z-index: -1;
+            font-family: "Dela Gothic One", Inter, sans-serif;
+            font-size: clamp(12px, 1.1vw, 20px);
+        }
+
+        .structure-art img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .structure-card:nth-child(2)::after,
+        .structure-card:nth-child(3)::after {
+            content: "✓";
+            position: absolute;
+            right: -20px;
+            bottom: -70px;
+            color: rgba(0, 0, 0, 0.16);
+            font-family: "Dela Gothic One", Inter, sans-serif;
+            font-size: clamp(180px, 16vw, 320px);
+        }
+
+        #team {
+            width: 70vw;
+        }
+
+        .team-head {
+            margin: 0 0 clamp(20px, 1.8vw, 34px);
+        }
+
+        .team-head h2 {
+            max-width: none;
+            font-family: var(--hero-font);
+            font-weight: 900;
+            font-size: clamp(42px, 3.35vw, 64px);
+            line-height: 1.03;
+            text-align: center;
+        }
+
+        .team-controls {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: clamp(12px, 1vw, 20px);
+        }
+
+        .team-controls button {
+            width: clamp(38px, 2.4vw, 46px);
+            height: clamp(38px, 2.4vw, 46px);
+            border: 0;
+            border-radius: 50%;
+            background: #eef0f5;
+            color: #1d1d22;
+            font-family: var(--hero-font);
+            font-size: clamp(18px, 1.1vw, 22px);
+            font-weight: 900;
+            cursor: pointer;
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: clamp(16px, 1.2vw, 24px);
+        }
+
+        .team-card {
+            min-height: clamp(220px, 14.5vw, 280px);
+            display: grid;
+            grid-template-columns: 40% 1fr;
+            background: var(--green);
+            overflow: hidden;
+        }
+
+        .team-photo {
+            position: relative;
+            min-height: 100%;
+            overflow: hidden;
+        }
+
+        .team-photo img {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top;
+        }
+
+        .team-copy {
+            padding: clamp(18px, 1.45vw, 28px) clamp(16px, 1.35vw, 26px);
+        }
+
+        .team-card h3 {
+            margin-bottom: clamp(10px, 0.8vw, 16px);
+            font-family: var(--hero-font);
+            font-weight: 900;
+            font-size: clamp(19px, 1.35vw, 26px);
+            line-height: 1.08;
+        }
+
+        .team-card p {
+            font-family: var(--hero-font);
+            font-weight: 800;
+            font-size: clamp(12px, 0.92vw, 17px);
+            line-height: 1.15;
+        }
+
+        .team-role {
+            position: absolute;
+            left: 0;
+            bottom: clamp(10px, 0.9vw, 18px);
+            min-width: 72%;
+            padding: clamp(7px, 0.6vw, 11px) clamp(18px, 1.4vw, 28px);
+            color: #fff;
+            background: var(--green);
+            font-family: var(--hero-font);
+            font-size: clamp(12px, 0.78vw, 15px);
+            font-weight: 900;
+            line-height: 1;
+            clip-path: polygon(0 0, 88% 0, 100% 50%, 88% 100%, 0 100%);
+            z-index: 1;
+        }
+
+        .site-footer {
+            position: relative;
+            margin-top: 72px;
+            padding: clamp(76px, 5.8vw, 112px) 0 clamp(28px, 2.4vw, 46px);
+            background: #25262c;
+            color: #f4f4f6;
+        }
+
+        .footer-pick-btn {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            min-width: clamp(260px, 21vw, 390px);
+            padding: clamp(18px, 1.45vw, 27px) clamp(34px, 2.7vw, 52px);
+            border: 4px solid #fff;
+            border-radius: 999px;
+            background: #25262c;
+            color: #fff;
+            box-shadow: 0 8px 0 #fff;
+            font-family: 'Dela Gothic One', Inter, sans-serif;
+            font-size: clamp(18px, 1.35vw, 26px);
+            line-height: 1;
+            cursor: pointer;
+        }
+
+        .footer-inner {
+            width: min(76vw, 1490px);
+            margin: 0 auto;
+        }
+
+        .footer-main {
+            display: grid;
+            grid-template-columns: 0.8fr 1fr 1.1fr minmax(310px, 1.35fr);
+            gap: clamp(34px, 4.8vw, 92px);
+            align-items: start;
+        }
+
+        .site-footer h4 {
+            margin: 0 0 18px;
+            color: #fff;
+            font-family: 'Dela Gothic One', Inter, sans-serif;
+            font-size: clamp(16px, 1.08vw, 21px);
+            font-weight: 400;
+            line-height: 1.1;
+        }
+
+        .site-footer a {
+            display: block;
+            margin-bottom: 8px;
+            color: #fff;
+            text-decoration: none;
+            font-size: clamp(13px, 0.92vw, 18px);
+            line-height: 1.18;
+        }
+
+        .footer-brand,
+        .footer-squads,
+        .footer-social {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .footer-social-icons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .footer-social-icons a {
+            width: 30px;
+            height: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.75);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 15px;
+        }
+
+        .footer-cards {
+            display: flex;
+            flex-direction: column;
+            gap: clamp(22px, 2.2vw, 42px);
+        }
+
+        .footer-card {
+            border-radius: 18px;
+            background: #666870;
+            color: #fff;
+        }
+
+        .footer-survey-card {
+            min-height: clamp(130px, 10vw, 190px);
+            padding: clamp(18px, 1.45vw, 28px) clamp(18px, 1.55vw, 30px);
+        }
+
+        .footer-survey-card p {
+            margin: 0 0 22px;
+            font-size: clamp(12px, 0.85vw, 16px);
+            line-height: 1.25;
+        }
+
+        .footer-survey-card button {
+            min-width: 152px;
+            padding: 10px 22px;
+            border: 0;
+            border-radius: 10px;
+            background: #fff;
+            color: #25262c;
+            font-weight: 800;
+            cursor: pointer;
+        }
+
+        .footer-contact-card {
+            padding: clamp(14px, 1vw, 20px) clamp(16px, 1.35vw, 26px);
+        }
+
+        .footer-contact-images {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            margin-bottom: 14px;
+        }
+
+        .footer-contact-images img {
+            width: clamp(52px, 4.3vw, 82px);
+            height: clamp(52px, 4.3vw, 82px);
+            border-radius: 7px;
+            object-fit: contain;
+            background: #fff;
+        }
+
+        .footer-contact-card p {
+            margin: 0;
+            font-family: 'Dela Gothic One', Inter, sans-serif;
+            font-size: clamp(10px, 0.76vw, 14px);
+            line-height: 1.45;
+        }
+
+        .footer-legal {
+            margin-top: clamp(34px, 4vw, 76px);
+            padding-top: clamp(18px, 1.6vw, 30px);
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            display: grid;
+            grid-template-columns: 1.1fr 1.1fr 1.45fr auto;
+            gap: clamp(24px, 3.2vw, 62px);
+            align-items: center;
+            color: rgba(255, 255, 255, 0.45);
+            font-size: clamp(11px, 0.76vw, 14px);
+            line-height: 1.45;
+        }
+
+        .footer-legal a,
+        .footer-legal div {
+            color: rgba(255, 255, 255, 0.45);
+        }
+
+        .footer-legal a {
+            font-weight: 700;
+            text-decoration: underline;
+        }
+
+        .footer-legal-logos {
+            display: flex;
+            gap: 22px;
+        }
+
+        .footer-legal-logos img {
+            width: clamp(44px, 3.4vw, 64px);
+            height: clamp(44px, 3.4vw, 64px);
+            object-fit: contain;
+            opacity: 0.72;
+        }
+
+        @media (max-width: 900px) {
+            :root {
+                --page-max: 100%;
+            }
+
+            body {
+                padding-top: 70px;
+            }
+
+            .header-bottom,
+            .search-wrapper {
+                display: none;
+            }
+
+            .header-container {
+                width: 94%;
+                padding: 0;
+            }
+
+            .header-top {
+                gap: 10px;
+            }
+
+            .logo {
+                font-size: 1.2rem;
+            }
+
+            .menu-btn-black,
+            .pick-header-btn,
+            .login-header-btn {
+                padding: 7px 12px;
+                font-size: 0.72rem;
+            }
+
+            .hero-grid,
+            .path-card,
+            .team-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .path-title,
+            .path-card {
+                width: min(92vw, 760px);
+            }
+
+            .hero-kicker {
+                min-width: 0;
+                width: 100%;
+                padding: 0 28px;
+                font-size: 13px;
+            }
+
+            .hero h1 {
+                font-size: clamp(34px, 8.5vw, 52px);
+            }
+
+            .hero-title-line {
+                white-space: normal;
+            }
+
+            .hero-photo {
+                width: min(465px, 100%);
+                margin: 0 auto;
+            }
+
+            .achievement-grid,
+            .trust-grid {
+                grid-template-columns: 1fr;
+            }
+
+            #trust {
+                width: min(92vw, 760px);
+            }
+
+            .trust-main,
+            .trust-wide,
+            .trust-small,
+            .trust-blue,
+            .trust-yellow,
+            .trust-orange {
+                grid-column: auto;
+            }
+
+            .trust-main h3,
+            .trust-main p {
+                max-width: 72%;
+            }
+
+            .cta-inner {
+                grid-template-columns: 1fr;
+                padding: 24px 0;
+                text-align: center;
+            }
+
+            .cta-star {
+                margin: 0 auto;
+            }
+
+            .cta-btn {
+                justify-self: center;
+            }
+
+            .structure-card {
+                transform: none !important;
+            }
+
+            .structure-list {
+                width: min(92vw, 760px);
+            }
+
+            #team {
+                width: min(92vw, 760px);
+            }
+
+            .structure-card p {
+                max-width: 100%;
+            }
+
+            .structure-card {
+                min-height: auto;
+            }
+
+            .structure-art {
+                position: relative;
+                inset: auto;
+                margin-top: 18px;
+            }
+
+            .team-head h2 {
+                max-width: none;
+                font-size: clamp(30px, 6vw, 44px);
+            }
+
+            .footer-inner {
+                width: min(88vw, 900px);
+            }
+
+            .footer-main {
+                grid-template-columns: 1fr 1fr;
+                gap: 34px;
+            }
+
+            .footer-cards,
+            .footer-legal {
+                grid-column: 1 / -1;
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+
+        @media (max-width: 520px) {
+            :root {
+                --side-pad: 16px;
+            }
+
+            .page-shell,
+            .cta-inner {
+                width: calc(100% - 24px);
+            }
+
+            .achievement-grid {
+                width: calc(100% - 24px);
+            }
+
+            .cta-star {
+                width: 112px;
+            }
+
+            #trust {
+                width: calc(100% - 24px);
+            }
+
+            .trust-main h3,
+            .trust-main p {
+                max-width: 100%;
+            }
+
+            .header-top {
+                min-height: 58px;
+            }
+
+            .header-actions {
+                gap: 6px;
+            }
+
+            .menu-btn-black {
+                display: none;
+            }
+
+            .hero {
+                padding-top: 28px;
+            }
+
+            .hero-grid {
+                gap: 18px;
+            }
+
+            .hero-kicker {
+                height: 32px;
+                padding: 0 18px;
+                font-size: 10px;
+                white-space: normal;
+                text-align: center;
+            }
+
+            .hero h1 {
+                font-size: clamp(28px, 8vw, 36px);
+                line-height: 1.15;
+                word-break: break-word;
+                margin-bottom: 22px;
+            }
+
+            .hero-list {
+                gap: 10px;
+                margin-bottom: 24px;
+            }
+
+            .hero-list li {
+                font-size: 14px;
+                padding-left: 24px;
+                line-height: 1.25;
+            }
+
+            .hero-list li::before {
+                width: 10px;
+                height: 10px;
+            }
+
+            .primary-btn,
+            .outline-btn {
+                min-height: 46px;
+                font-size: 15px;
+                padding: 0 18px;
+                line-height: 1.15;
+            }
+
+            .hero-photo {
+                width: min(360px, 100%);
+            }
+
+            .achievement-grid {
+                gap: 28px;
+                transform: translateY(-28px);
+            }
+
+            .achievement {
+                min-height: 82px;
+                padding: 16px 18px;
+                font-size: 14px;
+            }
+
+            .achievement-icon {
+                width: 42px;
+                height: 42px;
+            }
+
+            .path-card {
+                padding: 22px;
+            }
+
+            .structure-list {
+                width: calc(100% - 24px);
+            }
+
+            .path-title,
+            .path-card {
+                width: calc(100% - 24px);
+            }
+
+            .team-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .team-card {
+                grid-template-columns: 40% 1fr;
+            }
+
+            .team-photo {
+                min-height: 240px;
+            }
+
+            .site-footer {
+                padding-top: 74px;
+            }
+
+            .footer-pick-btn {
+                min-width: min(78vw, 300px);
+                padding: 16px 24px;
+                border-width: 3px;
+                box-shadow: 0 6px 0 #fff;
+                font-size: 16px;
+            }
+
+            .footer-inner {
+                width: min(90vw, 430px);
+            }
+
+            .footer-main,
+            .footer-cards,
+            .footer-legal {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            #team {
+                width: calc(100% - 24px);
+            }
+
+            .team-head h2 {
+                font-size: clamp(26px, 8vw, 36px);
+            }
+
+            .team-card {
+                grid-template-columns: 1fr;
+            }
+
+            .team-photo {
+                min-height: 300px;
+            }
+
+            .team-copy {
+                padding: 18px;
+            }
+
+            .footer-brand,
+            .footer-squads,
+            .footer-social {
+                align-items: center;
+            }
+
+            .footer-social-icons,
+            .footer-contact-images,
+            .footer-legal-logos {
+                justify-content: center;
+            }
+        }
+
+    </style>
+    <link rel="stylesheet" href="/css/common-layout.css">
+</head>
+<body>
+    <script src="/js/common-layout.js"></script>
+<header class="header">
+    <div class="header-container">
+        <div class="header-top">
+            <div class="logo-area">
+                <div class="logo" onclick="window.location.href='/'">СОЗВЕЗДИЕ</div>
+                <button class="menu-btn-black">Меню</button>
+            </div>
+            <div class="search-wrapper">
+                <input type="text" class="search-input" placeholder="Найти отряд по названию">
+            </div>
+            <div class="header-actions">
+                <button class="pick-header-btn" onclick="window.location.href='/test.html'">Подобрать отряд</button>
+                <button class="login-header-btn" onclick="window.location.href='/register.html'">Войти</button>
+            </div>
+        </div>
+        <div class="header-bottom">
+            <div class="bottom-nav">
+                <span>О нас</span>
+                <span>Направления</span>
+                <span>Отряды</span>
+                <span>Создавай</span>
+                <span>Интерактивы</span>
+                <span>Контакты</span>
+            </div>
+        </div>
+    </div>
+</header>
+
+<main>
+    <section class="hero">
+        <div class="page-shell">
+            <div class="hero-grid">
+                <div class="hero-copy">
+                    <div class="hero-kicker">ТВОЙ ПРОФЕССИОНАЛИЗМ НАЧИНАЕТСЯ ЗДЕСЬ</div>
+                    <h1><span class="hero-title-line">ОТРЯД ТВОЕГО ЛЕТА —</span><br>ТОП «КЛЕВЕР»</h1>
+                    <ul class="hero-list">
+                        <li>Трудоустройство в лучших лагерях и организациях области</li>
+                        <li>Твоя первая зарплата и официальный трудовой стаж</li>
+                        <li>Опытные наставники, которые всегда поддержат и научат</li>
+                        <li>Яркие фестивали, новые друзья и незабываемая атмосфера РСО</li>
+                    </ul>
+                    <div class="hero-actions">
+                        <button class="primary-btn">Стать частью команды</button>
+                        <button class="outline-btn">Узнать больше об отряде</button>
+                    </div>
+                </div>
+                <div class="hero-photo">
+                    <img src="/images/commander-sotnikova.png" alt="Боец отряда Клевер">
+                </div>
+            </div>
+        </div>
+        <div class="achievement-band">
+            <div class="achievement-grid">
+                <div class="achievement green">
+                    <img class="achievement-icon" src="/images/hero-hands.png" alt="">
+                    Более 12 побед в конкурсах и фестивалях — мы знаем, как быть лучшими!
+                </div>
+                <div class="achievement">
+                    <img class="achievement-icon" src="/images/hero-fire.png" alt="">
+                    3 место в рейтинге отрядов области — нам доверяют свое лето!
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section page-shell" id="trust">
+        <h2 class="section-title">НАМ ДОВЕРЯЮТ, И ВОТ ПОЧЕМУ</h2>
+        <div class="trust-grid">
+            <article class="trust-card trust-main">
+                <h3>Сильное наставничество</h3>
+                <p>Только опытные бойцы с многолетним стажем становятся кураторами новичков. Мы гарантируем поддержку на каждом этапе — от первой спевки до конца трудового сезона.</p>
+            </article>
+            <article class="trust-card trust-wide">
+                <h3>Обучение и мягкие навыки</h3>
+                <p>Ты пройдешь качественную подготовку перед выездом: научишься работать в команде, решать конфликты и организовывать мероприятия. Это база, которая пригодится в любой профессии.</p>
+            </article>
+            <article class="trust-card trust-small trust-blue">
+                <h3>Официальный стаж</h3>
+                <p>Мы обеспечиваем реальное трудоустройство. Твоя работа в отряде — это не просто запись в волонтерской книжке, а твой первый официальный профессиональный опыт.</p>
+            </article>
+            <article class="trust-card trust-small trust-yellow">
+                <h3>Друзья и общение</h3>
+                <p>«Клевер» — это больше, чем работа. Это выезды, гитара у костра, общие праздники и люди, которые станут твоей второй семьей по всей области.</p>
+            </article>
+            <article class="trust-card trust-small trust-orange">
+                <h3>Забота о каждом</h3>
+                <p>Мы всегда на связи с кандидатами и их родителями. Помогаем с документами, следим за безопасностью на объектах и создаем комфортную среду для роста.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="cta-strip">
+        <div class="cta-inner">
+            <div class="cta-star" aria-hidden="true"></div>
+            <div class="cta-copy">
+                <h2>Стань частью штаба «Созвездие»</h2>
+                <p>подай заявку прямо сейчас!</p>
+            </div>
+            <button class="cta-btn">Заполнить анкету</button>
+        </div>
+    </section>
+
+    <section class="section path-section" id="path">
+        <div class="page-shell">
+            <h2 class="path-title">ТВОЙ ПУТЬ В ОТРЯД — ПОНЯТНЫЙ И ПРОСТОЙ АНАЛОГ ПЕРВОЙ РАБОТЫ</h2>
+            <div class="path-card">
+                <div class="guide">
+                    <h3>Пошаговое руководство «Как провести лучшее лето»</h3>
+                    <ul>
+                        <li>Какие документы нужны для официального трудоустройства подростков</li>
+                        <li>Как пройти обучение и получить заветную целинку</li>
+                        <li>Как подготовиться к первой целине, чтобы всё прошло круто</li>
+                    </ul>
+                </div>
+                <form class="form-card" id="guideForm" novalidate>
+                    <label for="guideName">Оставь свои контакты — отправим PDF-гайд в Telegram или на почту</label>
+                    <div class="form-field">
+                        <input id="guideName" name="name" type="text" placeholder="Имя" autocomplete="name">
+                        <span class="field-error" data-error-for="name"></span>
+                    </div>
+                    <div class="form-field">
+                        <input id="guideVk" name="vk" type="text" placeholder="Ссылка на Вконтакте" autocomplete="url">
+                        <span class="field-error" data-error-for="vk"></span>
+                    </div>
+                    <div class="form-field">
+                        <input id="guideAge" name="age" type="text" inputmode="numeric" placeholder="Возраст" autocomplete="off">
+                        <span class="field-error" data-error-for="age"></span>
+                    </div>
+                    <label class="form-note">
+                        <input id="guideConsent" name="consent" type="checkbox">
+                        <span>Принимаю условия соглашения и даю согласие на обработку персональных данных</span>
+                    </label>
+                    <span class="field-error" data-error-for="consent"></span>
+                    <button type="submit">Получить бесплатно</button>
+                    <p class="form-status" aria-live="polite"></p>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <section class="section page-shell" id="structure">
+        <h2 class="section-title">КАК ВСЁ УСТРОЕНО В «КЛЕВЕРЕ»</h2>
+        <div class="structure-list">
+            <article class="structure-card">
+                <h3>Стань новичком онлайн</h3>
+                <p>Заполни анкету в группе ВК или на сайте. Мы свяжемся с тобой, добавим в общий чат и расскажем о ближайшем собрании.</p>
+            </article>
+            <article class="structure-card">
+                <h3>Школа вожатых и тренинги</h3>
+                <p>Тебя ждут лекции, мастер-классы и игры от наших опытных бойцов.</p>
+            </article>
+            <article class="structure-card">
+                <h3>Твоя первая целина</h3>
+                <p>Выезжай на трудовой объект в составе команды. Весь процесс прозрачен.</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="section page-shell" id="team">
+        <div class="team-head">
+            <h2>КОМАНДНЫЙ СОСТАВ, КОТОРЫЙ ПРИВЕДЕТ ТЕБЯ К РЕЗУЛЬТАТУ</h2>
+            <div class="team-controls">
+                <button type="button">←</button>
+                <button type="button">→</button>
+            </div>
+        </div>
+        <div class="team-grid">
+            <article class="team-card">
+                <div class="team-photo">
+                    <img src="/images/com-clover1.png" alt="Решаев Влад">
+                    <span class="team-role">Командир</span>
+                </div>
+                <div class="team-copy">
+                    <h3>Решаев Влад</h3>
+                    <p>6 лет в РСО — знает движение изнутри как никто другой. Бережно доведет новичков до победы в конкурсах.</p>
+                </div>
+            </article>
+            <article class="team-card">
+                <div class="team-photo">
+                    <img src="/images/com-clover2.png" alt="Милана Солдатова">
+                    <span class="team-role">Комиссар</span>
+                </div>
+                <div class="team-copy">
+                    <h3>Милана Солдатова</h3>
+                    <p>5 лет в РСО прошла путь от новичка до комиссара. Поможет раскрыться каждому бойцу.</p>
+                </div>
+            </article>
+        </div>
+    </section>
+</main>
+
+<footer class="site-footer">
+    <button class="footer-pick-btn" onclick="window.location.href='/test.html'">Подобрать отряд</button>
+    <div class="footer-inner">
+        <div class="footer-main">
+            <div class="footer-brand">
+                <h4>СОЗВЕЗДИЕ</h4>
+                <a href="/">О нас</a>
+                <a href="#">Контакты</a>
+            </div>
+            <div class="footer-squads">
+                <h4>Отряды</h4>
+                <a href="/squad/apelsin">СПО “Апельсин”</a>
+                <a href="#">СПО “Ямайка”</a>
+                <a href="#">СПО “Проспект”</a>
+                <a href="#">СПО “Жар-Птица”</a>
+                <a href="#">СПО “Шум”</a>
+                <a href="/squad/krylya">СПО “Крылья”</a>
+                <a href="/squad/klever">ТОП “Клевер”</a>
+                <a href="/squad/everest">ТОП “Эверест”</a>
+            </div>
+            <div class="footer-social">
+                <h4>Социальные сети</h4>
+                <div class="footer-social-icons">
+                    <a href="#" aria-label="VK"><i class="fab fa-vk"></i></a>
+                    <a href="#" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
+                </div>
+            </div>
+            <div class="footer-cards">
+                <div class="footer-card footer-survey-card">
+                    <h4>Ответьте на несколько вопросов</h4>
+                    <p>Предложим отряд по вашим интересам</p>
+                    <button type="button" onclick="window.location.href='/test.html'">Начать опрос</button>
+                </div>
+                <div class="footer-card footer-contact-card">
+                    <div class="footer-contact-images">
+                        <img src="/images/footer-staff-logo.png" alt="Созвездие">
+                        <img src="/images/footer-qr.png" alt="QR-код">
+                    </div>
+                    <p>По любым вопросам обращаться к командиру штаба - Пашкевичус Виктории</p>
+                </div>
+            </div>
+        </div>
+        <div class="footer-legal">
+            <div>© Созвездие, 2009–2026</div>
+            <a href="#">Политика обработки<br>персональных данных</a>
+            <div>Внесена в реестр российских<br>программ: запись №15676 от 25.11.2022 года</div>
+            <div class="footer-legal-logos">
+                <img src="/images/footer-bottom-logo-1.png" alt="">
+                <img src="/images/footer-bottom-logo-2.png" alt="">
+            </div>
+        </div>
+    </div>
+</footer>
+<script>
+    let activeSquadName = 'Клевер';
+    let teamMembers = [];
+    let teamStartIndex = 0;
+
+    function escapeHtml(value) {
+        return String(value ?? '')
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#039;');
+    }
+
+    function getSquadShortName() {
+        const pathMatch = window.location.pathname.match(/^\/squad\/([^/]+)\/?$/);
+        if (pathMatch) return decodeURIComponent(pathMatch[1]);
+        return new URLSearchParams(window.location.search).get('squad') || 'klever';
+    }
+
+    function setTheme(colors) {
+        const root = document.documentElement;
+        root.style.setProperty('--green', colors.primary);
+        root.style.setProperty('--green-dark', colors.dark);
+        root.style.setProperty('--green-soft', colors.soft);
+        root.style.setProperty('--lavender', colors.light);
+    }
+
+    function setSquadPanelTextMode(shortName) {
+        const whitePanelSquads = new Set([
+            'vokrug-sveta',
+            'prospekt',
+            'zhar-ptitsa',
+            'everest',
+            'krylya',
+            'femida',
+            'shum'
+        ]);
+
+        document.body.classList.toggle('squad-white-panels', whitePanelSquads.has(shortName));
+    }
+
+    function renderHero(page) {
+        document.querySelector('.hero-kicker').textContent = page.heroKicker || '';
+        document.querySelector('.hero h1').innerHTML = String(page.heroTitle || '')
+            .split('\n')
+            .map((line, index) => index === 0
+                ? `<span class="hero-title-line">${escapeHtml(line)}</span>`
+                : escapeHtml(line))
+            .join('<br>');
+
+        document.querySelector('.hero-list').innerHTML = page.heroBullets
+            .map((item) => `<li>${escapeHtml(item)}</li>`)
+            .join('');
+
+        const heroImage = document.querySelector('.hero-photo img');
+        heroImage.src = page.heroImage;
+        heroImage.alt = page.heroImageAlt || '';
+
+        document.querySelector('.primary-btn').addEventListener('click', () => {
+            document.getElementById('path')?.scrollIntoView({ behavior: 'smooth' });
+        });
+        document.querySelector('.outline-btn').addEventListener('click', () => {
+            document.getElementById('trust')?.scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+
+    function renderAchievements(page) {
+        document.querySelector('.achievement-grid').innerHTML = `
+            <div class="achievement green">
+                <img class="achievement-icon" src="/images/hero-hands.png" alt="">
+                ${escapeHtml(page.achievementPrimaryText)}
+            </div>
+            <div class="achievement">
+                <img class="achievement-icon" src="/images/hero-fire.png" alt="">
+                ${escapeHtml(page.achievementSecondaryText)}
+            </div>
+        `;
+    }
+
+    function trustClass(colorRole) {
+        const map = {
+            main: 'trust-main',
+            wide: 'trust-wide',
+            blue: 'trust-small trust-blue',
+            yellow: 'trust-small trust-yellow',
+            orange: 'trust-small trust-orange'
+        };
+        return map[colorRole] || 'trust-small trust-blue';
+    }
+
+    function renderTrust(page) {
+        const trust = document.getElementById('trust');
+        trust.querySelector('.section-title').textContent = page.trustTitle;
+        trust.querySelector('.trust-grid').innerHTML = page.trustCards.map((card, index) => {
+            const hasBg = index === 0 && page.trustPrimaryBgImage;
+            const style = hasBg ? ` style="background-image: url('${escapeHtml(page.trustPrimaryBgImage)}')"` : '';
+            return `
+                <article class="trust-card ${trustClass(card.color_role)}${hasBg ? ' has-bg' : ''}"${style}>
+                    <h3>${escapeHtml(card.title)}</h3>
+                    <p>${escapeHtml(card.body)}</p>
+                </article>
+            `;
+        }).join('');
+    }
+
+    function renderCta(page) {
+        document.querySelector('.cta-copy h2').textContent = page.ctaTitle;
+        document.querySelector('.cta-copy p').textContent = page.ctaSubtitle;
+        document.querySelector('.cta-btn').addEventListener('click', () => {
+            document.getElementById('path')?.scrollIntoView({ behavior: 'smooth' });
+        });
+    }
+
+    function renderStructure(page) {
+        document.querySelector('.path-title').textContent = page.pathTitle;
+        document.querySelector('.guide h3').textContent = page.guideTitle;
+        document.querySelector('#structure .section-title').textContent = page.structureTitle;
+        document.querySelector('.structure-list').innerHTML = page.structureSteps.map((step, index) => `
+            <article class="structure-card">
+                <h3>${escapeHtml(step.title)}</h3>
+                <p>${escapeHtml(step.body)}</p>
+                ${index === 0 && step.image ? `<div class="structure-art"><img src="${escapeHtml(step.image)}" alt=""></div>` : ''}
+            </article>
+        `).join('');
+    }
+
+    function renderTeam() {
+        const grid = document.querySelector('.team-grid');
+        if (!teamMembers.length) {
+            grid.innerHTML = '';
+            return;
+        }
+
+        const visibleCount = Math.min(2, teamMembers.length);
+        const visible = Array.from({ length: visibleCount }, (_, offset) => {
+            return teamMembers[(teamStartIndex + offset) % teamMembers.length];
+        });
+
+        grid.innerHTML = visible.map((member) => `
+            <article class="team-card">
+                <div class="team-photo">
+                    <img src="${escapeHtml(member.image)}" alt="${escapeHtml(member.name)}">
+                    <span class="team-role">${escapeHtml(member.role)}</span>
+                </div>
+                <div class="team-copy">
+                    <h3>${escapeHtml(member.name)}</h3>
+                    <p>${escapeHtml(member.body)}</p>
+                </div>
+            </article>
+        `).join('');
+    }
+
+    function initTeamSlider(members) {
+        teamMembers = members;
+        teamStartIndex = 0;
+        renderTeam();
+
+        const buttons = document.querySelectorAll('.team-controls button');
+        buttons[0]?.addEventListener('click', () => {
+            teamStartIndex = (teamStartIndex - 1 + teamMembers.length) % teamMembers.length;
+            renderTeam();
+        });
+        buttons[1]?.addEventListener('click', () => {
+            teamStartIndex = (teamStartIndex + 1) % teamMembers.length;
+            renderTeam();
+        });
+    }
+
+    async function loadSquadPage() {
+        const shortName = getSquadShortName();
+        const response = await fetch(`/api/squad-page/${encodeURIComponent(shortName)}`);
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.error || 'Не удалось загрузить отряд');
+        }
+
+        activeSquadName = data.squad.name;
+        document.title = data.squad.name;
+        setSquadPanelTextMode(shortName);
+        setTheme(data.squad.colors);
+        renderHero(data.page);
+        renderAchievements(data.page);
+        renderTrust(data.page);
+        renderCta(data.page);
+        renderStructure(data.page);
+        initTeamSlider(data.page.teamMembers);
+    }
+
+    loadSquadPage().catch((error) => {
+        console.error(error);
+        document.querySelector('main').innerHTML = `<section class="section page-shell"><h1>${escapeHtml(error.message)}</h1></section>`;
+    });
+
+    const guideForm = document.getElementById('guideForm');
+
+    function setGuideError(field, message) {
+        const error = guideForm?.querySelector(`[data-error-for="${field}"]`);
+        const input = guideForm?.elements[field];
+        if (error) error.textContent = message;
+        if (input && input.type !== 'checkbox') {
+            input.classList.toggle('is-invalid', Boolean(message));
+        }
+    }
+
+    function validateGuideForm() {
+        const formData = new FormData(guideForm);
+        const name = String(formData.get('name') || '').trim();
+        const vk = String(formData.get('vk') || '').trim();
+        const ageRaw = String(formData.get('age') || '').trim();
+        const age = Number(ageRaw);
+        const consent = guideForm.elements.consent.checked;
+        const vkPattern = /^(https?:\/\/)?(www\.)?(vk\.com|vkontakte\.ru)\/[A-Za-z0-9_.-]+\/?$/i;
+        let isValid = true;
+
+        setGuideError('name', '');
+        setGuideError('vk', '');
+        setGuideError('age', '');
+        setGuideError('consent', '');
+
+        if (name.length < 2) {
+            setGuideError('name', 'Укажи имя минимум из 2 символов');
+            isValid = false;
+        }
+
+        if (!vkPattern.test(vk)) {
+            setGuideError('vk', 'Укажи ссылку вида vk.com/name');
+            isValid = false;
+        }
+
+        if (!Number.isInteger(age) || age < 14 || age > 25) {
+            setGuideError('age', 'Укажи возраст от 14 до 25 лет');
+            isValid = false;
+        }
+
+        if (!consent) {
+            setGuideError('consent', 'Нужно согласие на обработку данных');
+            isValid = false;
+        }
+
+        return { isValid, name, vk, age };
+    }
+
+    guideForm?.addEventListener('input', (event) => {
+        const field = event.target.name;
+        if (field) setGuideError(field, '');
+        guideForm.querySelector('.form-status').textContent = '';
+        guideForm.querySelector('.form-status').className = 'form-status';
+    });
+
+    guideForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const status = guideForm.querySelector('.form-status');
+        const button = guideForm.querySelector('button[type="submit"]');
+        const result = validateGuideForm();
+
+        status.textContent = '';
+        status.className = 'form-status';
+
+        if (!result.isValid) return;
+
+        button.disabled = true;
+        button.textContent = 'Отправляем...';
+
+        try {
+            const response = await fetch('/api/ask-question', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: result.name,
+                    phone: result.vk,
+                    question: `Запрос PDF-гайда «Как провести лучшее лето». Отряд: ${activeSquadName}. Возраст: ${result.age}`
+                })
+            });
+            const data = await response.json();
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.error || 'Не удалось отправить форму');
+            }
+
+            guideForm.reset();
+            status.textContent = 'Готово! Заявка отправлена, скоро с тобой свяжутся.';
+            status.classList.add('success');
+        } catch (error) {
+            status.textContent = error.message || 'Ошибка отправки. Попробуй еще раз.';
+            status.classList.add('error');
+        } finally {
+            button.disabled = false;
+            button.textContent = 'Получить бесплатно';
+        }
+    });
+</script>
+</body>
+</html>
