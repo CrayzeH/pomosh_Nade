@@ -977,10 +977,6 @@ app.get('/index.html', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.get('/about.html', (req, res) => {
-    res.sendFile(path.join(__dirname, 'about.html'));
-});
-
 app.get('/profile.html', (req, res) => {
     if (!req.session.userId) {
         return res.redirect('/register.html');
@@ -1023,7 +1019,6 @@ app.listen(PORT, () => {
     console.log(`Сервер запущен на http://localhost:${PORT}`);
     console.log(`Доступные страницы:`);
     console.log(`  - http://localhost:${PORT}/`);
-    console.log(`  - http://localhost:${PORT}/about.html`);
     console.log(`  - http://localhost:${PORT}/register.html`);
     console.log(`  - http://localhost:${PORT}/test.html`);
     console.log(`  - http://localhost:${PORT}/group_wings.html`);

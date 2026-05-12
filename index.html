@@ -353,7 +353,6 @@
 
         /* ===== ОСТАЛЬНЫЕ СТИЛИ (без изменений) ===== */
         .hero {
-            margin-top: 130px;
             height: 60vh;
             min-height: 520px;
             background: url("/images/banner1.png");
@@ -1049,7 +1048,6 @@
         @media (max-width: 1024px) and (min-width: 769px) {
             /* Hero секция */
             .hero {
-                margin-top: 110px;
                 min-height: 450px;
                 height: auto;
                 padding: 40px 20px;
@@ -1189,7 +1187,6 @@
         @media (max-width: 768px) {
             /* Hero секция */
             .hero {
-                margin-top: 90px;
                 min-height: 380px;
                 height: auto;
                 padding: 30px 15px;
@@ -1708,7 +1705,6 @@
 
         /* Hero секция - простой и надёжный вариант */
         .hero {
-            margin-top: 130px;
             width: 100%;
             background: url("/images/banner1.png");
             background-size: cover;
@@ -1767,7 +1763,6 @@
         /* Планшеты */
         @media (max-width: 1024px) {
             .hero {
-                margin-top: 110px;
             }
 
             .hero-content {
@@ -1792,7 +1787,6 @@
         /* Телефоны */
         @media (max-width: 768px) {
             .hero {
-                margin-top: 90px;
             }
 
             .hero-content {
@@ -3249,7 +3243,6 @@
 
 /* Stable responsive hero based on the real 1910x576 banner ratio. */
 .hero {
-    margin-top: clamp(80px, 6.8vw, 130px);
     width: 100%;
     height: clamp(420px, 30.15vw, 772px);
     min-height: 0;
@@ -3304,7 +3297,6 @@
 
 @media (max-width: 1024px) {
     .hero {
-        margin-top: 82px;
         height: clamp(360px, 42vw, 430px);
     }
 
@@ -3326,7 +3318,6 @@
 
 @media (max-width: 640px) {
     .hero {
-        margin-top: 70px;
         height: clamp(420px, 118vw, 560px);
         background-size: contain;
         background-position: center top;
@@ -3476,7 +3467,6 @@
         left: 0;
         width: 100%;
         height: calc(100vw / 3.316);
-        border: 2px solid #000;
         pointer-events: none;
         box-sizing: border-box;
     }
@@ -3825,7 +3815,271 @@
         justify-content: center;
     }
 }
+/* ===== HERO — ЧИСТЫЙ АДАПТИВ, БЕЗ ИЗМЕНЕНИЙ ВНЕШНЕГО ВИДА ===== */
+.hero {
+    width: 100%;
+    background: url("/images/banner1.png") center center / cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    min-height: 560px;
+}
 
+.hero-content {
+    width: 100%;
+    padding: 60px 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.hero-content h1 {
+    font-size: 3rem;
+    font-weight: 800;
+    color: black;
+    max-width: 800px;
+    margin: 0 auto;
+    text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+.hero-content p {
+    font-size: 1.2rem;
+    margin: 0;
+    color: #a6a6a6;
+    max-width: 700px;
+    font-weight: 500;
+}
+
+.hero-btn {
+    background: black;
+    border: none;
+    padding: 20px 38px;
+    border-radius: 50px;
+    min-width: 420px;
+    font-weight: bold;
+    font-size: 1.6rem;
+    cursor: pointer;
+    transition: 0.2s;
+    color: white;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+}
+
+.hero-btn:hover {
+    background: #3B2E5E;
+}
+
+/* Планшеты */
+@media (max-width: 1024px) {
+    .hero {
+        min-height: 480px;
+    }
+    .hero-content {
+        padding: 50px 20px;
+        gap: 22px;
+    }
+    .hero-content h1 {
+        font-size: 2.5rem;
+    }
+    .hero-content p {
+        font-size: 1rem;
+    }
+    .hero-btn {
+        font-size: 1.3rem;
+        min-width: 280px;
+        padding: 15px 30px;
+    }
+}
+
+/* Телефоны */
+@media (max-width: 768px) {
+    .hero {
+        min-height: 420px;
+        background-position: 70% center;
+    }
+    .hero-content {
+        padding: 40px 15px;
+        gap: 20px;
+    }
+    .hero-content h1 {
+        font-size: 1.8rem;
+    }
+    .hero-content p {
+        font-size: 0.9rem;
+    }
+    .hero-btn {
+        font-size: 1.1rem;
+        min-width: 240px;
+        padding: 14px 24px;
+    }
+}
+
+/* Маленькие телефоны */
+@media (max-width: 480px) {
+    .hero {
+        margin-top: 80px;
+        min-height: 360px;
+        background-position: 75% center;
+    }
+    .hero-content {
+        padding: 30px 12px;
+        gap: 15px;
+    }
+    .hero-content h1 {
+        font-size: 1.4rem;
+    }
+    .hero-content p {
+        font-size: 0.8rem;
+    }
+    .hero-btn {
+        font-size: 0.9rem;
+        min-width: 200px;
+        padding: 12px 20px;
+    }
+}
+
+/* Очень маленькие */
+@media (max-width: 380px) {
+    .hero {
+        margin-top: 75px;
+        min-height: 320px;
+        background-position: 80% center;
+    }
+    .hero-content h1 {
+        font-size: 1.2rem;
+    }
+    .hero-content p {
+        font-size: 0.7rem;
+    }
+    .hero-btn {
+        font-size: 0.8rem;
+        min-width: 170px;
+        padding: 10px 16px;
+    }
+}
+
+/* Большие экраны */
+@media (min-width: 1400px) {
+    .hero {
+        min-height: 680px;
+    }
+    .hero-content h1 {
+        font-size: 4rem;
+    }
+    .hero-content p {
+        font-size: 1.5rem;
+    }
+    .hero-btn {
+        font-size: 1.8rem;
+        min-width: 480px;
+        padding: 22px 48px;
+    }
+}
+        /* ===== HERO — ТОЛЬКО ПРОПОРЦИИ, БЕЗ ЛИШНЕГО ===== */
+.hero {
+    width: 100%;
+    aspect-ratio: 1990 / 680;
+    background: url("/images/banner1.png") center center / cover no-repeat;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+}
+
+.hero-content {
+    width: 100%;
+    height: 100%;
+    padding: 0 5%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+}
+
+.hero-btn {
+    background: black;
+    border: none;
+    border-radius: 50px;
+    font-weight: bold;
+    cursor: pointer;
+    color: white;
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.2);
+    width: 480px;
+    padding: 18px 0;
+    font-size: 1.6rem;
+}
+
+.hero-btn:hover {
+    background: #3B2E5E;
+}
+
+/* Только адаптив размеров */
+@media (max-width: 1024px) {
+    .hero {
+    }
+    .hero-content h1 {
+        font-size: 2.5rem;
+        max-width: 90%;
+    }
+    .hero-content p {
+        font-size: 1rem;
+        max-width: 85%;
+    }
+    .hero-btn {
+        width: 400px;
+        font-size: 1.3rem;
+        padding: 15px 0;
+    }
+}
+
+@media (max-width: 768px) {
+    .hero {
+    }
+    .hero-content {
+        gap: 15px;
+    }
+    .hero-content h1 {
+        font-size: 1.8rem;
+        max-width: 95%;
+    }
+    .hero-content p {
+        font-size: 0.85rem;
+        max-width: 90%;
+    }
+    .hero-btn {
+        width: 280px;
+        font-size: 1rem;
+        padding: 12px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .hero {
+        margin-top: 80px;
+    }
+    .hero-content {
+        gap: 10px;
+    }
+    .hero-content h1 {
+        font-size: 1.3rem;
+    }
+    .hero-content p {
+        font-size: 0.7rem;
+    }
+    .hero-btn {
+        width: 220px;
+        font-size: 0.8rem;
+        padding: 10px 0;
+    }
+}
+
+@media (min-width: 1400px) {
+    .hero {
+    }
+}
     </style>
     <link rel="stylesheet" href="/css/common-layout.css">
 </head>
@@ -3837,7 +4091,7 @@
         <div class="header-top">
             <div class="logo-area">
                 <div class="logo" onclick="window.location.href='/'">СОЗВЕЗДИЕ</div>
-                <button class="menu-btn-black" id="menuToggleBtn">Меню</button>
+                <button class="menu-btn-black" id="menuToggleBtn" onclick="toggleMobileMenu()">Меню</button>
             </div>
             <div class="search-wrapper">
                 <input type="text" class="search-input" id="searchInput" placeholder="Найти отряд по названию">
@@ -3854,9 +4108,9 @@
         </div>
         <div class="header-bottom">
             <div class="bottom-nav" id="bottomNav">
-                <span data-page="about">О нас</span>
+                <span data-page="about" onclick="document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'})">О нас</span>
                 <span data-page="directions">Направления</span>
-                <span data-page="squads">Отряды</span>
+                <span data-page="squads" onclick="document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'})">Отряды</span>
                 <span data-page="create">Создавай</span>
                 <span data-page="interactive">Интерактивы</span>
                 <span data-page="contacts">Контакты</span>
@@ -3867,9 +4121,9 @@
 
 <!-- Мобильное меню (выезжающее) -->
 <div class="mobile-menu-drop" id="mobileMenuDrop">
-    <span data-page="about">О нас</span>
+    <span data-page="about" onclick="document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'})">О нас</span>
     <span data-page="directions">Направления</span>
-    <span data-page="squads">Отряды</span>
+    <span data-page="squads" onclick="document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'}); closeMobileMenu();">Отряды</span>
     <span data-page="create">Создавай</span>
     <span data-page="interactive">Интерактивы</span>
     <span data-page="contacts">Контакты</span>
@@ -3890,16 +4144,16 @@
         <div class="container" style="margin-top: 0;">
             <div class="stats-grid animate-on-scroll" id="statsGrid">
                 <div class="stat-item">
-                    <div class="stat-number" id="stat1Value">98%</div>
-                    <div class="stat-label" id="stat1Label">детей хотят вернуться в отряд</div>
+                    <div class="stat-number" id="stat1Value">13</div>
+                    <div class="stat-label" id="stat1Label">Отрядов</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number" id="stat2Value">450+</div>
-                    <div class="stat-label" id="stat2Label">активных отрядов по всей России</div>
+                    <div class="stat-number" id="stat2Value">+1000</div>
+                    <div class="stat-label" id="stat2Label">ребят освоили свою первую профеесию</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-number" id="stat3Value">32</div>
-                    <div class="stat-label" id="stat3Label">уникальные авторские программы</div>
+                    <div class="stat-number" id="stat3Value">5</div>
+                    <div class="stat-label" id="stat3Label">направлений</div>
                 </div>
             </div>
         </div>
@@ -3982,7 +4236,7 @@
         <div class="footer-main">
             <div class="footer-brand">
                 <h4>СОЗВЕЗДИЕ</h4>
-                <a href="/about.html">О нас</a>
+                <a href="#">О нас</a>
                 <a href="#">Контакты</a>
             </div>
 
@@ -4048,7 +4302,7 @@
         </div>
         <div class="footer-col">
             <h4>Информация</h4>
-            <a href="/about.html">О нас</a>
+            <a href="#">О нас</a>
             <a href="#">Направления</a>
             <a href="#">Интерактивы</a>
         </div>
@@ -4172,9 +4426,7 @@
             // Добавляем обработчики на кнопки
             document.querySelectorAll('.big-card-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
-                    const squadShortName = btn.getAttribute('data-squad');
-                    if (featuredSquads.includes(squadShortName)) window.location.href = `/squad/${squadShortName}`;
-                    else alert('Страница отряда в разработке');
+                    document.querySelector('footer').scrollIntoView({behavior: 'smooth'});
                 });
             });
         } catch (error) {
@@ -4345,33 +4597,52 @@
     // =============================================
     // НАВИГАЦИЯ
     // =============================================
+    function handleHeaderNav(page) {
+        switch (page) {
+            case 'about':
+                document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'});
+                break;
+            case 'directions':
+                alert('Раздел "Направления" в разработке');
+                break;
+            case 'squads':
+                document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'});
+                break;
+            case 'create':
+                alert('Раздел "Создавай" в разработке');
+                break;
+            case 'interactive':
+                alert('Раздел "Интерактивы" в разработке');
+                break;
+            case 'contacts':
+                document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'});
+                break;
+            default:
+                break;
+        }
+    }
+
+    function getHeaderPage(item) {
+        const page = item.getAttribute('data-page');
+        if (page) return page;
+
+        const label = item.textContent.trim();
+        const pageByLabel = {
+            'О нас': 'about',
+            'Направления': 'directions',
+            'Отряды': 'squads',
+            'Создавай': 'create',
+            'Интерактивы': 'interactive',
+            'Контакты': 'contacts'
+        };
+        return pageByLabel[label] || '';
+    }
+
     function initNavigation() {
-        const navItems = document.querySelectorAll('[data-page]');
+        const navItems = document.querySelectorAll('[data-page], .bottom-nav span, .mobile-menu-drop span');
         navItems.forEach(item => {
             item.addEventListener('click', (e) => {
-                const page = item.getAttribute('data-page');
-                switch (page) {
-                    case 'about':
-                        window.location.href = '/about.html';
-                        break;
-                    case 'directions':
-                        alert('Раздел "Направления" в разработке');
-                        break;
-                    case 'squads':
-                        document.getElementById('squadsGrid').scrollIntoView({behavior: 'smooth'});
-                        break;
-                    case 'create':
-                        alert('Раздел "Создавай" в разработке');
-                        break;
-                    case 'interactive':
-                        alert('Раздел "Интерактивы" в разработке');
-                        break;
-                    case 'contacts':
-                        document.querySelector('footer').scrollIntoView({behavior: 'smooth'});
-                        break;
-                    default:
-                        break;
-                }
+                handleHeaderNav(getHeaderPage(item));
                 closeMobileMenu();
             });
         });
@@ -4402,11 +4673,6 @@
     }
 
     if (menuBtn && mobileMenu) {
-        menuBtn.addEventListener('click', (e) => {
-            e.stopPropagation();
-            toggleMobileMenu();
-        });
-
         // Закрытие при клике на пункт меню
         const menuItems = mobileMenu.querySelectorAll('span');
         menuItems.forEach(item => {

@@ -1770,7 +1770,7 @@
             <div class="bottom-nav" id="bottomNav">
                 <span onclick="window.location.href='about.html'">О нас</span>
                 <span>Направления</span>
-                <span>Отряды</span>
+                <span data-page="squads">Отряды</span>
                 <span>Создавай</span>
                 <span>Интерактивы</span>
                 <span>Контакты</span>
@@ -1780,7 +1780,7 @@
     <div class="mobile-menu-drop" id="mobileMenuDrop">
         <span>О нас</span>
         <span>Направления</span>
-        <span>Отряды</span>
+        <span data-page="squads">Отряды</span>
         <span>Создавай</span>
         <span>Интерактивы</span>
         <span>Контакты</span>
@@ -2172,7 +2172,7 @@
                         alert('Раздел "Направления" в разработке');
                         break;
                     case 'squads':
-                        document.getElementById('squadsGrid').scrollIntoView({behavior: 'smooth'});
+                        document.querySelector('footer').scrollIntoView({behavior: 'smooth'});
                         break;
                     case 'create':
                         alert('Раздел "Создавай" в разработке');

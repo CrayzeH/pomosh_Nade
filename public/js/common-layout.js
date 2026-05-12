@@ -22,9 +22,9 @@
         </div>
         <div class="header-bottom">
             <div class="bottom-nav">
-                <span onclick="window.location.href='/about.html'">О нас</span>
+                <span data-page="about">О нас</span>
                 <span onclick="window.location.href='/'">Направления</span>
-                <span onclick="window.location.href='/'">Отряды</span>
+                <span data-page="squads">Отряды</span>
                 <span onclick="window.location.href='/'">Создавай</span>
                 <span onclick="window.location.href='/'">Интерактивы</span>
                 <span onclick="window.location.href='/about.html#contacts'">Контакты</span>
@@ -33,9 +33,9 @@
     </div>
 </header>
 <div class="mobile-menu-drop" id="mobileMenuDrop">
-    <span onclick="window.location.href='/about.html'">О нас</span>
+    <span data-page="about">О нас</span>
     <span onclick="window.location.href='/'">Направления</span>
-    <span onclick="window.location.href='/'">Отряды</span>
+    <span data-page="squads">Отряды</span>
     <span onclick="window.location.href='/'">Создавай</span>
     <span onclick="window.location.href='/'">Интерактивы</span>
     <span onclick="window.location.href='/about.html#contacts'">Контакты</span>
@@ -139,6 +139,37 @@
 
         document.getElementById('userProfile')?.addEventListener('click', () => {
             window.location.href = '/profile.html';
+        });
+
+        const menuBtn = document.getElementById('menuToggleBtn');
+        const mobileMenu = document.getElementById('mobileMenuDrop');
+        menuBtn?.addEventListener('click', (event) => {
+            event.stopPropagation();
+            mobileMenu?.classList.toggle('open');
+            document.body.classList.toggle('menu-open', mobileMenu?.classList.contains('open'));
+        });
+
+        document.addEventListener('click', (event) => {
+            if (!mobileMenu?.classList.contains('open')) return;
+            if (mobileMenu.contains(event.target) || menuBtn?.contains(event.target)) return;
+            mobileMenu.classList.remove('open');
+            document.body.classList.remove('menu-open');
+        });
+
+        document.querySelectorAll('[data-page="squads"]').forEach((item) => {
+            item.addEventListener('click', () => {
+                document.querySelector('footer')?.scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('mobileMenuDrop')?.classList.remove('open');
+                document.body.classList.remove('menu-open');
+            });
+        });
+
+        document.querySelectorAll('[data-page="about"]').forEach((item) => {
+            item.addEventListener('click', () => {
+                document.querySelector('footer')?.scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('mobileMenuDrop')?.classList.remove('open');
+                document.body.classList.remove('menu-open');
+            });
         });
 
     }

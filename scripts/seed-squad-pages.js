@@ -197,7 +197,7 @@ const pages = {
             achievementPrimaryText: 'Более 12 побед в конкурсах и фестивалях — мы знаем, как быть лучшими!',
             achievementSecondaryText: '3 место в рейтинге отрядов области — нам доверяют свое лето!',
             trustTitle: 'НАМ ДОВЕРЯЮТ, И ВОТ ПОЧЕМУ',
-            trustPrimaryBgImage: null,
+            trustPrimaryBgImage: '/images/squad-klever-trust-bg.png',
             ctaTitle: 'Стань частью штаба «Созвездие»',
             ctaSubtitle: 'подай заявку прямо сейчас!',
             pathTitle: commonPathTitle,

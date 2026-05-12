@@ -526,6 +526,7 @@
             line-height: 1.05;
         }
 
+
         .cta-copy p {
             margin-top: clamp(18px, 1.2vw, 24px);
             font-family: var(--hero-font);
@@ -546,6 +547,76 @@
             font-size: clamp(18px, 1.25vw, 24px);
             font-weight: 900;
             cursor: pointer;
+        }
+
+        @media (max-width: 2100px) {
+            .cta-copy h2 {
+                font-size: 40px;
+            }
+            .cta-copy p {
+                font-size: 32px;
+            }
+            .cta-btn {
+                width: 300px;
+                height: 55px;
+            }
+        }
+        @media (max-width: 1700px) {
+            .cta-copy h2 {
+                font-size: 34px;
+            }
+            .cta-copy p {
+                font-size: 28px;
+            }
+            .cta-btn {
+                width: 240px;
+                height: 40px;
+            }
+        }
+        @media (max-width: 1450px) {
+            .cta-copy h2 {
+                font-size: 26px;
+            }
+            .cta-copy p {
+                font-size: 20px;
+            }
+            .cta-btn {
+                width: 200px;
+                height: 33px;
+                font-size: 16px;
+            }
+        }
+        @media (max-width: 1225px) {
+            .cta-copy h2 {
+                font-size: 22px;
+            }
+            .cta-copy p {
+                font-size: 15px;
+            }
+        }
+        @media (max-width: 1140px) {
+            .cta-copy h2 {
+                font-size: 16px;
+            }
+            .cta-copy p {
+                font-size: 11px;
+            }
+        }
+        @media (max-width: 1000px) {
+            .cta-copy h2 {
+                font-size: 13px;
+            }
+            .cta-copy p {
+                font-size: 8px;
+            }
+        }
+        @media (max-width: 900px) {
+            .cta-copy h2 {
+                font-size: 20px;
+            }
+            .cta-copy p {
+                font-size: 12px;
+            }
         }
 
         .path-section {
@@ -816,6 +887,14 @@
             margin: 0 auto;
         }
 
+        #structure {
+            --structure-scroll-extra: clamp(320px, 28vw, 520px);
+        }
+
+        .structure-pin {
+            position: relative;
+        }
+
         .structure-card {
             position: relative;
             width: 100%;
@@ -824,17 +903,20 @@
             background: var(--green);
             transform: rotate(-3deg);
             overflow: hidden;
+            will-change: transform;
         }
 
         .structure-card:nth-child(2) {
             color: #000;
             background: var(--green-soft);
             transform: rotate(0deg);
+            z-index: 2;
         }
 
         .structure-card:nth-child(3) {
             background: var(--green);
             transform: rotate(3deg);
+            z-index: 3;
         }
 
         body.squad-white-panels .structure-card,
@@ -883,6 +965,10 @@
             pointer-events: none;
         }
 
+        .structure-card:first-child .structure-art {
+            right: clamp(24px, 3.6vw, 64px);
+        }
+
         .structure-art img {
             display: block;
             width: auto;
@@ -905,6 +991,33 @@
         .structure-card:nth-child(2)::after,
         .structure-card:nth-child(3)::after {
             content: none;
+        }
+
+        @media (min-width: 901px) {
+            #structure {
+                min-height: calc(100vh + var(--structure-scroll-extra));
+            }
+
+            .structure-pin {
+                position: sticky;
+                top: clamp(84px, 6vw, 118px);
+            }
+
+            .structure-list {
+                position: relative;
+                display: block;
+                height: clamp(330px, 23vw, 442px);
+            }
+
+            .structure-card {
+                position: absolute;
+                left: 0;
+                top: 0;
+            }
+
+            .structure-card:first-child {
+                z-index: 1;
+            }
         }
 
         #team {
@@ -1517,7 +1630,200 @@
                 justify-content: center;
             }
         }
+        /* ===== ФИКС HERO БЛОКА - ПРИВЯЗКА К ВЫСОТЕ ФОТО ===== */
 
+/* Базовые стили hero */
+.hero {
+    position: relative;
+    padding: 44px 0 0;
+    overflow-x: hidden;
+}
+
+.hero-grid {
+    display: grid;
+    grid-template-columns: 1fr clamp(340px, 24.2vw, 465px);
+    gap: clamp(20px, 1.65vw, 32px);
+    align-items: stretch;
+}
+
+/* Фото блок - фиксированное соотношение */
+.hero-photo {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 465 / 685;
+    border: 3px solid var(--green);
+    border-radius: 22px;
+    overflow: hidden;
+    background: #f0f7ed;
+}
+
+.hero-photo img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: top center;
+}
+
+/* Левый блок - растягиваем на всю высоту */
+.hero-copy {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    height: 100%;
+}
+
+/* Клеймор */
+.hero-kicker {
+    width: clamp(280px, 31.5vw, 605px);
+    height: clamp(32px, 2.25vw, 44px);
+    margin-bottom: clamp(20px, 2.25vw, 44px);
+    padding: 0 32px;
+    font-size: clamp(11px, 0.9vw, 18px);
+    white-space: nowrap;
+    clip-path: polygon(0% 0%, 93% 0%, 100% 50%, 93% 100%, 0% 100%, 7% 50%);
+}
+
+/* Заголовок */
+.hero h1 {
+    font-size: clamp(28px, 3.05vw, 58px);
+    margin-bottom: clamp(20px, 2.4vw, 46px);
+    line-height: 1.12;
+}
+
+.hero-title-line {
+    white-space: nowrap;
+}
+
+/* Список */
+.hero-list {
+    gap: clamp(12px, 1.15vw, 24px);
+    margin-bottom: clamp(24px, 2.5vw, 50px);
+}
+
+.hero-list li {
+    font-size: clamp(14px, 1.34vw, 25.5px);
+    padding-left: 35px;
+}
+
+/* Кнопки */
+.hero-actions {
+    margin-top: auto;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+
+.primary-btn,
+.outline-btn {
+    min-height: clamp(44px, 3vw, 58px);
+    padding: 0 clamp(20px, 3.2vw, 54px);
+    font-size: clamp(14px, 1.4vw, 26px);
+    white-space: nowrap;
+}
+
+/* ===== АДАПТИВ ПО ШИРИНЕ ===== */
+
+/* 1400px и меньше */
+@media (max-width: 1400px) {
+    .hero-kicker { font-size: 12px; width: 260px; }
+    .hero h1 { font-size: 36px; }
+    .hero-list li { font-size: 18px; }
+    .primary-btn, .outline-btn { font-size: 18px; padding: 0 24px; }
+}
+
+/* 1200px */
+@media (max-width: 1200px) {
+    .hero-kicker { font-size: 11px; width: 240px; height: 36px; }
+    .hero h1 { font-size: 32px; }
+    .hero-list li { font-size: 16px; padding-left: 30px; }
+    .primary-btn, .outline-btn { font-size: 16px; padding: 0 20px; min-height: 44px; }
+}
+
+/* 1050px */
+@media (max-width: 1050px) {
+    .hero-kicker { font-size: 10px; width: 220px; height: 34px; }
+    .hero h1 { font-size: 28px; }
+    .hero-list li { font-size: 14px; }
+    .primary-btn, .outline-btn { font-size: 14px; padding: 0 16px; }
+}
+
+/* 950px - переключаем на колонку */
+@media (max-width: 950px) {
+    .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 32px;
+    }
+
+    .hero-photo {
+        max-width: 400px;
+        margin: 0 auto;
+    }
+
+    .hero-copy {
+        order: 1;
+    }
+
+    .hero-photo {
+        order: 2;
+    }
+
+    .hero-kicker {
+        width: 100%;
+        white-space: normal;
+        text-align: center;
+        height: auto;
+        padding: 8px 20px;
+        font-size: 12px;
+        clip-path: polygon(0% 0%, 96% 0%, 100% 50%, 96% 100%, 0% 100%, 4% 50%);
+    }
+
+    .hero-title-line {
+        white-space: normal;
+    }
+}
+
+/* 600px */
+@media (max-width: 600px) {
+    .hero {
+        padding: 20px 0 0;
+    }
+
+    .hero-kicker {
+        font-size: 10px;
+        padding: 6px 16px;
+    }
+
+    .hero h1 {
+        font-size: 24px;
+    }
+
+    .hero-list li {
+        font-size: 13px;
+        padding-left: 24px;
+    }
+
+    .hero-list li::before {
+        width: 10px;
+        height: 10px;
+    }
+
+    .primary-btn, .outline-btn {
+        white-space: normal;
+        text-align: center;
+        font-size: 14px;
+        padding: 10px 16px;
+    }
+
+    .hero-actions {
+        flex-direction: column;
+    }
+
+    .hero-photo {
+        max-width: 100%;
+    }
+}
     </style>
     <link rel="stylesheet" href="/css/common-layout.css">
 </head>
@@ -1542,7 +1848,7 @@
             <div class="bottom-nav">
                 <span>О нас</span>
                 <span>Направления</span>
-                <span>Отряды</span>
+                <span data-page="squads">Отряды</span>
                 <span>Создавай</span>
                 <span>Интерактивы</span>
                 <span>Контакты</span>
@@ -1570,7 +1876,7 @@
                     </div>
                 </div>
                 <div class="hero-photo">
-                    <img src="/images/commander-sotnikova.png" alt="Боец отряда Клевер">
+                    <img src="#" alt="Боец отряда Клевер">
                 </div>
             </div>
         </div>
@@ -1664,22 +1970,24 @@
     </section>
 
     <section class="section page-shell" id="structure">
-        <h2 class="section-title">КАК ВСЁ УСТРОЕНО В «КЛЕВЕРЕ»</h2>
-        <div class="structure-list">
-            <article class="structure-card">
-                <h3>Стань новичком онлайн</h3>
-                <p>Заполни анкету в группе ВК или на сайте. Мы свяжемся с тобой, добавим в общий чат и расскажем о ближайшем собрании.</p>
-            </article>
-            <article class="structure-card">
-                <h3>Школа вожатых и тренинги</h3>
-                <p>Тебя ждут лекции, мастер-классы и игры от наших опытных бойцов.</p>
-                <div class="structure-art"><img src="/images/squad-structure-step-2.png" alt=""></div>
-            </article>
-            <article class="structure-card">
-                <h3>Твоя первая целина</h3>
-                <p>Выезжай на трудовой объект в составе команды. Весь процесс прозрачен.</p>
-                <div class="structure-art"><img src="/images/squad-structure-step-3.png" alt=""></div>
-            </article>
+        <div class="structure-pin">
+            <h2 class="section-title">КАК ВСЁ УСТРОЕНО В «КЛЕВЕРЕ»</h2>
+            <div class="structure-list">
+                <article class="structure-card">
+                    <h3>Стань новичком онлайн</h3>
+                    <p>Заполни анкету в группе ВК или на сайте. Мы свяжемся с тобой, добавим в общий чат и расскажем о ближайшем собрании.</p>
+                </article>
+                <article class="structure-card">
+                    <h3>Школа вожатых и тренинги</h3>
+                    <p>Тебя ждут лекции, мастер-классы и игры от наших опытных бойцов.</p>
+                    <div class="structure-art"><img src="/images/squad-structure-step-2.png" alt=""></div>
+                </article>
+                <article class="structure-card">
+                    <h3>Твоя первая целина</h3>
+                    <p>Выезжай на трудовой объект в составе команды. Весь процесс прозрачен.</p>
+                    <div class="structure-art"><img src="/images/squad-structure-step-3.png" alt=""></div>
+                </article>
+            </div>
         </div>
     </section>
 
@@ -1896,6 +2204,61 @@
         `).join('');
     }
 
+    let structureScrollFrame = null;
+
+    function clamp01(value) {
+        return Math.max(0, Math.min(1, value));
+    }
+
+    function easeStructure(value) {
+        return 1 - Math.pow(1 - value, 3);
+    }
+
+    function updateStructureScroll() {
+        structureScrollFrame = null;
+
+        const section = document.getElementById('structure');
+        const pin = section?.querySelector('.structure-pin');
+        const cards = Array.from(section?.querySelectorAll('.structure-card') || []);
+        const canAnimate = window.matchMedia('(min-width: 901px)').matches && section && pin && cards.length >= 3;
+
+        if (!canAnimate) {
+            cards.forEach((card, index) => {
+                card.style.transform = '';
+                card.style.zIndex = index + 1;
+            });
+            return;
+        }
+
+        const rect = section.getBoundingClientRect();
+        const stickyTop = Math.max(84, Math.min(window.innerWidth * 0.06, 118));
+        const scrollRange = Math.max(1, section.offsetHeight - pin.offsetHeight);
+        const progress = clamp01((stickyTop - rect.top) / scrollRange);
+        const secondProgress = easeStructure(clamp01(progress * 2));
+        const thirdProgress = easeStructure(clamp01((progress - 0.5) * 2));
+        const baseGap = cards[0].offsetHeight + Math.max(42, Math.min(window.innerWidth * 0.038, 72));
+        const targetGap = Math.max(22, Math.min(window.innerWidth * 0.026, 42));
+        const rotations = [-3, 0, 3];
+
+        cards[0].style.transform = `rotate(${rotations[0]}deg)`;
+        cards[0].style.zIndex = 1;
+        cards[1].style.transform = `translateY(${baseGap - ((baseGap - targetGap) * secondProgress)}px) rotate(${rotations[1]}deg)`;
+        cards[1].style.zIndex = 2;
+        cards[2].style.transform = `translateY(${(baseGap * 2) - (((baseGap * 2) - (targetGap * 2)) * thirdProgress)}px) rotate(${rotations[2]}deg)`;
+        cards[2].style.zIndex = 3;
+    }
+
+    function requestStructureScrollUpdate() {
+        if (structureScrollFrame !== null) return;
+        structureScrollFrame = window.requestAnimationFrame(updateStructureScroll);
+    }
+
+    function initStructureScroll() {
+        updateStructureScroll();
+        window.addEventListener('scroll', requestStructureScrollUpdate, { passive: true });
+        window.addEventListener('resize', requestStructureScrollUpdate);
+    }
+
     function renderTeam() {
         const grid = document.querySelector('.team-grid');
         if (!teamMembers.length) {
@@ -1956,12 +2319,19 @@
         renderTrust(data.page);
         renderCta(data.page);
         renderStructure(data.page);
+        initStructureScroll();
         initTeamSlider(data.page.teamMembers);
     }
 
     loadSquadPage().catch((error) => {
         console.error(error);
         document.querySelector('main').innerHTML = `<section class="section page-shell"><h1>${escapeHtml(error.message)}</h1></section>`;
+    });
+
+    document.querySelectorAll('[data-page="squads"]').forEach((item) => {
+        item.addEventListener('click', () => {
+            document.querySelector('footer')?.scrollIntoView({ behavior: 'smooth' });
+        });
     });
 
     const guideForm = document.getElementById('guideForm');
