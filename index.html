@@ -2959,7 +2959,7 @@
     position: relative;
     min-width: 0;
     min-height: 0;
-    height: clamp(390px, 27vw, 518px);
+    height: clamp(430px, 29vw, 560px);
     padding: clamp(16px, 1.1vw, 21px) clamp(13px, 0.9vw, 17px) clamp(22px, 1.55vw, 30px);
     border: 3px solid #8da0e9;
     border-radius: 28px;
@@ -3003,7 +3003,7 @@
 .commander-photo-wrap {
     position: relative;
     width: 100%;
-    height: clamp(215px, 14.9vw, 286px);
+    height: clamp(255px, 17.5vw, 335px);
     margin: 0 auto clamp(16px, 1.15vw, 22px);
     overflow: hidden;
     border: 2px solid #00a3ff;
@@ -3030,18 +3030,7 @@
 }
 
 .commander-name {
-    position: absolute;
-    left: 10px;
-    right: 10px;
-    bottom: 0;
-    margin: 0;
-    padding: clamp(12px, 0.85vw, 16px) 12px clamp(13px, 0.9vw, 17px);
-    background: #8248f5;
-    color: #05050a;
-    font-size: clamp(14px, 0.95vw, 18px);
-    line-height: 1.1;
-    font-weight: 400;
-    clip-path: polygon(7% 0, 100% 0, 93% 100%, 0 100%);
+    display: none;
 }
 
 .commander-name::before,
@@ -3054,8 +3043,7 @@
 }
 
 .carousel-card.center .commander-name {
-    padding: clamp(14px, 1vw, 19px) 12px clamp(15px, 1.05vw, 20px);
-    font-size: clamp(16px, 1.1vw, 21px);
+    display: none;
 }
 
 .commander-desc {
@@ -4315,7 +4303,6 @@
                         <div class="commander-role">${commander.role}</div>
                         <div class="commander-photo-wrap">
                             <img class="commander-photo" src="${commander.photo || 'https://via.placeholder.com/400x340?text=Photo'}" alt="${commander.name}" loading="lazy">
-                            <div class="commander-name">${commander.name}</div>
                         </div>
                         <div class="commander-desc">${commander.description}</div>
                     </div>

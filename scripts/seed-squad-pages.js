@@ -1,6 +1,10 @@
-const sqlite3 = require('sqlite3').verbose();
+﻿const sqlite3 = require('sqlite3').verbose();
 
 const db = new sqlite3.Database('./soz.db');
+const sharedStructureImages = {
+    2: '/images/squad-structure-step-2.png',
+    3: '/images/squad-structure-step-3.png'
+};
 
 function run(sql, params = []) {
     return new Promise((resolve, reject) => {
@@ -148,10 +152,11 @@ async function seedPage(squadId, page) {
 
     await run('DELETE FROM squad_page_structure_steps WHERE squad_id = ?', [squadId]);
     for (const [index, step] of page.structureSteps.entries()) {
+        const orderIndex = index + 1;
         await run(
             `INSERT INTO squad_page_structure_steps (squad_id, title, body, image, order_index)
              VALUES (?, ?, ?, ?, ?)`,
-            [squadId, step.title, step.body, step.image || null, index + 1]
+            [squadId, step.title, step.body, step.image || sharedStructureImages[orderIndex] || null, orderIndex]
         );
     }
 
@@ -240,12 +245,12 @@ const pages = {
                 {
                     title: 'Школа вожатых и тренинги',
                     body: 'Тебя ждут лекции, мастер-классы и игры от наших опытных бойцов. Мы научим тебя всему: от техники безопасности до основ педагогики. Выбирай формат по душе и готовься к самому яркому лету.',
-                    image: null
+                    image: '/images/squad-structure-step-2.png'
                 },
                 {
                     title: 'Твоя первая целина',
                     body: 'Выезжай на трудовой объект в составе команды. Работа под присмотром наставников, вечерние огоньки и творческие фестивали. Весь процесс прозрачен: ты точно знаешь свои задачи и размер будущей выплаты.',
-                    image: null
+                    image: '/images/squad-structure-step-3.png'
                 }
             ],
             team: [

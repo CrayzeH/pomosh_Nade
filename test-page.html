@@ -196,7 +196,7 @@
             padding: 0 42px;
             color: #fff;
             background: var(--green);
-            clip-path: polygon(7% 0, 93% 0, 100% 50%, 93% 100%, 7% 100%, 0 50%);
+            clip-path: polygon(0% 0%, 93% 0%, 100% 50%, 100% 50%, 93% 100%, 0% 100%, 7% 50%);
             font-family: var(--hero-font);
             font-weight: 800;
             font-size: clamp(15px, 0.9vw, 18px);
@@ -265,7 +265,7 @@
 
         .primary-btn {
             border: 3px solid var(--green);
-            color: #fff;
+            color: #000;
             background: var(--green);
         }
 
@@ -347,7 +347,7 @@
         }
 
         .achievement.green {
-            color: #fff;
+            color: #000;
             background: var(--green);
         }
 
@@ -433,7 +433,7 @@
 
         .trust-main.has-bg h3,
         .trust-main.has-bg p {
-            color: #fff;
+            color: inherit;
         }
 
         .trust-wide {
@@ -500,7 +500,7 @@
 
         .cta-strip {
             background: var(--green);
-            color: #fff;
+            color: #000;
         }
 
         .cta-inner {
@@ -522,7 +522,7 @@
         .cta-copy h2 {
             font-family: var(--hero-font);
             font-weight: 900;
-            font-size: clamp(30px, 2.3vw, 44px);
+            font-size: clamp(36px, 2.75vw, 52px);
             line-height: 1.05;
         }
 
@@ -530,7 +530,7 @@
             margin-top: clamp(18px, 1.2vw, 24px);
             font-family: var(--hero-font);
             font-weight: 800;
-            font-size: clamp(24px, 1.65vw, 32px);
+            font-size: clamp(28px, 1.95vw, 38px);
             line-height: 1.05;
         }
 
@@ -838,20 +838,32 @@
         }
 
         body.squad-white-panels .structure-card,
-        body.squad-white-panels .team-card {
+        body.squad-white-panels .team-card,
+        body.squad-white-panels .primary-btn,
+        body.squad-white-panels .achievement.green,
+        body.squad-white-panels .trust-main,
+        body.squad-white-panels .cta-strip {
+            color: #fff;
+        }
+
+        body.squad-white-panels .cta-btn {
+            background: #000;
             color: #fff;
         }
 
         .structure-card h3 {
+            position: relative;
             font-family: var(--hero-font);
             font-weight: 900;
-            z-index: 999;
+            z-index: 1;
             font-size: clamp(42px, 3.3vw, 64px);
             line-height: 1.05;
         }
 
         .structure-card p {
-            max-width: 78%;
+            position: relative;
+            z-index: 1;
+            max-width: 65%;
             margin-top: clamp(10px, 0.9vw, 18px);
             font-family: var(--hero-font);
             font-weight: 800;
@@ -861,24 +873,22 @@
 
         .structure-art {
             position: absolute;
-            right: 36px;
-            top: 26px;
-            width: clamp(190px, 15vw, 288px);
-            height: clamp(120px, 9vw, 172px);
-            border-radius: 12px;
-            transform: rotate(8deg);
+            right: clamp(8px, 2.5vw, 36px);
+            top: 0;
+            width: clamp(170px, 20vw, 340px);
+            height: 100%;
             display: grid;
             place-items: center;
-            z-index: -1;
-            font-family: "Dela Gothic One", Inter, sans-serif;
-            font-size: clamp(12px, 1.1vw, 20px);
+            z-index: 0;
+            pointer-events: none;
         }
 
         .structure-art img {
             display: block;
-            width: 100%;
-            height: 100%;
-            object-fit: contain;
+            width: auto;
+            height: 112%;
+            max-width: none;
+            object-fit: cover;
         }
 
         .structure-card:nth-child(2)::after,
@@ -890,6 +900,11 @@
             color: rgba(0, 0, 0, 0.16);
             font-family: "Dela Gothic One", Inter, sans-serif;
             font-size: clamp(180px, 16vw, 320px);
+        }
+
+        .structure-card:nth-child(2)::after,
+        .structure-card:nth-child(3)::after {
+            content: none;
         }
 
         #team {
@@ -965,14 +980,14 @@
             margin-bottom: clamp(10px, 0.8vw, 16px);
             font-family: var(--hero-font);
             font-weight: 900;
-            font-size: clamp(19px, 1.35vw, 26px);
+            font-size: clamp(21px, 1.42vw, 28px);
             line-height: 1.08;
         }
 
         .team-card p {
             font-family: var(--hero-font);
             font-weight: 800;
-            font-size: clamp(12px, 0.92vw, 17px);
+            font-size: clamp(14px, 1.02vw, 19px);
             line-height: 1.15;
         }
 
@@ -1658,10 +1673,12 @@
             <article class="structure-card">
                 <h3>Школа вожатых и тренинги</h3>
                 <p>Тебя ждут лекции, мастер-классы и игры от наших опытных бойцов.</p>
+                <div class="structure-art"><img src="/images/squad-structure-step-2.png" alt=""></div>
             </article>
             <article class="structure-card">
                 <h3>Твоя первая целина</h3>
                 <p>Выезжай на трудовой объект в составе команды. Весь процесс прозрачен.</p>
+                <div class="structure-art"><img src="/images/squad-structure-step-3.png" alt=""></div>
             </article>
         </div>
     </section>
@@ -1874,7 +1891,7 @@
             <article class="structure-card">
                 <h3>${escapeHtml(step.title)}</h3>
                 <p>${escapeHtml(step.body)}</p>
-                ${index === 0 && step.image ? `<div class="structure-art"><img src="${escapeHtml(step.image)}" alt=""></div>` : ''}
+                ${step.image || index === 1 || index === 2 ? `<div class="structure-art"><img src="${escapeHtml(step.image || (index === 1 ? '/images/squad-structure-step-2.png' : '/images/squad-structure-step-3.png'))}" alt=""></div>` : ''}
             </article>
         `).join('');
     }
