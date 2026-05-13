@@ -1,0 +1,86 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Созвездие — Создавай</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="feed-page">
+    <div class="feed-layout">
+      <aside class="feed-sidebar">
+        <p class="brand">СОЗВЕЗДИЕ</p>
+        <nav class="menu">
+          <a class="menu-item" href="/feed.html"><img class="menu-icon" src="/images/лента.png" alt="" />Лента</a>
+          <a class="menu-item is-active" href="/create.html"><img class="menu-icon" src="/images/создавай.png" alt="" />Создавай</a>
+          <a class="menu-item" href="/notifications.html"><img class="menu-icon" src="/images/уведомления.png" alt="" />Уведомления</a>
+          <a class="menu-item" href="/profile_new.html"><img class="menu-icon" src="/images/профиль.png" alt="" />Профиль</a>
+          <a class="menu-item" href="/chats.html"><img class="menu-icon" src="/images/чаты.png" alt="" />Чаты</a>
+        </nav>
+        <button class="menu-item menu-item-logout" type="button" data-logout><img class="menu-icon" src="/images/выход.png" alt="" />Выйти</button>
+      </aside>
+
+      <section class="create-main" aria-label="Создавай">
+        <div class="create-tabs">
+          <button class="create-tab is-active" id="tab-tasks" type="button">Задания</button>
+          <button class="create-tab" id="tab-merch" type="button">Мерч</button>
+        </div>
+
+        <section class="create-panel" aria-label="Контент раздела создавай">
+          <div class="quiz-shell" id="quiz-shell"></div>
+        </section>
+      </section>
+    </div>
+  </main>
+
+  <div class="purchase-modal" id="purchase-modal" aria-hidden="true">
+    <div class="purchase-backdrop" id="purchase-backdrop"></div>
+    <section class="purchase-dialog" role="dialog" aria-modal="true" aria-label="Оформление покупки">
+      <button class="purchase-close" id="purchase-close" type="button" aria-label="Закрыть окно">✕</button>
+      <form class="purchase-form" id="purchase-form">
+        <input class="purchase-field" type="text" placeholder="Имя" />
+        <div class="purchase-dropdown" id="squad-dropdown">
+          <input type="hidden" name="squad" id="squad-value" />
+          <button class="purchase-field purchase-dropdown-trigger" id="squad-trigger" type="button" aria-expanded="false">
+            <span class="purchase-dropdown-text" id="squad-text">Отряд</span>
+            <span class="purchase-caret">▼</span>
+          </button>
+          <div class="purchase-dropdown-menu" id="squad-menu" role="listbox" aria-label="Список отрядов">
+            <button class="purchase-option" type="button" data-squad="ТОП “Клевер”">ТОП “Клевер”</button>
+            <button class="purchase-option" type="button" data-squad="СПО “Апельсин”">СПО “Апельсин”</button>
+            <button class="purchase-option" type="button" data-squad="СПО ”Крылья”">СПО ”Крылья”</button>
+            <button class="purchase-option" type="button" data-squad="ТОП ”Фемида”">ТОП ”Фемида”</button>
+            <button class="purchase-option" type="button" data-squad="СПО “ШУМ”">СПО “ШУМ”</button>
+            <button class="purchase-option" type="button" data-squad="СПО “Ямайка”">СПО “Ямайка”</button>
+            <button class="purchase-option" type="button" data-squad="ТОП “Эверест”">ТОП “Эверест”</button>
+            <button class="purchase-option" type="button" data-squad="СПО ”Жар-птица”">СПО ”Жар-птица”</button>
+            <button class="purchase-option" type="button" data-squad="ТОП “Краски”">ТОП “Краски”</button>
+            <button class="purchase-option" type="button" data-squad="СПО “Проспект”">СПО “Проспект”</button>
+            <button class="purchase-option" type="button" data-squad="СОП “Вокруг света”">СОП “Вокруг света”</button>
+          </div>
+        </div>
+        <div class="purchase-dropdown" id="role-dropdown">
+          <input type="hidden" name="role" id="role-value" />
+          <button class="purchase-field purchase-dropdown-trigger" id="role-trigger" type="button" aria-expanded="false">
+            <span class="purchase-dropdown-text" id="role-text">Должность</span>
+            <span class="purchase-caret">▼</span>
+          </button>
+          <div class="purchase-dropdown-menu" id="role-menu" role="listbox" aria-label="Список должностей">
+            <button class="purchase-option" type="button" data-role="Командирский состав">Командирский состав</button>
+            <button class="purchase-option" type="button" data-role="Кандидат">Кандидат</button>
+            <button class="purchase-option" type="button" data-role="Новичок">Новичок</button>
+          </div>
+        </div>
+        <p class="purchase-message" id="purchase-message" aria-live="polite"></p>
+        <button class="purchase-submit" type="submit">Купить</button>
+      </form>
+    </section>
+  </div>
+
+  <script src="/js/social-app.js"></script>
+</body>
+</html>

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Созвездие — Чаты</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="feed-page">
+    <div class="feed-layout">
+      <aside class="feed-sidebar">
+        <p class="brand">СОЗВЕЗДИЕ</p>
+        <nav class="menu">
+          <a class="menu-item" href="/feed.html"><img class="menu-icon" src="/images/лента.png" alt="" />Лента</a>
+          <a class="menu-item" href="/create.html"><img class="menu-icon" src="/images/создавай.png" alt="" />Создавай</a>
+          <a class="menu-item" href="/notifications.html"><img class="menu-icon" src="/images/уведомления.png" alt="" />Уведомления</a>
+          <a class="menu-item" href="/profile_new.html"><img class="menu-icon" src="/images/профиль.png" alt="" />Профиль</a>
+          <a class="menu-item is-active" href="/chats.html"><img class="menu-icon" src="/images/чаты.png" alt="" />Чаты</a>
+        </nav>
+        <button class="menu-item menu-item-logout" type="button" data-logout><img class="menu-icon" src="/images/выход.png" alt="" />Выйти</button>
+      </aside>
+
+      <section class="chats-main" aria-label="Чаты">
+        <div class="chats-shell">
+          <section id="chats-list-view">
+            <header class="chats-title-bar">Чаты</header>
+            <label class="chats-search" aria-label="Поиск">
+              <img class="chats-search-icon-img" src="/images/лупа.png" alt="" />
+              <input id="chat-search-input" type="text" placeholder="Поиск" />
+            </label>
+            <section class="chats-list" id="chats-list"></section>
+          </section>
+
+          <section id="chat-dialog-view" class="chat-dialog-view" hidden>
+            <header class="chat-dialog-header">
+              <button class="chat-back-btn" id="chat-back-btn" type="button" aria-label="Назад">
+                <img src="/images/стрелка.png" alt="" />
+              </button>
+              <div class="chat-dialog-avatar" id="chat-dialog-avatar"></div>
+              <div class="chat-dialog-head-copy">
+                <p class="chat-dialog-name" id="chat-dialog-name"></p>
+                <p class="chat-dialog-status" id="chat-dialog-status"></p>
+              </div>
+            </header>
+            <section class="chat-dialog-messages" id="chat-dialog-messages"></section>
+            <form class="chat-dialog-composer" id="chat-dialog-form">
+              <input class="chat-dialog-input" id="chat-dialog-input" type="text" placeholder="Сообщение" />
+              <button class="chat-dialog-attach" id="chat-dialog-attach-btn" type="button" aria-label="Прикрепить">
+                <img src="/images/скрепка.png" alt="" />
+              </button>
+              <input id="chat-dialog-attach-input" type="file" accept="image/*" multiple hidden />
+              <button class="chat-dialog-send" type="submit" aria-label="Отправить">
+                <img src="/images/стрелка.png" alt="" />
+              </button>
+            </form>
+          </section>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <div class="media-modal" id="chat-media-modal" aria-hidden="true">
+    <button class="media-backdrop" id="chat-media-backdrop" type="button" aria-label="Закрыть"></button>
+    <div class="media-dialog" role="dialog" aria-modal="true" aria-label="Просмотр фото">
+      <div class="media-stage">
+        <button class="media-close" id="chat-media-close" type="button" aria-label="Закрыть">✕</button>
+        <div class="media-track" id="chat-media-track"></div>
+      </div>
+      <button class="media-nav prev" id="chat-media-prev" type="button" aria-label="Предыдущее фото">‹</button>
+      <button class="media-nav next" id="chat-media-next" type="button" aria-label="Следующее фото">›</button>
+    </div>
+  </div>
+
+  <script src="/js/social-app.js"></script>
+</body>
+</html>

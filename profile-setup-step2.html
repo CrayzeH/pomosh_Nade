@@ -1,0 +1,120 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Созвездие — Настройка профиля (шаг 2)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="page">
+    <section class="profile-card" aria-labelledby="profile-title-step2">
+      <h1 class="profile-title" id="profile-title-step2">Настройка профиля</h1>
+      <p class="profile-subtitle">Пожалуйста, укажите данные профиля</p>
+
+      <div class="profile-stepper" aria-label="Шаг 2 из 2">
+        <span class="step-dot step-dot--active">1</span>
+        <span class="step-line step-line--active"></span>
+        <span class="step-dot step-dot--active">2</span>
+      </div>
+
+      <div class="profile-group">
+        <p class="profile-label">Фото профиля</p>
+        <p class="profile-help">Поменять его позже - будет можно</p>
+      </div>
+
+      <div class="profile-photo-wrap">
+        <button class="photo-pick" id="photo-pick-btn" type="button" aria-label="Выбрать фото профиля">?</button>
+        <input class="photo-input" id="photo-input" type="file" accept="image/*" />
+        <p class="photo-pick-text">Нажмите чтобы выбрать</p>
+      </div>
+
+      <div class="profile-actions">
+        <a class="profile-back-btn btn" href="profile-setup.html">Назад</a>
+        <a class="profile-submit btn" id="profile-setup-finish" href="feed.html">Продолжить</a>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    const pickButton = document.querySelector('#photo-pick-btn');
+    const fileInput = document.querySelector('#photo-input');
+    const finishButton = document.querySelector('#profile-setup-finish');
+    const USER_PROFILE_STORAGE_KEY = 'sozvezdie_user_profile_v1';
+    const AUTH_SESSION_STORAGE_KEY = 'sozvezdie_auth_session_v1';
+    const requireAuth = () => {
+      try {
+        if (localStorage.getItem(AUTH_SESSION_STORAGE_KEY)) return;
+      } catch {}
+      window.location.replace('login.html');
+    };
+    requireAuth();
+
+    const readCurrentUser = () => {
+      try {
+        const raw = localStorage.getItem(USER_PROFILE_STORAGE_KEY);
+        if (!raw) return null;
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== 'object') return null;
+        return parsed;
+      } catch {
+        return null;
+      }
+    };
+
+    const saveCurrentUser = (nextUser) => {
+      try {
+        localStorage.setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(nextUser));
+      } catch {}
+    };
+
+    const applyPickPreview = (imageUrl) => {
+      pickButton.style.backgroundImage = `url("${imageUrl}")`;
+      pickButton.style.backgroundSize = 'cover';
+      pickButton.style.backgroundPosition = 'center';
+      pickButton.style.backgroundRepeat = 'no-repeat';
+      pickButton.textContent = '';
+      pickButton.setAttribute('aria-label', 'Изменить фото профиля');
+      pickButton.classList.add('photo-pick--selected');
+    };
+
+    const currentUser = readCurrentUser();
+    if (currentUser?.avatar) {
+      applyPickPreview(currentUser.avatar);
+    }
+
+    pickButton?.addEventListener('click', () => {
+      fileInput?.click();
+    });
+
+    fileInput?.addEventListener('change', () => {
+      const file = fileInput.files && fileInput.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = () => {
+        const imageUrl = String(reader.result || '');
+        if (!imageUrl) return;
+        applyPickPreview(imageUrl);
+        saveCurrentUser({
+          ...(readCurrentUser() || {}),
+          avatar: imageUrl
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+
+    finishButton?.addEventListener('click', () => {
+      const latest = readCurrentUser();
+      saveCurrentUser(latest || {
+        name: 'Persona',
+        handle: 'persona',
+        avatar: ''
+      });
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Созвездие — Профиль пользователя</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="feed-page">
+    <div class="feed-layout">
+      <aside class="feed-sidebar">
+        <p class="brand">СОЗВЕЗДИЕ</p>
+        <nav class="menu">
+          <a class="menu-item" href="/feed.html"><img class="menu-icon" src="/images/лента.png" alt="" />Лента</a>
+          <a class="menu-item" href="/create.html"><img class="menu-icon" src="/images/создавай.png" alt="" />Создавай</a>
+          <a class="menu-item" href="/notifications.html"><img class="menu-icon" src="/images/уведомления.png" alt="" />Уведомления</a>
+          <a class="menu-item is-active" href="profile-other.html"><img class="menu-icon" src="/images/профиль.png" alt="" />Профиль</a>
+          <a class="menu-item" href="/chats.html"><img class="menu-icon" src="/images/чаты.png" alt="" />Чаты</a>
+        </nav>
+        <button class="menu-item menu-item-logout" type="button" data-logout><img class="menu-icon" src="/images/выход.png" alt="" />Выйти</button>
+      </aside>
+
+      <section class="profile-main" aria-label="Профиль пользователя">
+        <div class="profile-cover" style="background:#7d8aa1;"></div>
+
+        <div class="profile-head">
+          <div class="profile-id">
+            <div class="profile-avatar-wrap">
+              <img class="profile-avatar" src="https://i.pravatar.cc/160?img=44" alt="Persona" />
+              <span class="profile-online"></span>
+            </div>
+            <div class="profile-name-row">
+              <h1 class="profile-name">Persona</h1>
+              <p class="profile-handle">@persona</p>
+            </div>
+          </div>
+
+          <button class="profile-edit" id="profile-message-btn" type="button">Написать</button>
+        </div>
+
+        <div class="profile-tabs">
+          <button class="profile-tab is-active" type="button">Посты</button>
+          <button class="profile-tab" type="button" disabled aria-disabled="true"></button>
+        </div>
+
+        <article class="composer" id="other-composer">
+          <div class="composer-top">
+            <img class="avatar" src="https://i.pravatar.cc/100?img=44" alt="Persona" />
+            <textarea class="composer-input" id="other-post-text" placeholder="Написать на стене Persona"></textarea>
+          </div>
+          <div class="composer-bottom">
+            <div>
+              <button class="attach-btn" id="other-attach-btn" type="button" aria-label="Прикрепить фото">
+                <img class="attach-icon" src="/images/скрепка.png" alt="" />
+              </button>
+              <input class="attach-input" id="other-attach-input" type="file" accept="image/*" multiple />
+            </div>
+            <button class="post-btn" id="other-publish-btn" type="button">Опубликовать</button>
+          </div>
+          <div class="composer-preview" id="other-composer-preview"></div>
+        </article>
+
+        <section class="post-list" id="other-post-list"></section>
+      </section>
+    </div>
+  </main>
+
+  <div class="media-modal" id="other-media-modal" aria-hidden="true">
+    <button class="media-backdrop" id="other-media-backdrop" type="button" aria-label="Закрыть"></button>
+    <div class="media-dialog" role="dialog" aria-modal="true" aria-label="Просмотр фото">
+      <div class="media-stage">
+        <button class="media-close" id="other-media-close" type="button" aria-label="Закрыть">✕</button>
+        <div class="media-track" id="other-media-track"></div>
+      </div>
+      <button class="media-nav prev" id="other-media-prev" type="button" aria-label="Предыдущее фото">‹</button>
+      <button class="media-nav next" id="other-media-next" type="button" aria-label="Следующее фото">›</button>
+    </div>
+  </div>
+
+  <script src="/js/social-app.js"></script>
+</body>
+</html>

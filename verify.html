@@ -1,0 +1,43 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Созвездие — Подтверждение</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="page">
+    <section class="confirm-card" aria-labelledby="confirm-title">
+      <p class="brand">СОЗВЕЗДИЕ</p>
+
+      <h1 class="confirm-title" id="confirm-title">Подтверждение действия</h1>
+      <p class="confirm-text">Мы отправили шестизначный код на почту <span id="confirm-email">вашу почту</span>, чтобы убедиться, что вы - настоящий её владелец.</p>
+
+      <p class="confirm-label">Код с почты</p>
+
+      <form id="verify-form" action="profile-setup.html" method="get">
+        <div class="otp" aria-label="Код подтверждения">
+          <input type="text" inputmode="numeric" maxlength="1" autocomplete="one-time-code" />
+          <input type="text" inputmode="numeric" maxlength="1" />
+          <input type="text" inputmode="numeric" maxlength="1" />
+          <input type="text" inputmode="numeric" maxlength="1" />
+          <input type="text" inputmode="numeric" maxlength="1" />
+          <input type="text" inputmode="numeric" maxlength="1" />
+        </div>
+
+        <button class="confirm-btn" type="submit">Продолжить</button>
+      </form>
+
+      <p class="confirm-error" id="confirm-error" aria-live="polite"></p>
+      <button class="confirm-meta confirm-resend" id="resend-timer" type="button" disabled>Получить новый код через 60с</button>
+      <p class="confirm-back"><a href="register_new.html">Назад</a></p>
+    </section>
+  </main>
+
+  <script src="/js/social-app.js"></script>
+</body>
+</html>

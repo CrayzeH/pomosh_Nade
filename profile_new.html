@@ -1,0 +1,179 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Созвездие — Профиль</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="feed-page">
+    <div class="feed-layout">
+      <aside class="feed-sidebar">
+        <p class="brand">СОЗВЕЗДИЕ</p>
+        <nav class="menu">
+          <a class="menu-item" href="/feed.html"><img class="menu-icon" src="/images/лента.png" alt="" />Лента</a>
+          <a class="menu-item" href="/create.html"><img class="menu-icon" src="/images/создавай.png" alt="" />Создавай</a>
+          <a class="menu-item" href="/notifications.html"><img class="menu-icon" src="/images/уведомления.png" alt="" />Уведомления</a>
+          <a class="menu-item is-active" href="/profile_new.html"><img class="menu-icon" src="/images/профиль.png" alt="" />Профиль</a>
+          <a class="menu-item" href="/chats.html"><img class="menu-icon" src="/images/чаты.png" alt="" />Чаты</a>
+        </nav>
+        <button class="menu-item menu-item-logout" type="button" data-logout><img class="menu-icon" src="/images/выход.png" alt="" />Выйти</button>
+      </aside>
+
+      <section class="profile-main" aria-label="Профиль">
+        <div class="profile-cover" id="profile-cover">
+          <button class="profile-cover-overlay" id="profile-cover-trigger" type="button" aria-label="Изменить шапку профиля">
+            <span class="profile-cover-icon">📷</span>
+          </button>
+          <input class="profile-cover-input" id="profile-cover-input" type="file" accept="image/*" />
+        </div>
+
+        <div class="profile-head">
+          <div class="profile-id">
+            <div class="profile-avatar-wrap">
+              <img class="profile-avatar" id="profile-avatar" src="https://i.pravatar.cc/160?img=44" alt="Persona" />
+              <button class="profile-avatar-overlay" id="profile-avatar-trigger" type="button" aria-label="Изменить аватар">
+                <span class="profile-cover-icon">📷</span>
+              </button>
+              <input class="profile-avatar-input" id="profile-avatar-input" type="file" accept="image/*" />
+              <span class="profile-online"></span>
+            </div>
+            <div class="profile-name-row">
+              <h1 class="profile-name">Persona</h1>
+              <p class="profile-handle">@persona</p>
+            </div>
+          </div>
+
+          <button class="profile-edit" id="profile-edit-btn" type="button">Редактировать</button>
+        </div>
+
+        <div class="profile-tabs">
+          <button class="profile-tab is-active" id="profile-tab-posts" type="button">Посты</button>
+          <button class="profile-tab" id="profile-tab-points" type="button">Баллы</button>
+        </div>
+
+        <section class="profile-posts-panel" id="profile-posts-panel">
+          <article class="composer">
+            <div class="composer-top">
+              <img class="avatar" id="profile-composer-avatar" src="https://i.pravatar.cc/100?img=44" alt="Ваш аватар" />
+              <textarea class="composer-input" id="profile-new-post-text" placeholder="Что нового?"></textarea>
+            </div>
+            <div class="composer-bottom">
+              <div>
+                <button class="attach-btn" id="profile-attach-btn" type="button" aria-label="Прикрепить фото">
+                  <img class="attach-icon" src="/images/скрепка.png" alt="" />
+                </button>
+                <input class="attach-input" id="profile-attach-input" type="file" accept="image/*" multiple />
+              </div>
+              <button class="post-btn" id="profile-publish-btn" type="button">Опубликовать</button>
+            </div>
+            <div class="composer-preview" id="profile-composer-preview"></div>
+          </article>
+
+          <section class="post-list" id="profile-post-list"></section>
+        </section>
+
+        <section class="profile-points-panel" id="profile-points-panel" hidden>
+          <div class="profile-points-card">
+            <span class="profile-points-label">Ваши баллы</span>
+            <span class="profile-points-value" id="profile-points-value">1000<img class="profile-points-star" src="/images/звезда.png" alt="" /></span>
+          </div>
+        </section>
+      </section>
+    </div>
+  </main>
+  <div class="media-modal" id="profile-media-modal" aria-hidden="true">
+    <button class="media-backdrop" id="profile-media-backdrop" type="button" aria-label="Закрыть"></button>
+    <div class="media-dialog" role="dialog" aria-modal="true" aria-label="Просмотр фото">
+      <div class="media-stage">
+        <button class="media-close" id="profile-media-close" type="button" aria-label="Закрыть">✕</button>
+        <div class="media-track" id="profile-media-track"></div>
+      </div>
+      <button class="media-nav prev" id="profile-media-prev" type="button" aria-label="Предыдущее фото">‹</button>
+      <button class="media-nav next" id="profile-media-next" type="button" aria-label="Следующее фото">›</button>
+    </div>
+  </div>
+  <div class="settings-modal" id="profile-settings-modal" aria-hidden="true">
+    <button class="settings-backdrop" id="profile-settings-backdrop" type="button" aria-label="Закрыть"></button>
+    <section class="settings-dialog" role="dialog" aria-modal="true" aria-label="Настройки профиля">
+      <button class="settings-close" id="profile-settings-close" type="button" aria-label="Закрыть">✕</button>
+      <div class="settings-layout">
+        <aside class="settings-sidebar">
+          <h2 class="settings-title">Настройки</h2>
+          <button class="settings-nav-item is-active" id="settings-account-tab" type="button">
+            <img class="settings-nav-icon" src="/images/профиль.png" alt="" />
+            Аккаунт
+          </button>
+          <button class="settings-nav-item" id="settings-security-tab" type="button">
+            <span class="settings-shield" aria-hidden="true">🛡</span>
+            Безопасность
+          </button>
+        </aside>
+        <div class="settings-divider"></div>
+        <section class="settings-content">
+          <div class="settings-pane" id="settings-account-pane">
+            <h3 class="settings-pane-title">Аккаунт</h3>
+            <div class="settings-field-row">
+              <div class="settings-field-copy">
+                <p class="settings-field-label">Имя</p>
+                <p class="settings-field-hint">Отображаемое имя</p>
+              </div>
+              <input class="settings-input" id="settings-name-input" type="text" value="Persona" />
+            </div>
+            <div class="settings-separator"></div>
+            <div class="settings-field-row">
+              <div class="settings-field-copy">
+                <p class="settings-field-label">Username</p>
+                <p class="settings-field-hint">Ваш уникальный идентификатор<br />(только латиница, цифры и _)</p>
+              </div>
+              <input class="settings-input" id="settings-username-input" type="text" value="persona44" />
+            </div>
+            <div class="settings-separator"></div>
+            <div class="settings-field-stack">
+              <p class="settings-field-label">О себе</p>
+              <p class="settings-field-hint">Расскажите немного о себе</p>
+              <textarea class="settings-textarea" id="settings-about-input" placeholder="Напишите что-нибудь о себе..."></textarea>
+            </div>
+          </div>
+          <div class="settings-pane" id="settings-security-pane" hidden>
+            <h3 class="settings-pane-title">Безопасность</h3>
+            <div class="settings-field-stack">
+              <p class="settings-field-label">Смена почты</p>
+              <p class="settings-field-hint">Код подтверждения придет на новую почту.</p>
+              <input class="settings-input" id="settings-email-input" type="email" placeholder="Новая почта" autocomplete="email" />
+              <input class="settings-input" id="settings-email-password" type="password" placeholder="Текущий пароль" autocomplete="current-password" />
+              <button class="settings-security-btn" id="settings-email-code" type="button">Получить код для почты</button>
+            </div>
+            <div class="settings-separator"></div>
+            <div class="settings-field-stack">
+              <p class="settings-field-label">Смена пароля</p>
+              <p class="settings-field-hint">Код подтверждения придет на текущую почту.</p>
+              <input class="settings-input" id="settings-current-password" type="password" placeholder="Текущий пароль" autocomplete="current-password" />
+              <input class="settings-input" id="settings-new-password" type="password" placeholder="Новый пароль, минимум 10 символов" minlength="10" autocomplete="new-password" />
+              <button class="settings-security-btn" id="settings-password-code" type="button">Получить код для пароля</button>
+            </div>
+            <div class="settings-separator"></div>
+            <div class="settings-field-stack">
+              <p class="settings-field-label">Подтверждение</p>
+              <p class="settings-field-hint">Введите шестизначный код из письма.</p>
+              <input class="settings-input" id="settings-security-code" type="text" inputmode="numeric" maxlength="6" placeholder="6-значный код" autocomplete="one-time-code" />
+              <p class="settings-password-message" id="settings-security-message" aria-live="polite"></p>
+              <button class="settings-security-btn settings-password-save" id="settings-security-confirm" type="button">Подтвердить изменения</button>
+            </div>
+          </div>
+          <div class="settings-actions">
+            <button class="settings-apply-btn" id="settings-apply-btn" type="button">Применить</button>
+            <button class="settings-save-btn" id="settings-save-btn" type="button">Сохранить</button>
+          </div>
+        </section>
+      </div>
+    </section>
+  </div>
+
+  <script src="/js/social-app.js"></script>
+</body>
+</html>

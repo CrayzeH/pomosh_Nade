@@ -1,0 +1,63 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Созвездие — Создание аккаунта</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="page">
+    <section class="card" aria-labelledby="register-title">
+      <p class="brand">СОЗВЕЗДИЕ</p>
+
+      <h1 id="register-title">Создание аккаунта</h1>
+      <p class="subtitle">Пожалуйста, введите ваши&nbsp;&nbsp;данные</p>
+
+      <form class="form" id="register-form" action="verify.html" method="get">
+        <label class="label" for="email">E-Mail</label>
+        <input class="input input--filled" type="text" id="email" name="email" autocomplete="email" required />
+
+        <label class="label" for="password">Пароль</label>
+        <div class="password-wrap">
+          <input
+            class="input input--outline"
+            type="password"
+            id="password"
+            name="password"
+            placeholder="Минимум 10 символов"
+            minlength="10"
+            autocomplete="new-password"
+            required
+          />
+          <button class="eye" type="button" aria-label="Показать пароль">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M1.5 12s3.9-6.5 10.5-6.5S22.5 12 22.5 12s-3.9 6.5-10.5 6.5S1.5 12 1.5 12Z" stroke="currentColor" stroke-width="1.4"/>
+              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.4"/>
+            </svg>
+          </button>
+        </div>
+
+        <p class="policy">
+          Продолжая, вы соглашаетесь с
+          <a class="policy-link" href="terms.html">условиями использования</a>
+          и
+          <a class="policy-link" href="privacy.html">политики конфиденциальности</a>
+        </p>
+
+        <button class="btn btn--primary" type="submit">Продолжить</button>
+      </form>
+
+      <p class="login-line">
+        <span>У вас уже есть аккаунт?</span>
+        <a class="btn btn--small" href="login_new.html">Войти</a>
+      </p>
+    </section>
+  </main>
+
+  <script src="/js/social-app.js"></script>
+</body>
+</html>

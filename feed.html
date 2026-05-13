@@ -1,0 +1,67 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Созвездие — Лента</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="feed-page">
+    <div class="feed-layout">
+      <aside class="feed-sidebar">
+        <p class="brand">СОЗВЕЗДИЕ</p>
+        <nav class="menu">
+          <a class="menu-item is-active" href="/feed.html"><img class="menu-icon" src="/images/лента.png" alt="" />Лента</a>
+          <a class="menu-item" href="/create.html"><img class="menu-icon" src="/images/создавай.png" alt="" />Создавай</a>
+          <a class="menu-item" href="/notifications.html"><img class="menu-icon" src="/images/уведомления.png" alt="" />Уведомления</a>
+          <a class="menu-item" href="/profile_new.html"><img class="menu-icon" src="/images/профиль.png" alt="" />Профиль</a>
+          <a class="menu-item" href="/chats.html"><img class="menu-icon" src="/images/чаты.png" alt="" />Чаты</a>
+        </nav>
+        <button class="menu-item menu-item-logout" type="button" data-logout><img class="menu-icon" src="/images/выход.png" alt="" />Выйти</button>
+      </aside>
+
+      <section class="feed-main" aria-label="Лента новостей">
+        <div class="feed-tabs">
+          <button class="feed-tab" type="button">Для вас</button>
+        </div>
+
+        <article class="composer">
+          <div class="composer-top">
+            <img class="avatar" src="https://i.pravatar.cc/100?img=15" alt="Ваш аватар" />
+            <textarea class="composer-input" id="new-post-text" placeholder="Что нового?"></textarea>
+          </div>
+          <div class="composer-bottom">
+            <div>
+              <button class="attach-btn" id="attach-btn" type="button" aria-label="Прикрепить фото">
+                <img class="attach-icon" src="/images/скрепка.png" alt="" />
+              </button>
+              <input class="attach-input" id="attach-input" type="file" accept="image/*" multiple />
+            </div>
+            <button class="post-btn" id="publish-btn" type="button">Опубликовать</button>
+          </div>
+          <div class="composer-preview" id="composer-preview"></div>
+        </article>
+
+        <section class="post-list" id="post-list"></section>
+      </section>
+    </div>
+  </main>
+  <div class="media-modal" id="feed-media-modal" aria-hidden="true">
+    <button class="media-backdrop" id="feed-media-backdrop" type="button" aria-label="Закрыть"></button>
+    <div class="media-dialog" role="dialog" aria-modal="true" aria-label="Просмотр фото">
+      <div class="media-stage">
+        <button class="media-close" id="feed-media-close" type="button" aria-label="Закрыть">✕</button>
+        <div class="media-track" id="feed-media-track"></div>
+      </div>
+      <button class="media-nav prev" id="feed-media-prev" type="button" aria-label="Предыдущее фото">‹</button>
+      <button class="media-nav next" id="feed-media-next" type="button" aria-label="Следующее фото">›</button>
+    </div>
+  </div>
+
+  <script src="/js/social-app.js"></script>
+</body>
+</html>
