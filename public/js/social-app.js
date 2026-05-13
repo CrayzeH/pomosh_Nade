@@ -32,6 +32,27 @@
     }).format(date);
   };
 
+  const messageTimeLabel = (value) => {
+    const date = value ? new Date(value) : new Date();
+    if (Number.isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat('ru-RU', { hour: '2-digit', minute: '2-digit' }).format(date);
+  };
+
+  const dayLabel = (value) => {
+    const date = value ? new Date(value) : new Date();
+    if (Number.isNaN(date.getTime())) return '';
+    return new Intl.DateTimeFormat('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+  };
+
+  const dayKey = (value) => {
+    const date = value ? new Date(value) : new Date();
+    if (Number.isNaN(date.getTime())) return '';
+    return `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+  };
+
+  const iconTrash = () => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5"/><path d="M14 11v5"/></svg>';
+  const iconBan = () => '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M6.5 6.5l11 11"/></svg>';
+
   const readImages = (files) => Promise.all(files.map((file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result || ''));
@@ -91,6 +112,12 @@
   function renderPost(post) {
     const author = post.author || {};
     const isWallPost = post.wallOwner && post.wallOwner.id !== author.id;
+    const moderation = post.canModerate ? `
+      <div class="admin-actions">
+        <button class="admin-icon-btn" type="button" data-delete-post="${post.id}" title="Удалить пост">${iconTrash()}</button>
+        <button class="admin-icon-btn admin-icon-btn--danger" type="button" data-ban-user="${author.id}" title="Забанить пользователя">${iconBan()}</button>
+      </div>
+    ` : '';
     return `
       <article class="post" data-post-id="${post.id}">
         <div class="post-header">
@@ -101,6 +128,7 @@
             <p class="post-author"><a class="post-profile-link" href="${profileUrl(author)}">${escapeHtml(author.name)}</a></p>
             <span class="post-time">${isWallPost ? `для ${escapeHtml(post.wallOwner.name)} · ` : ''}${timeLabel(post.createdAt)}</span>
           </div>
+          ${moderation}
         </div>
         ${post.text ? `<p class="post-text">${escapeHtml(post.text)}</p>` : ''}
         ${renderImages(post.images)}
@@ -116,6 +144,12 @@
 
   function renderFeedMessage(message) {
     const author = message.author || {};
+    const moderation = message.canModerate ? `
+      <div class="admin-actions">
+        <button class="admin-icon-btn" type="button" data-delete-message="${message.id}" title="Удалить пост">${iconTrash()}</button>
+        <button class="admin-icon-btn admin-icon-btn--danger" type="button" data-ban-user="${author.id}" title="Забанить пользователя">${iconBan()}</button>
+      </div>
+    ` : '';
     return `
       <article class="post" data-message-id="${message.id}">
         <div class="post-header">
@@ -126,11 +160,37 @@
             <p class="post-author"><a class="post-profile-link" href="${profileUrl(author)}">${escapeHtml(author.name)}</a></p>
             <span class="post-time">${timeLabel(message.createdAt)}</span>
           </div>
+          ${moderation}
         </div>
         ${message.text ? `<p class="post-text">${escapeHtml(message.text)}</p>` : ''}
         ${renderImages(message.images)}
       </article>
     `;
+  }
+
+  async function handleAdminAction(event, reload) {
+    const deletePost = event.target.closest('[data-delete-post]');
+    if (deletePost) {
+      if (!confirm('Удалить этот пост?')) return true;
+      await api(`/api/social/posts/${deletePost.dataset.deletePost}`, { method: 'DELETE' });
+      await reload();
+      return true;
+    }
+    const deleteMessage = event.target.closest('[data-delete-message]');
+    if (deleteMessage) {
+      if (!confirm('Удалить этот пост из ленты?')) return true;
+      await api(`/api/social/messages/${deleteMessage.dataset.deleteMessage}`, { method: 'DELETE' });
+      await reload();
+      return true;
+    }
+    const banUser = event.target.closest('[data-ban-user]');
+    if (banUser) {
+      if (!confirm('Забанить пользователя?')) return true;
+      await api(`/api/admin/users/${banUser.dataset.banUser}/ban`, { method: 'PUT', body: JSON.stringify({}) });
+      await reload();
+      return true;
+    }
+    return false;
   }
 
   async function initAuthPages() {
@@ -274,6 +334,9 @@
       $('#composer-preview').innerHTML = '';
       await loadFeed();
     });
+    list?.addEventListener('click', async (event) => {
+      await handleAdminAction(event, loadFeed);
+    });
     await loadFeed();
   }
 
@@ -294,9 +357,31 @@
     $('.profile-name').textContent = viewed.name;
     $('.profile-handle').textContent = `@${viewed.handle}`;
     $('.profile-avatar').src = viewed.avatar;
+    const profileNameRow = $('.profile-name-row');
+    if (profileNameRow) {
+      const memberships = viewed.memberships?.length
+        ? viewed.memberships.map((item) => escapeHtml(item.name)).join(', ')
+        : 'Не состоит в отрядах';
+      profileNameRow.insertAdjacentHTML('beforeend', `<p class="profile-memberships">Отряд: ${memberships}</p>`);
+      if (viewed.isBanned) profileNameRow.insertAdjacentHTML('beforeend', '<p class="profile-ban-state">Пользователь заблокирован</p>');
+    }
     if ($('.profile-cover') && viewed.cover) $('.profile-cover').style.backgroundImage = `url("${viewed.cover}")`;
     if (isOwn && $('#profile-points-value')) $('#profile-points-value').innerHTML = `${viewed.points}<img class="profile-points-star" src="/images/звезда.png" alt="" />`;
     if (!isOwn && text) text.placeholder = `Написать на стене ${viewed.name}`;
+    if (!isOwn && me.isAdmin) {
+      const head = $('.profile-head');
+      head?.insertAdjacentHTML('beforeend', viewed.isBanned
+        ? `<button class="profile-edit" id="profile-unban-btn" type="button">Разбанить</button>`
+        : `<button class="profile-edit" id="profile-ban-btn" type="button">Забанить</button>`);
+      $('#profile-ban-btn')?.addEventListener('click', async () => {
+        await api(`/api/admin/users/${viewed.id}/ban`, { method: 'PUT', body: JSON.stringify({}) });
+        window.location.reload();
+      });
+      $('#profile-unban-btn')?.addEventListener('click', async () => {
+        await api(`/api/admin/users/${viewed.id}/unban`, { method: 'PUT', body: JSON.stringify({}) });
+        window.location.reload();
+      });
+    }
 
     async function loadWall() {
       const data = await api(`/api/social/posts?wallOwnerId=${viewed.id}`);
@@ -325,6 +410,7 @@
     });
 
     list?.addEventListener('click', async (event) => {
+      if (await handleAdminAction(event, loadWall)) return;
       const like = event.target.closest('[data-like-id]');
       if (!like) return;
       await api(`/api/social/posts/${like.dataset.likeId}/like`, { method: 'POST', body: '{}' });
@@ -488,6 +574,7 @@
           <img class="notification-avatar" src="${item.actor.avatar}" alt="" />
           <div class="notification-copy">
             <p class="notification-text"><span class="notification-name">${escapeHtml(item.actor.name)}</span> ${escapeHtml(item.body)}</p>
+            ${item.type === 'squad_application' ? `<p class="notification-status">Статус: ${item.actionState === 'approved' ? 'принята' : item.actionState === 'rejected' ? 'отклонена' : 'на рассмотрении'}</p>` : ''}
             ${item.postText ? `<p class="notification-post-preview">${escapeHtml(item.postText)}</p>` : ''}
             ${item.type === 'wall_post_request' && item.actionState === 'pending' ? `
               <div class="notification-actions">
@@ -607,27 +694,43 @@
       list.innerHTML = data.chats.map((chat) => `
         <article class="chat-row" data-chat-id="${chat.id}">
           <div class="chat-avatar">${chat.avatar?.startsWith('http') || chat.avatar?.startsWith('/') ? `<img class="chat-avatar-image" src="${chat.avatar}" alt="" />` : `<span class="chat-avatar-emoji">${escapeHtml(chat.avatar || '★')}</span>`}</div>
-          <div class="chat-copy"><p class="chat-name">${escapeHtml(chat.title)}</p><p class="chat-preview">${escapeHtml(chat.type === 'group' ? 'Группа' : 'Личный чат')} · ${escapeHtml(chat.preview)}</p></div>
+          <div class="chat-copy"><p class="chat-name">${escapeHtml(chat.title)}${chat.isBlocked ? ' <span class="chat-blocked-badge">заблокирован</span>' : ''}</p><p class="chat-preview">${escapeHtml(chat.type === 'group' ? 'Группа' : 'Личный чат')} · ${escapeHtml(chat.preview)}</p></div>
         </article>`).join('');
+    }
+
+    function renderDialogMessages(messages) {
+      let previousDay = '';
+      return messages.map((message) => {
+        const currentDay = dayKey(message.createdAt);
+        const divider = currentDay !== previousDay
+          ? `<div class="chat-day-divider"><span>${escapeHtml(dayLabel(message.createdAt))}</span></div>`
+          : '';
+        previousDay = currentDay;
+        const authorUrl = profileUrl(message.author);
+        const adminTools = message.canModerate ? `<div class="admin-actions admin-actions--chat"><button class="admin-icon-btn" type="button" data-delete-message="${message.id}" title="Удалить сообщение">${iconTrash()}</button><button class="admin-icon-btn admin-icon-btn--danger" type="button" data-ban-user="${message.author.id}" title="Забанить пользователя">${iconBan()}</button></div>` : '';
+        return `${divider}
+        <div class="chat-bubble-row ${message.isMine ? 'is-me' : 'is-them'}">
+          ${!message.isMine ? `<a href="${authorUrl}" class="chat-message-avatar-link"><img class="chat-message-avatar" src="${message.author.avatar}" alt="${escapeHtml(message.author.name)}" /></a>` : ''}
+          <div class="chat-bubble chat-bubble--text">
+            ${!message.isMine ? `<a class="chat-message-author" href="${authorUrl}">${escapeHtml(message.author.name)}</a>` : ''}
+            ${message.text ? `<span class="chat-message-text">${escapeHtml(message.text)}</span>` : ''}
+            ${renderImages(message.images, 'chat-bubble-image')}
+            <span class="chat-message-time">${messageTimeLabel(message.createdAt)}</span>
+            ${adminTools}
+          </div>
+        </div>`;
+      }).join('');
     }
 
     async function openChat(chatId) {
       activeChatId = Number(chatId);
       const data = await api(`/api/social/chats/${activeChatId}/messages`);
       $('#chat-dialog-name').textContent = data.chat.title;
-      $('#chat-dialog-status').textContent = data.chat.type === 'group' ? 'групповой чат' : 'личный чат';
+      $('#chat-dialog-status').textContent = data.chat.isBlocked ? 'личный чат · пользователь заблокирован' : (data.chat.type === 'group' ? 'групповой чат' : 'личный чат');
       $('#chat-dialog-avatar').innerHTML = data.chat.avatar?.startsWith('http') || data.chat.avatar?.startsWith('/')
-        ? `<img class="chat-avatar-image" src="${data.chat.avatar}" alt="" />`
+        ? `${data.chat.type === 'direct' && data.chat.otherUser ? `<a href="${profileUrl(data.chat.otherUser)}"><img class="chat-avatar-image" src="${data.chat.avatar}" alt="" /></a>` : `<img class="chat-avatar-image" src="${data.chat.avatar}" alt="" />`}`
         : `<span class="chat-avatar-emoji">${escapeHtml(data.chat.avatar || '★')}</span>`;
-      messagesNode.innerHTML = data.messages.map((message) => `
-        <div class="chat-bubble-row ${message.isMine ? 'is-me' : 'is-them'}">
-          ${!message.isMine ? `<img class="chat-message-avatar" src="${message.author.avatar}" alt="${escapeHtml(message.author.name)}" />` : ''}
-          <div class="chat-bubble chat-bubble--text">
-            ${!message.isMine ? `<span class="chat-message-author">${escapeHtml(message.author.name)}</span>` : ''}
-            ${message.text ? `<span class="chat-message-text">${escapeHtml(message.text)}</span>` : ''}
-            ${renderImages(message.images, 'chat-bubble-image')}
-          </div>
-        </div>`).join('');
+      messagesNode.innerHTML = renderDialogMessages(data.messages);
       messagesNode.scrollTop = messagesNode.scrollHeight;
       listView.hidden = true;
       dialog.hidden = false;
@@ -649,6 +752,12 @@
       input.value = '';
       await openChat(activeChatId);
       await loadChats();
+    });
+    messagesNode?.addEventListener('click', async (event) => {
+      await handleAdminAction(event, async () => {
+        await openChat(activeChatId);
+        await loadChats();
+      });
     });
     search?.addEventListener('input', async () => {
       const q = search.value.trim();

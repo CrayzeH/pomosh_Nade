@@ -1022,6 +1022,63 @@ h1 {
   gap: 10px;
 }
 
+.admin-actions {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-actions--chat {
+  margin-left: 0;
+  margin-top: 8px;
+}
+
+.admin-icon-btn {
+  width: 34px;
+  height: 34px;
+  border: 1px solid rgba(16, 24, 40, 0.12);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  color: #475467;
+  display: inline-grid;
+  place-items: center;
+}
+
+.admin-icon-btn svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.admin-icon-btn:hover {
+  background: #f2f4f7;
+  color: #175cd3;
+}
+
+.admin-icon-btn--danger:hover {
+  background: #fef3f2;
+  color: #d92d20;
+}
+
+.profile-memberships,
+.profile-ban-state,
+.notification-status {
+  margin-top: 4px;
+  color: #667085;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.profile-ban-state {
+  color: #d92d20;
+}
+
 .post-meta {
   display: flex;
   align-items: baseline;
@@ -2593,6 +2650,18 @@ h1 {
   line-height: 1.1;
 }
 
+.chat-blocked-badge {
+  display: inline-flex;
+  margin-left: 8px;
+  padding: 3px 8px;
+  border-radius: 999px;
+  background: rgba(254, 243, 242, 0.95);
+  color: #b42318;
+  font-size: 12px;
+  font-weight: 900;
+  vertical-align: middle;
+}
+
 .chat-preview {
   margin: 6px 0 0;
   color: #c7cfdd;
@@ -2681,6 +2750,13 @@ h1 {
   flex-shrink: 0;
 }
 
+.chat-dialog-avatar a,
+.chat-message-avatar-link {
+  display: contents;
+  color: inherit;
+  text-decoration: none;
+}
+
 .chat-dialog-head-copy {
   min-width: 0;
 }
@@ -2715,6 +2791,29 @@ h1 {
 .chat-dialog-messages::before {
   content: "";
   margin-top: auto;
+  flex: 0 0 auto;
+}
+
+.chat-day-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #8f98aa;
+  font-size: 13px;
+  font-weight: 900;
+  text-align: center;
+  padding: 8px 8px 2px;
+}
+
+.chat-day-divider::before,
+.chat-day-divider::after {
+  content: "";
+  height: 1px;
+  flex: 1 1 auto;
+  background: rgba(143, 152, 170, 0.35);
+}
+
+.chat-day-divider span {
   flex: 0 0 auto;
 }
 
@@ -2775,10 +2874,20 @@ h1 {
   font-weight: 900;
   letter-spacing: 0;
   opacity: 0.95;
+  text-decoration: none;
 }
 
 .chat-message-text {
   display: block;
+}
+
+.chat-message-time {
+  align-self: flex-end;
+  color: rgba(237, 241, 251, 0.7);
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  margin-top: 2px;
 }
 
 .chat-bubble--media {

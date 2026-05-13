@@ -2079,6 +2079,7 @@
 </footer>
 <script>
     let activeSquadName = 'Клевер';
+    let activeSquadId = null;
     let teamMembers = [];
     let teamStartIndex = 0;
 
@@ -2311,6 +2312,7 @@
         }
 
         activeSquadName = data.squad.name;
+        activeSquadId = data.squad.id;
         document.title = data.squad.name;
         setSquadPanelTextMode(shortName);
         setTheme(data.squad.colors);
@@ -2405,13 +2407,14 @@
         button.textContent = 'Отправляем...';
 
         try {
-            const response = await fetch('/api/ask-question', {
+            const response = await fetch('/api/apply', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    name: result.name,
+                    squadId: activeSquadId,
+                    fullName: result.name,
                     phone: result.vk,
-                    question: `Запрос PDF-гайда «Как провести лучшее лето». Отряд: ${activeSquadName}. Возраст: ${result.age}`
+                    class: String(result.age)
                 })
             });
             const data = await response.json();
@@ -2421,7 +2424,7 @@
             }
 
             guideForm.reset();
-            status.textContent = 'Готово! Заявка отправлена, скоро с тобой свяжутся.';
+            status.textContent = `Готово! Заявка в ${activeSquadName} отправлена и находится на рассмотрении.`;
             status.classList.add('success');
         } catch (error) {
             status.textContent = error.message || 'Ошибка отправки. Попробуй еще раз.';

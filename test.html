@@ -2166,6 +2166,321 @@
         renderQuestion();
     }
 
+    function testOption(text, weights, traits) {
+        return { text, weights, traits };
+    }
+
+    questions.splice(0, questions.length,
+        {
+            text: 'Какая роль в команде тебе ближе всего?',
+            options: [
+                testOption('Быстро включаюсь, беру задачу и двигаю процесс вперед', { krylya: 3, everest: 2, prospekt: 1 }, ['инициатива', 'быстрое действие']),
+                testOption('Помогаю людям договориться и держу спокойную атмосферу', { klever: 3, yamaika: 2, femida: 1 }, ['поддержка', 'командность']),
+                testOption('Придумываю визуал, подачу, шутки и нестандартные решения', { kraski: 3, apelsin: 3, shum: 1 }, ['творчество', 'креатив']),
+                testOption('Выстраиваю план, правила и понятный порядок работы', { femida: 3, prospekt: 2, everest: 1 }, ['структура', 'ответственность']),
+                testOption('Зову людей, рассказываю, выступаю и создаю движ', { shum: 3, 'zhar-ptitsa': 3, apelsin: 1 }, ['публичность', 'энергия'])
+            ]
+        },
+        {
+            text: 'В какой среде тебе проще раскрыться?',
+            options: [
+                testOption('В поездках, маршрутах и ситуациях, где каждый день новый', { 'vokrug-sveta': 4, yamaika: 1, prospekt: 1 }, ['путешествия', 'открытость']),
+                testOption('На событиях с детьми, где нужно быть внимательным и активным', { krylya: 4, klever: 1, apelsin: 1 }, ['педагогика', 'забота']),
+                testOption('В творческой мастерской, где можно делать красиво руками и головой', { kraski: 4, apelsin: 2 }, ['визуальное творчество', 'эстетика']),
+                testOption('На сцене, в шоу, выступлениях и больших эмоциональных событиях', { 'zhar-ptitsa': 4, shum: 2 }, ['сцена', 'харизма']),
+                testOption('В проектах, где есть конкретная цель и измеримый результат', { everest: 3, prospekt: 2, femida: 1 }, ['цели', 'результат'])
+            ]
+        },
+        {
+            text: 'Что ты делаешь, когда задача внезапно усложняется?',
+            options: [
+                testOption('Собираю факты, ищу честное решение и не паникую', { femida: 4, prospekt: 1 }, ['логика', 'справедливость']),
+                testOption('Давлю до результата, даже если тяжело и долго', { everest: 4, krylya: 1 }, ['выносливость', 'настойчивость']),
+                testOption('Пересобираю идею в более легкий и веселый формат', { apelsin: 3, kraski: 2, yamaika: 1 }, ['легкость', 'креатив']),
+                testOption('Объясняю команде, что происходит, и беру коммуникацию на себя', { shum: 4, 'zhar-ptitsa': 1 }, ['коммуникация', 'публичность']),
+                testOption('Делаю маршрут действий: кто, что и когда выполняет', { prospekt: 4, femida: 2 }, ['организация', 'практичность'])
+            ]
+        },
+        {
+            text: 'Что больше всего заряжает после насыщенного дня?',
+            options: [
+                testOption('Понимание, что команда стала ближе и никого не оставили одного', { klever: 4, yamaika: 2 }, ['поддержка', 'теплая атмосфера']),
+                testOption('Фото, видео, сторис и ощущение, что событие заметили', { shum: 4, apelsin: 1, 'zhar-ptitsa': 1 }, ['медиа', 'заметность']),
+                testOption('Красивый итог: плакат, оформление, костюмы, визуальная идея', { kraski: 4, 'zhar-ptitsa': 1 }, ['эстетика', 'визуальный результат']),
+                testOption('Маршрут, новые впечатления и истории, которые хочется пересказывать', { 'vokrug-sveta': 4, yamaika: 1 }, ['путешествия', 'впечатления']),
+                testOption('Сложная цель закрыта, и можно честно сказать: мы справились', { everest: 4, femida: 1 }, ['достижение', 'дисциплина'])
+            ]
+        },
+        {
+            text: 'Какой человек рядом с тобой быстрее станет своим?',
+            options: [
+                testOption('Тот, кто искренний, спокойный и умеет поддержать', { klever: 4, yamaika: 2 }, ['доверие', 'забота']),
+                testOption('Тот, кто любит юмор, идеи и не боится странных предложений', { apelsin: 4, kraski: 1 }, ['юмор', 'идеи']),
+                testOption('Тот, кто держит слово и уважает договоренности', { femida: 4, everest: 1 }, ['надежность', 'правила']),
+                testOption('Тот, кто легко знакомится, двигается и не теряется в новом месте', { 'vokrug-sveta': 3, yamaika: 2, shum: 1 }, ['открытость', 'общение']),
+                testOption('Тот, кто горит событием и может увлечь остальных', { 'zhar-ptitsa': 4, krylya: 1, shum: 1 }, ['энергия', 'лидерство'])
+            ]
+        },
+        {
+            text: 'Какой проект ты бы выбрал на свободный месяц?',
+            options: [
+                testOption('Смену или серию активностей для детей', { krylya: 4, klever: 1 }, ['детские события', 'педагогика']),
+                testOption('Медиакампанию, афиши, короткие ролики и новости', { shum: 4, kraski: 2 }, ['медиа', 'дизайн']),
+                testOption('Большое творческое событие с костюмами и выступлениями', { 'zhar-ptitsa': 4, apelsin: 2, kraski: 1 }, ['сцена', 'творчество']),
+                testOption('Поездку, экспедицию или серию городских маршрутов', { 'vokrug-sveta': 4, prospekt: 2 }, ['маршруты', 'путешествия']),
+                testOption('Проект с четкими задачами, дедлайнами и пользой для людей', { prospekt: 3, femida: 2, everest: 1 }, ['планирование', 'польза'])
+            ]
+        },
+        {
+            text: 'Какой темп работы тебе комфортнее?',
+            options: [
+                testOption('Быстрый: меньше раскачки, больше действия', { krylya: 3, shum: 2, apelsin: 1 }, ['динамика', 'действие']),
+                testOption('Ровный: спокойно, по плану, без хаоса', { femida: 3, prospekt: 3, klever: 1 }, ['порядок', 'стабильность']),
+                testOption('Волнами: сначала идея, потом мощный рывок перед событием', { 'zhar-ptitsa': 3, kraski: 2, apelsin: 1 }, ['событийность', 'креативный рывок']),
+                testOption('Дальний: можно долго идти к большой цели', { everest: 4, 'vokrug-sveta': 1 }, ['долгая дистанция', 'цель']),
+                testOption('Гибкий: главное, чтобы людям было комфортно', { yamaika: 3, klever: 2 }, ['гибкость', 'комфорт'])
+            ]
+        },
+        {
+            text: 'За что ты скорее возьмешь ответственность?',
+            options: [
+                testOption('За честность решения и соблюдение договоренностей', { femida: 4, klever: 1 }, ['справедливость', 'ответственность']),
+                testOption('За атмосферу, поддержку и настроение команды', { klever: 3, yamaika: 3, apelsin: 1 }, ['атмосфера', 'поддержка']),
+                testOption('За визуальный стиль, оформление и первое впечатление', { kraski: 4, shum: 1 }, ['визуал', 'эстетика']),
+                testOption('За маршрут, логистику и понятный план', { prospekt: 4, 'vokrug-sveta': 2 }, ['логистика', 'план']),
+                testOption('За финальный результат, даже если придется тащить сложный кусок', { everest: 4, krylya: 1 }, ['результат', 'упорство'])
+            ]
+        },
+        {
+            text: 'Как ты обычно общаешься с новой аудиторией?',
+            options: [
+                testOption('Сразу громко, понятно и уверенно', { shum: 3, 'zhar-ptitsa': 3 }, ['публичность', 'уверенность']),
+                testOption('Через юмор и легкое общение', { apelsin: 3, yamaika: 2 }, ['юмор', 'легкость']),
+                testOption('Через заботу: замечаю, кому некомфортно', { klever: 4, krylya: 1 }, ['эмпатия', 'внимательность']),
+                testOption('Через правила и ясные инструкции', { femida: 3, prospekt: 2 }, ['ясность', 'структура']),
+                testOption('Через общее приключение и новые впечатления', { 'vokrug-sveta': 4, yamaika: 1 }, ['приключение', 'открытость'])
+            ]
+        },
+        {
+            text: 'Какая фраза больше похожа на тебя?',
+            options: [
+                testOption('Если делать, то красиво и со смыслом', { kraski: 4, femida: 1 }, ['смысл', 'эстетика']),
+                testOption('Сначала люди, потом процессы', { klever: 4, yamaika: 2 }, ['люди', 'комфорт']),
+                testOption('Нам нужен инфоповод, чтобы об этом узнали', { shum: 4, apelsin: 1 }, ['медиа', 'инфоповод']),
+                testOption('Дорога сама подскажет, что делать дальше', { 'vokrug-sveta': 4, yamaika: 1 }, ['дорога', 'гибкость']),
+                testOption('Сложно не значит невозможно', { everest: 4, krylya: 1 }, ['вызов', 'стойкость'])
+            ]
+        },
+        {
+            text: 'Что в событии для тебя самое важное?',
+            options: [
+                testOption('Чтобы участники ушли с ощущением заботы и принятия', { klever: 4, krylya: 1 }, ['принятие', 'забота']),
+                testOption('Чтобы была яркая эмоция и сильная подача', { 'zhar-ptitsa': 4, apelsin: 2 }, ['эмоция', 'сцена']),
+                testOption('Чтобы все было понятно, безопасно и по делу', { femida: 3, prospekt: 3 }, ['надежность', 'порядок']),
+                testOption('Чтобы получился красивый визуальный образ', { kraski: 4, shum: 1 }, ['образ', 'дизайн']),
+                testOption('Чтобы событие вывело людей в новый опыт', { 'vokrug-sveta': 3, everest: 2, yamaika: 1 }, ['новый опыт', 'рост'])
+            ]
+        },
+        {
+            text: 'Если бы нужно было выбрать символ, что ближе?',
+            options: [
+                testOption('Компас и билет', { 'vokrug-sveta': 4, prospekt: 1 }, ['маршрут', 'исследование']),
+                testOption('Микрофон и громкая афиша', { shum: 4, 'zhar-ptitsa': 1 }, ['голос', 'афиша']),
+                testOption('Кисти, ткань, краски и макеты', { kraski: 4, apelsin: 1 }, ['мастерская', 'визуал']),
+                testOption('Весы, чек-лист и ясная договоренность', { femida: 4, prospekt: 1 }, ['честность', 'структура']),
+                testOption('Вершина, флаг и команда на подъеме', { everest: 4, krylya: 1 }, ['вершина', 'командный путь'])
+            ]
+        },
+        {
+            text: 'Что ты хочешь прокачать в отряде сильнее всего?',
+            options: [
+                testOption('Навык вести людей и работать с детьми', { krylya: 4, klever: 1 }, ['педагогика', 'лидерство']),
+                testOption('Публичность, медиа и уверенную коммуникацию', { shum: 4, 'zhar-ptitsa': 2 }, ['медиа', 'выступления']),
+                testOption('Проектность, планирование и системность', { prospekt: 3, femida: 3 }, ['системность', 'проектность']),
+                testOption('Творческое мышление и визуальную подачу', { kraski: 4, apelsin: 2 }, ['творческое мышление', 'подача']),
+                testOption('Выдержку, дисциплину и умение идти до конца', { everest: 4, femida: 1 }, ['дисциплина', 'выдержка'])
+            ]
+        },
+        {
+            text: 'Какой итог теста тебе был бы самым честным?',
+            options: [
+                testOption('Отряд, где я буду полезен людям и команде', { klever: 3, krylya: 2, femida: 1 }, ['польза людям', 'команда']),
+                testOption('Отряд, где будет много событий, эмоций и яркости', { 'zhar-ptitsa': 3, apelsin: 2, shum: 1 }, ['яркость', 'события']),
+                testOption('Отряд, где можно создавать красивое и заметное', { kraski: 3, shum: 2, apelsin: 1 }, ['созидание', 'визуальность']),
+                testOption('Отряд, где есть путь, движение и новые горизонты', { 'vokrug-sveta': 3, prospekt: 2, yamaika: 1 }, ['движение', 'горизонты']),
+                testOption('Отряд, где меня будет тянуть расти и преодолевать себя', { everest: 3, femida: 1, krylya: 1 }, ['рост', 'преодоление'])
+            ]
+        }
+    );
+
+    Object.keys(squadDataMap).forEach(key => delete squadDataMap[key]);
+    Object.assign(squadDataMap, {
+        apelsin: { short_name: 'apelsin', name: 'СПО «Апельсин»', icon: '🍊', description: 'Творчество, юмор, легкость и умение быстро превращать идею в яркое событие.' },
+        'vokrug-sveta': { short_name: 'vokrug-sveta', name: 'СОП «Вокруг Света»', icon: '🚆', description: 'Путешествия, дорога, новые места и интерес к людям из разных контекстов.' },
+        krylya: { short_name: 'krylya', name: 'СПО «Крылья»', icon: '🪽', description: 'Педагогика, детские события, инициатива и активная работа в команде.' },
+        prospekt: { short_name: 'prospekt', name: 'СПО «Проспект»', icon: '🛤', description: 'Организация маршрутов, городские проекты, практичность и понятная структура.' },
+        'zhar-ptitsa': { short_name: 'zhar-ptitsa', name: 'СПО «Жар-Птица»', icon: '🔥', description: 'Сцена, энергия, харизма, события и способность зажигать людей вокруг.' },
+        yamaika: { short_name: 'yamaika', name: 'СПО «Ямайка»', icon: '🌴', description: 'Теплый вайб, культура, легкая коммуникация и спокойная уверенность.' },
+        shum: { short_name: 'shum', name: 'СПО «Шум»', icon: '📣', description: 'Медиа, публичность, инфоповоды, голос команды и заметные события.' },
+        klever: { short_name: 'klever', name: 'ТОП «Клевер»', icon: '🍀', description: 'Поддержка, забота, командность и атмосфера, где люди чувствуют себя своими.' },
+        femida: { short_name: 'femida', name: 'ТОП «Фемида»', icon: '⚖', description: 'Справедливость, ответственность, порядок, правила и спокойная логика.' },
+        everest: { short_name: 'everest', name: 'ТОП «Эверест»', icon: '🏔', description: 'Цели, вызов, выносливость, дисциплина и движение к результату.' },
+        kraski: { short_name: 'kraski', name: 'ТОП «Краски»', icon: '🎨', description: 'Визуальное творчество, дизайн, мастерские и внимание к эстетике.' }
+    });
+
+    calculateScores = function(answers) {
+        const scores = Object.fromEntries(Object.keys(squadDataMap).map(key => [key, 0]));
+        answers.forEach(answer => {
+            if (!answer) return;
+            Object.entries(answer.weights || {}).forEach(([key, value]) => {
+                if (scores[key] !== undefined) scores[key] += Number(value || 0);
+            });
+        });
+        return scores;
+    };
+
+    function getAnswerPayload() {
+        return userAnswers.filter(Boolean).map((answer, index) => ({
+            question: questions[index]?.text || '',
+            answer: answer.text,
+            weights: answer.weights,
+            traits: answer.traits
+        }));
+    }
+
+    getAIRecommendation = async function(answers, scores) {
+        try {
+            const response = await fetch('/api/ai-recommend', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ answers: getAnswerPayload(), scores })
+            });
+            return await response.json();
+        } catch (error) {
+            console.error('Ошибка AI рекомендации:', error);
+            return null;
+        }
+    };
+
+    getSquadByScores = function(scores) {
+        return Object.entries(scores)
+            .sort((a, b) => b[1] - a[1])[0]?.[0] || 'apelsin';
+    };
+
+    showResult = async function() {
+        const scores = calculateScores(userAnswers);
+        const resultIcon = document.getElementById('resultIcon');
+        const resultSquad = document.getElementById('resultSquad');
+        const resultDescription = document.getElementById('resultDescription');
+
+        resultIcon.textContent = '🤖';
+        resultSquad.textContent = 'Анализируем ответы...';
+        resultDescription.innerHTML = 'ИИ анализирует твои ответы и сравнивает их с профилями всех 11 отрядов.';
+
+        questionsBlock.classList.add('hidden');
+        resultBlock.classList.remove('hidden');
+
+        const aiResult = await getAIRecommendation(userAnswers, scores);
+        const finalSquad = aiResult?.squadKey || aiResult?.squad || getSquadByScores(scores);
+        const squad = squadDataMap[finalSquad] || squadDataMap.apelsin;
+        const reason = aiResult?.reason || `${squad.name} лучше всего подходит по твоим ответам: ${squad.description}`;
+
+        resultIcon.textContent = squad.icon;
+        resultSquad.textContent = squad.name;
+        resultDescription.innerHTML = `${squad.description}<br><br>🤖 <strong>ИИ-анализ:</strong> ${reason}`;
+
+        if (Array.isArray(aiResult?.top) && aiResult.top.length) {
+            const topText = aiResult.top.slice(0, 3).map(item => {
+                const topSquad = squadDataMap[item.key] || squadDataMap[item.squad] || {};
+                return `${topSquad.name || item.name} — ${Math.round(item.score || 0)} баллов`;
+            }).join('<br>');
+            resultDescription.innerHTML += `<br><br>📊 <strong>Ближайшие совпадения:</strong><br>${topText}`;
+        }
+
+        window.selectedSquadId = squad.short_name;
+        window.selectedSquadName = squad.name;
+        isAIRecommended = Boolean(aiResult?.success);
+        aiRecommendationResult = aiResult;
+
+        try {
+            await fetch('/api/test-result', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    recommendedSquadId: squad.short_name,
+                    answers: getAnswerPayload()
+                })
+            });
+        } catch (error) {
+            console.error('Ошибка сохранения результата:', error);
+        }
+    };
+
+    renderQuestion = function() {
+        const q = questions[currentQuestion];
+        questionText.textContent = q.text;
+        optionsList.innerHTML = '';
+
+        q.options.forEach(option => {
+            const btn = document.createElement('button');
+            btn.className = 'option-btn';
+            btn.textContent = option.text;
+            btn.addEventListener('click', () => {
+                userAnswers[currentQuestion] = option;
+                document.querySelectorAll('.option-btn').forEach(item => {
+                    item.style.background = '#F9F6FF';
+                    item.style.borderColor = '#E0D9F0';
+                });
+                btn.style.background = '#F3EEFF';
+                btn.style.borderColor = '#844DF5';
+                setTimeout(() => {
+                    if (currentQuestion < questions.length - 1) {
+                        nextQuestion();
+                    } else {
+                        showResult();
+                    }
+                }, 300);
+            });
+            optionsList.appendChild(btn);
+        });
+
+        if (userAnswers[currentQuestion]) {
+            const btns = document.querySelectorAll('.option-btn');
+            const selectedIndex = q.options.indexOf(userAnswers[currentQuestion]);
+            if (selectedIndex !== -1 && btns[selectedIndex]) {
+                btns[selectedIndex].style.background = '#F3EEFF';
+                btns[selectedIndex].style.borderColor = '#844DF5';
+            }
+        }
+
+        prevBtn.style.visibility = currentQuestion === 0 ? 'hidden' : 'visible';
+        nextBtn.textContent = currentQuestion === questions.length - 1 ? 'Завершить' : 'Далее →';
+        updateProgress();
+    };
+
+    nextQuestion = function() {
+        if (!userAnswers[currentQuestion]) {
+            alert('Пожалуйста, выберите ответ');
+            return;
+        }
+        if (currentQuestion < questions.length - 1) {
+            currentQuestion++;
+            renderQuestion();
+        } else {
+            showResult();
+        }
+    };
+
+    resetTest = function() {
+        currentQuestion = 0;
+        userAnswers = [];
+        isAIRecommended = false;
+        aiRecommendationResult = null;
+        questionsBlock.classList.remove('hidden');
+        resultBlock.classList.add('hidden');
+        renderQuestion();
+    };
+
     nextBtn.addEventListener('click', nextQuestion);
     prevBtn.addEventListener('click', prevQuestion);
     document.getElementById('resetBtn').addEventListener('click', resetTest);
@@ -2198,6 +2513,10 @@
         const authButtons = document.getElementById('authButtons');
         const userMenu = document.getElementById('userMenu');
         const userNameDisplay = document.getElementById('userNameDisplay');
+
+        if (!authButtons || !userMenu || !userNameDisplay) {
+            return;
+        }
 
         if (currentUser) {
             authButtons.style.display = 'none';

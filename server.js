@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcryptjs');
@@ -14,14 +14,18 @@ let nodemailer = null;
 try {
     nodemailer = require('nodemailer');
 } catch (err) {
-    console.warn('nodemailer не установлен, email-коды будут выводиться в консоль');
+    console.warn('nodemailer РЅРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅ, email-РєРѕРґС‹ Р±СѓРґСѓС‚ РІС‹РІРѕРґРёС‚СЊСЃСЏ РІ РєРѕРЅСЃРѕР»СЊ');
 }
 
 const app = express();
 const PORT = 3000;
+const isProduction = process.env.NODE_ENV === 'production';
+const sessionSecret = process.env.SESSION_SECRET || 'sozvezdie_secret_key_2026';
+
+app.set('trust proxy', 1);
 
 // =============================================
-// НАСТРОЙКА ПУТЕЙ
+// РќРђРЎРўР РћР™РљРђ РџРЈРўР•Р™
 // =============================================
 
 
@@ -31,13 +35,13 @@ if (!fs.existsSync(publicDir)) {
 }
 
 // =============================================
-// ПОДКЛЮЧЕНИЕ К БД
+// РџРћР”РљР›Р®Р§Р•РќРР• Рљ Р‘Р”
 // =============================================
 const db = new sqlite3.Database('./soz.db', (err) => {
     if (err) {
-        console.error('Ошибка подключения к БД:', err.message);
+        console.error('РћС€РёР±РєР° РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє Р‘Р”:', err.message);
     } else {
-        console.log('Подключено к SQLite базе данных');
+        console.log('РџРѕРґРєР»СЋС‡РµРЅРѕ Рє SQLite Р±Р°Р·Рµ РґР°РЅРЅС‹С…');
     }
 });
 
@@ -66,8 +70,8 @@ function slugify(value, fallback = 'user') {
     const slug = String(value || '')
         .trim()
         .toLowerCase()
-        .replace(/ё/g, 'е')
-        .replace(/[^a-z0-9а-я_-]+/gi, '_')
+        .replace(/С‘/g, 'Рµ')
+        .replace(/[^a-z0-9Р°-СЏ_-]+/gi, '_')
         .replace(/^_+|_+$/g, '')
         .slice(0, 32);
     return slug || fallback;
@@ -81,6 +85,12 @@ function getDefaultAvatar(user) {
 function publicUser(user) {
     if (!user) return null;
     const name = user.full_name || user.email || 'Пользователь';
+    const memberships = user.memberships_json
+        ? String(user.memberships_json).split('||').filter(Boolean).map((item) => {
+            const [id, name, shortName] = item.split('::');
+            return { id: Number(id), name, shortName };
+        })
+        : [];
     return {
         id: user.id,
         full_name: name,
@@ -93,15 +103,25 @@ function publicUser(user) {
         cover: user.cover || '',
         bio: user.bio || '',
         points: Number(user.points || 0),
-        role: user.role || 'user'
+        role: user.role || 'user',
+        isAdmin: user.role === 'admin' || user.email === 'ultrasecret@admin.com',
+        isBanned: Boolean(user.is_banned),
+        bannedAt: user.banned_at || null,
+        memberships
     };
 }
 
 async function getCurrentUser(req) {
     if (!req.session.userId) return null;
     const user = await dbGet(
-        `SELECT id, full_name, email, phone, role, avatar, username, bio, cover, points
-         FROM users WHERE id = ?`,
+        `SELECT u.id, u.full_name, u.email, u.phone, u.role, u.avatar, u.username, u.bio, u.cover, u.points,
+                u.is_banned, u.banned_at,
+                GROUP_CONCAT(usm.squad_id || '::' || s.name || '::' || s.short_name, '||') AS memberships_json
+         FROM users u
+         LEFT JOIN user_squad_memberships usm ON usm.user_id = u.id
+         LEFT JOIN squads s ON s.id = usm.squad_id
+         WHERE u.id = ?
+         GROUP BY u.id`,
         [req.session.userId]
     );
     return publicUser(user);
@@ -113,7 +133,15 @@ async function requireUser(req, res) {
         res.status(401).json({ error: 'Не авторизован' });
         return null;
     }
+    if (user.isBanned) {
+        res.status(403).json({ error: 'Аккаунт заблокирован администратором' });
+        return null;
+    }
     return user;
+}
+
+function isAdminUser(user) {
+    return Boolean(user && (user.role === 'admin' || user.email === 'ultrasecret@admin.com'));
 }
 
 async function addColumnIfMissing(table, column, definition) {
@@ -134,7 +162,7 @@ async function sendMail(to, subject, text) {
     const smtpFrom = process.env.SMTP_FROM || smtpUser;
 
     if (!nodemailer || !smtpHost || !smtpUser || !smtpPass || !smtpFrom) {
-        throw new Error('Почта не настроена. Заполните SMTP-настройки в .env');
+        throw new Error('РџРѕС‡С‚Р° РЅРµ РЅР°СЃС‚СЂРѕРµРЅР°. Р—Р°РїРѕР»РЅРёС‚Рµ SMTP-РЅР°СЃС‚СЂРѕР№РєРё РІ .env');
     }
 
     const transporter = nodemailer.createTransport({
@@ -161,8 +189,8 @@ async function createEmailCode({ email, purpose, payload = null, userId = null }
 
     const mail = await sendMail(
         normalizedEmail,
-        'Код подтверждения Созвездие',
-        `Ваш код подтверждения: ${code}. Он действует 10 минут.`
+        'РљРѕРґ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ РЎРѕР·РІРµР·РґРёРµ',
+        `Р’Р°С€ РєРѕРґ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ: ${code}. РћРЅ РґРµР№СЃС‚РІСѓРµС‚ 10 РјРёРЅСѓС‚.`
     );
 
     await dbRun(
@@ -189,13 +217,13 @@ async function verifyEmailCode({ email, purpose, code, userId = null }) {
         [normalizedEmail, purpose, userId, userId]
     );
     if (!row) {
-        throw new Error('Код не найден. Запросите новый код.');
+        throw new Error('РљРѕРґ РЅРµ РЅР°Р№РґРµРЅ. Р—Р°РїСЂРѕСЃРёС‚Рµ РЅРѕРІС‹Р№ РєРѕРґ.');
     }
     if (new Date(row.expires_at).getTime() < Date.now()) {
-        throw new Error('Срок действия кода истёк.');
+        throw new Error('РЎСЂРѕРє РґРµР№СЃС‚РІРёСЏ РєРѕРґР° РёСЃС‚С‘Рє.');
     }
     if (row.code_hash !== codeHash) {
-        throw new Error('Неверный код.');
+        throw new Error('РќРµРІРµСЂРЅС‹Р№ РєРѕРґ.');
     }
     await dbRun(`UPDATE email_verification_codes SET used_at = datetime('now') WHERE id = ?`, [row.id]);
     return row.payload_json ? JSON.parse(row.payload_json) : {};
@@ -207,6 +235,10 @@ async function initSocialSchema() {
     await addColumnIfMissing('users', 'cover', 'TEXT');
     await addColumnIfMissing('users', 'points', 'INTEGER DEFAULT 1000');
     await addColumnIfMissing('users', 'is_profile_complete', 'INTEGER DEFAULT 0');
+    await addColumnIfMissing('users', 'is_banned', 'INTEGER DEFAULT 0');
+    await addColumnIfMissing('users', 'banned_at', 'TEXT');
+    await addColumnIfMissing('users', 'banned_reason', 'TEXT');
+    await addColumnIfMissing('users', 'banned_by', 'INTEGER');
 
     await dbRun(`CREATE TABLE IF NOT EXISTS posts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -350,24 +382,52 @@ async function initSocialSchema() {
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )`);
+    await dbRun(`CREATE TABLE IF NOT EXISTS user_squad_memberships (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER NOT NULL,
+        squad_id INTEGER NOT NULL,
+        source TEXT NOT NULL DEFAULT 'admin',
+        application_id INTEGER,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(user_id, squad_id),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (squad_id) REFERENCES squads(id) ON DELETE CASCADE,
+        FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE SET NULL
+    )`);
+
+    const adminEmail = 'ultrasecret@admin.com';
+    const adminPasswordHash = await bcrypt.hash('adminpass567', 10);
+    const existingAdmin = await dbGet(`SELECT id FROM users WHERE email = ?`, [adminEmail]);
+    if (existingAdmin) {
+        await dbRun(
+            `UPDATE users SET role = 'admin', password_hash = ?, is_banned = 0, banned_at = NULL, updated_at = datetime('now') WHERE id = ?`,
+            [adminPasswordHash, existingAdmin.id]
+        );
+    } else {
+        await dbRun(
+            `INSERT INTO users (full_name, email, phone, password_hash, role, username, points, created_at, updated_at)
+             VALUES ('Администратор', ?, 'email:ultrasecret@admin.com', ?, 'admin', 'admin', 1000, datetime('now'), datetime('now'))`,
+            [adminEmail, adminPasswordHash]
+        );
+    }
 
     const testsCount = await dbGet(`SELECT COUNT(*) AS count FROM social_tests`);
     if (!testsCount.count) {
         const tests = [
-            { id: 'safety', title: 'Безопасность в сети', reward: 12, order: 1, questions: [
-                { text: 'Какой пароль считается надёжным?', options: ['12345678', 'qwerty2024', 'Случайный длинный пароль с разными символами'], correctIndex: 2 },
-                { text: 'Что делать, если пришла подозрительная ссылка?', options: ['Открыть и проверить', 'Игнорировать и удалить', 'Переслать всем друзьям'], correctIndex: 1 },
-                { text: 'Для чего нужна двухфакторная аутентификация?', options: ['Для дополнительной защиты аккаунта', 'Для красоты профиля', 'Чтобы быстрее входить без пароля'], correctIndex: 0 }
+            { id: 'safety', title: 'Р‘РµР·РѕРїР°СЃРЅРѕСЃС‚СЊ РІ СЃРµС‚Рё', reward: 12, order: 1, questions: [
+                { text: 'РљР°РєРѕР№ РїР°СЂРѕР»СЊ СЃС‡РёС‚Р°РµС‚СЃСЏ РЅР°РґС‘Р¶РЅС‹Рј?', options: ['12345678', 'qwerty2024', 'РЎР»СѓС‡Р°Р№РЅС‹Р№ РґР»РёРЅРЅС‹Р№ РїР°СЂРѕР»СЊ СЃ СЂР°Р·РЅС‹РјРё СЃРёРјРІРѕР»Р°РјРё'], correctIndex: 2 },
+                { text: 'Р§С‚Рѕ РґРµР»Р°С‚СЊ, РµСЃР»Рё РїСЂРёС€Р»Р° РїРѕРґРѕР·СЂРёС‚РµР»СЊРЅР°СЏ СЃСЃС‹Р»РєР°?', options: ['РћС‚РєСЂС‹С‚СЊ Рё РїСЂРѕРІРµСЂРёС‚СЊ', 'РРіРЅРѕСЂРёСЂРѕРІР°С‚СЊ Рё СѓРґР°Р»РёС‚СЊ', 'РџРµСЂРµСЃР»Р°С‚СЊ РІСЃРµРј РґСЂСѓР·СЊСЏРј'], correctIndex: 1 },
+                { text: 'Р”Р»СЏ С‡РµРіРѕ РЅСѓР¶РЅР° РґРІСѓС…С„Р°РєС‚РѕСЂРЅР°СЏ Р°СѓС‚РµРЅС‚РёС„РёРєР°С†РёСЏ?', options: ['Р”Р»СЏ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅРѕР№ Р·Р°С‰РёС‚С‹ Р°РєРєР°СѓРЅС‚Р°', 'Р”Р»СЏ РєСЂР°СЃРѕС‚С‹ РїСЂРѕС„РёР»СЏ', 'Р§С‚РѕР±С‹ Р±С‹СЃС‚СЂРµРµ РІС…РѕРґРёС‚СЊ Р±РµР· РїР°СЂРѕР»СЏ'], correctIndex: 0 }
             ] },
-            { id: 'content', title: 'Этичный контент', reward: 8, order: 2, questions: [
-                { text: 'Можно ли публиковать чужое фото без разрешения?', options: ['Да, если фото красивое', 'Нет, нужно разрешение', 'Да, если удалить автора'], correctIndex: 1 },
-                { text: 'Как реагировать на токсичные комментарии?', options: ['Ответить агрессией', 'Пожаловаться и не разжигать конфликт', 'Публиковать скрины с оскорблениями'], correctIndex: 1 }
+            { id: 'content', title: 'Р­С‚РёС‡РЅС‹Р№ РєРѕРЅС‚РµРЅС‚', reward: 8, order: 2, questions: [
+                { text: 'РњРѕР¶РЅРѕ Р»Рё РїСѓР±Р»РёРєРѕРІР°С‚СЊ С‡СѓР¶РѕРµ С„РѕС‚Рѕ Р±РµР· СЂР°Р·СЂРµС€РµРЅРёСЏ?', options: ['Р”Р°, РµСЃР»Рё С„РѕС‚Рѕ РєСЂР°СЃРёРІРѕРµ', 'РќРµС‚, РЅСѓР¶РЅРѕ СЂР°Р·СЂРµС€РµРЅРёРµ', 'Р”Р°, РµСЃР»Рё СѓРґР°Р»РёС‚СЊ Р°РІС‚РѕСЂР°'], correctIndex: 1 },
+                { text: 'РљР°Рє СЂРµР°РіРёСЂРѕРІР°С‚СЊ РЅР° С‚РѕРєСЃРёС‡РЅС‹Рµ РєРѕРјРјРµРЅС‚Р°СЂРёРё?', options: ['РћС‚РІРµС‚РёС‚СЊ Р°РіСЂРµСЃСЃРёРµР№', 'РџРѕР¶Р°Р»РѕРІР°С‚СЊСЃСЏ Рё РЅРµ СЂР°Р·Р¶РёРіР°С‚СЊ РєРѕРЅС„Р»РёРєС‚', 'РџСѓР±Р»РёРєРѕРІР°С‚СЊ СЃРєСЂРёРЅС‹ СЃ РѕСЃРєРѕСЂР±Р»РµРЅРёСЏРјРё'], correctIndex: 1 }
             ] },
-            { id: 'creative', title: 'Креативный мини-тест', reward: 15, order: 3, questions: [
-                { text: 'Что важнее в первом кадре ролика?', options: ['Сильный хук и понятная идея', 'Случайный кадр', 'Только музыка'], correctIndex: 0 },
-                { text: 'Как повысить вовлечение в посте?', options: ['Задать вопрос аудитории', 'Сделать длинный заголовок без смысла', 'Отключить комментарии'], correctIndex: 0 },
-                { text: 'Зачем использовать единый визуальный стиль профиля?', options: ['Чтобы профиль легче запоминался', 'Это никак не влияет', 'Чтобы скрыть текст'], correctIndex: 0 },
-                { text: 'Что лучше для понятного сообщения?', options: ['Один главный тезис', 'Сразу 10 разных мыслей', 'Только эмодзи'], correctIndex: 0 }
+            { id: 'creative', title: 'РљСЂРµР°С‚РёРІРЅС‹Р№ РјРёРЅРё-С‚РµСЃС‚', reward: 15, order: 3, questions: [
+                { text: 'Р§С‚Рѕ РІР°Р¶РЅРµРµ РІ РїРµСЂРІРѕРј РєР°РґСЂРµ СЂРѕР»РёРєР°?', options: ['РЎРёР»СЊРЅС‹Р№ С…СѓРє Рё РїРѕРЅСЏС‚РЅР°СЏ РёРґРµСЏ', 'РЎР»СѓС‡Р°Р№РЅС‹Р№ РєР°РґСЂ', 'РўРѕР»СЊРєРѕ РјСѓР·С‹РєР°'], correctIndex: 0 },
+                { text: 'РљР°Рє РїРѕРІС‹СЃРёС‚СЊ РІРѕРІР»РµС‡РµРЅРёРµ РІ РїРѕСЃС‚Рµ?', options: ['Р—Р°РґР°С‚СЊ РІРѕРїСЂРѕСЃ Р°СѓРґРёС‚РѕСЂРёРё', 'РЎРґРµР»Р°С‚СЊ РґР»РёРЅРЅС‹Р№ Р·Р°РіРѕР»РѕРІРѕРє Р±РµР· СЃРјС‹СЃР»Р°', 'РћС‚РєР»СЋС‡РёС‚СЊ РєРѕРјРјРµРЅС‚Р°СЂРёРё'], correctIndex: 0 },
+                { text: 'Р—Р°С‡РµРј РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РµРґРёРЅС‹Р№ РІРёР·СѓР°Р»СЊРЅС‹Р№ СЃС‚РёР»СЊ РїСЂРѕС„РёР»СЏ?', options: ['Р§С‚РѕР±С‹ РїСЂРѕС„РёР»СЊ Р»РµРіС‡Рµ Р·Р°РїРѕРјРёРЅР°Р»СЃСЏ', 'Р­С‚Рѕ РЅРёРєР°Рє РЅРµ РІР»РёСЏРµС‚', 'Р§С‚РѕР±С‹ СЃРєСЂС‹С‚СЊ С‚РµРєСЃС‚'], correctIndex: 0 },
+                { text: 'Р§С‚Рѕ Р»СѓС‡С€Рµ РґР»СЏ РїРѕРЅСЏС‚РЅРѕРіРѕ СЃРѕРѕР±С‰РµРЅРёСЏ?', options: ['РћРґРёРЅ РіР»Р°РІРЅС‹Р№ С‚РµР·РёСЃ', 'РЎСЂР°Р·Сѓ 10 СЂР°Р·РЅС‹С… РјС‹СЃР»РµР№', 'РўРѕР»СЊРєРѕ СЌРјРѕРґР·Рё'], correctIndex: 0 }
             ] }
         ];
         for (const test of tests) {
@@ -381,9 +441,9 @@ async function initSocialSchema() {
     const merchCount = await dbGet(`SELECT COUNT(*) AS count FROM merch_items`);
     if (!merchCount.count) {
         const merch = [
-            ['Футболка', 4000, '/images/футболка.png', 1],
-            ['Термокружка', 1000, '/images/термокружка.png', 2],
-            ['Шоппер', 7000, '/images/шоппер.png', 3]
+            ['Р¤СѓС‚Р±РѕР»РєР°', 4000, '/images/С„СѓС‚Р±РѕР»РєР°.png', 1],
+            ['РўРµСЂРјРѕРєСЂСѓР¶РєР°', 1000, '/images/С‚РµСЂРјРѕРєСЂСѓР¶РєР°.png', 2],
+            ['РЁРѕРїРїРµСЂ', 7000, '/images/С€РѕРїРїРµСЂ.png', 3]
         ];
         for (const item of merch) {
             await dbRun(`INSERT INTO merch_items (name, price, image_url, order_index) VALUES (?, ?, ?, ?)`, item);
@@ -393,8 +453,8 @@ async function initSocialSchema() {
     const feedChat = await dbGet(`SELECT id FROM chats WHERE type = 'group' AND slug = 'global-feed'`);
     if (!feedChat) {
         await dbRun(
-            `INSERT INTO chats (type, title, slug, avatar) VALUES ('group', 'Лента', 'global-feed', ?)`,
-            ['/images/лента.png']
+            `INSERT INTO chats (type, title, slug, avatar) VALUES ('group', 'Р›РµРЅС‚Р°', 'global-feed', ?)`,
+            ['/images/Р»РµРЅС‚Р°.png']
         );
     }
 
@@ -404,14 +464,26 @@ async function initSocialSchema() {
         if (!exists) {
             await dbRun(
                 `INSERT INTO chats (type, title, slug, avatar) VALUES ('group', ?, ?, ?)`,
-                [squad.name, `squad-${squad.short_name}`, squad.icon || '★']
+                [squad.name, `squad-${squad.short_name}`, squad.icon || 'в…']
             );
         }
+    }
+
+    const approvedApplications = await dbAll(
+        `SELECT id, user_id, squad_id FROM applications WHERE user_id IS NOT NULL AND status = 'approved'`
+    );
+    for (const application of approvedApplications) {
+        await assignSquadMembership({
+            userId: application.user_id,
+            squadId: application.squad_id,
+            source: 'application',
+            applicationId: application.id
+        });
     }
 }
 
 initSocialSchema().catch((err) => {
-    console.error('Ошибка инициализации социальной схемы:', err.message);
+    console.error('РћС€РёР±РєР° РёРЅРёС†РёР°Р»РёР·Р°С†РёРё СЃРѕС†РёР°Р»СЊРЅРѕР№ СЃС…РµРјС‹:', err.message);
 });
 
 // =============================================
@@ -423,20 +495,23 @@ app.use(express.static(publicDir));
 
 app.use(express.static(path.join(__dirname, 'public/css')));
 
-// Настройка сессий
+// РќР°СЃС‚СЂРѕР№РєР° СЃРµСЃСЃРёР№
 app.use(session({
     store: new SQLiteStore({ db: 'sessions.db', table: 'sessions' }),
-    secret: 'sozvezdie_secret_key_2026',
+    name: 'soz.sid',
+    secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
+    proxy: true,
     cookie: {
-        secure: false, // для разработки (http)
-        maxAge: 1000 * 60 * 60 * 24, // 24 часа
+        secure: isProduction ? 'auto' : false,
+        sameSite: 'lax',
+        maxAge: 1000 * 60 * 60 * 24,
         httpOnly: true
     }
 }));
 
-// Настройка загрузки файлов (аватары)
+// РќР°СЃС‚СЂРѕР№РєР° Р·Р°РіСЂСѓР·РєРё С„Р°Р№Р»РѕРІ (Р°РІР°С‚Р°СЂС‹)
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const uploadDir = path.join(__dirname, 'public/uploads/avatars');
@@ -458,7 +533,7 @@ const upload = multer({
         if (allowedTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(new Error('Только изображения!'));
+            cb(new Error('РўРѕР»СЊРєРѕ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ!'));
         }
     }
 });
@@ -494,32 +569,33 @@ async function getGigaChatToken() {
         if (data.access_token) {
             tokenCache.token = data.access_token;
             tokenCache.expiresAt = (Date.now() / 1000) + (data.expires_in || 1800) - 60;
-            console.log('✅ Токен GigaChat получен');
+            console.log('вњ… РўРѕРєРµРЅ GigaChat РїРѕР»СѓС‡РµРЅ');
             return data.access_token;
         }
-        console.error('❌ Ошибка получения токена:', data);
+        console.error('вќЊ РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ С‚РѕРєРµРЅР°:', data);
         return null;
     } catch (error) {
-        console.error('❌ Ошибка получения токена:', error.message);
+        console.error('вќЊ РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ С‚РѕРєРµРЅР°:', error.message);
         return null;
     }
 }
 
-async function askGigaChat(userMessage) {
+async function askGigaChat(userMessage, systemPromptOverride = null) {
     const token = await getGigaChatToken();
     if (!token) return null;
 
-    const systemPrompt = `Ты дружелюбный ИИ-ассистент отрядного движения "Созвездие".
+    const systemPrompt = `РўС‹ РґСЂСѓР¶РµР»СЋР±РЅС‹Р№ РР-Р°СЃСЃРёСЃС‚РµРЅС‚ РѕС‚СЂСЏРґРЅРѕРіРѕ РґРІРёР¶РµРЅРёСЏ "РЎРѕР·РІРµР·РґРёРµ".
 
-ОТРЯДЫ:
-- КРЫЛЬЯ 💙: энергичные, инициативные, любят динамику, новые задачи и активный отдых. Драйв, скорость, развитие.
-- КЛЕВЕР 🍀: душевные, спокойные, ценят коллектив, поддержку, дружбу и тёплую атмосферу.
-- ФЕМИДА ⚖️: серьёзные, дисциплинированные, логичные. Любят порядок, структуру, правила и ответственность.
-- АПЕЛЬСИН 🍊: творческие, открытые, любят внимание, юмор, креатив, веселье и лёгкость.
-- ЭВЕРЕСТ 🏔: целеустремлённые, выносливые, любят преодолевать трудности. Сила, упорство, результат.
+РћРўР РЇР”Р«:
+- РљР Р«Р›Р¬РЇ рџ’™: СЌРЅРµСЂРіРёС‡РЅС‹Рµ, РёРЅРёС†РёР°С‚РёРІРЅС‹Рµ, Р»СЋР±СЏС‚ РґРёРЅР°РјРёРєСѓ, РЅРѕРІС‹Рµ Р·Р°РґР°С‡Рё Рё Р°РєС‚РёРІРЅС‹Р№ РѕС‚РґС‹С…. Р”СЂР°Р№РІ, СЃРєРѕСЂРѕСЃС‚СЊ, СЂР°Р·РІРёС‚РёРµ.
+- РљР›Р•Р’Р•Р  рџЌЂ: РґСѓС€РµРІРЅС‹Рµ, СЃРїРѕРєРѕР№РЅС‹Рµ, С†РµРЅСЏС‚ РєРѕР»Р»РµРєС‚РёРІ, РїРѕРґРґРµСЂР¶РєСѓ, РґСЂСѓР¶Р±Сѓ Рё С‚С‘РїР»СѓСЋ Р°С‚РјРѕСЃС„РµСЂСѓ.
+- Р¤Р•РњРР”Рђ вљ–пёЏ: СЃРµСЂСЊС‘Р·РЅС‹Рµ, РґРёСЃС†РёРїР»РёРЅРёСЂРѕРІР°РЅРЅС‹Рµ, Р»РѕРіРёС‡РЅС‹Рµ. Р›СЋР±СЏС‚ РїРѕСЂСЏРґРѕРє, СЃС‚СЂСѓРєС‚СѓСЂСѓ, РїСЂР°РІРёР»Р° Рё РѕС‚РІРµС‚СЃС‚РІРµРЅРЅРѕСЃС‚СЊ.
+- РђРџР•Р›Р¬РЎРРќ рџЌЉ: С‚РІРѕСЂС‡РµСЃРєРёРµ, РѕС‚РєСЂС‹С‚С‹Рµ, Р»СЋР±СЏС‚ РІРЅРёРјР°РЅРёРµ, СЋРјРѕСЂ, РєСЂРµР°С‚РёРІ, РІРµСЃРµР»СЊРµ Рё Р»С‘РіРєРѕСЃС‚СЊ.
+- Р­Р’Р•Р Р•РЎРў рџЏ”: С†РµР»РµСѓСЃС‚СЂРµРјР»С‘РЅРЅС‹Рµ, РІС‹РЅРѕСЃР»РёРІС‹Рµ, Р»СЋР±СЏС‚ РїСЂРµРѕРґРѕР»РµРІР°С‚СЊ С‚СЂСѓРґРЅРѕСЃС‚Рё. РЎРёР»Р°, СѓРїРѕСЂСЃС‚РІРѕ, СЂРµР·СѓР»СЊС‚Р°С‚.
 
-На основе ответов пользователя определи, какой отряд ему подходит.
-Ответь ТОЛЬКО в формате JSON: {"squad": "название отряда", "reason": "почему подходит"}`;
+РќР° РѕСЃРЅРѕРІРµ РѕС‚РІРµС‚РѕРІ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РѕРїСЂРµРґРµР»Рё, РєР°РєРѕР№ РѕС‚СЂСЏРґ РµРјСѓ РїРѕРґС…РѕРґРёС‚.
+РћС‚РІРµС‚СЊ РўРћР›Р¬РљРћ РІ С„РѕСЂРјР°С‚Рµ JSON: {"squad": "РЅР°Р·РІР°РЅРёРµ РѕС‚СЂСЏРґР°", "reason": "РїРѕС‡РµРјСѓ РїРѕРґС…РѕРґРёС‚"}`;
+    const finalSystemPrompt = systemPromptOverride || systemPrompt;
 
     try {
         const requestId = crypto.randomUUID();
@@ -534,7 +610,7 @@ async function askGigaChat(userMessage) {
             body: JSON.stringify({
                 model: 'GigaChat',
                 messages: [
-                    { role: 'system', content: systemPrompt },
+                    { role: 'system', content: finalSystemPrompt },
                     { role: 'user', content: userMessage }
                 ],
                 temperature: 0.5,
@@ -547,47 +623,242 @@ async function askGigaChat(userMessage) {
         if (response.status === 200 && data.choices && data.choices[0]) {
             return data.choices[0].message.content;
         }
-        console.error('Ошибка GigaChat:', data);
+        console.error('РћС€РёР±РєР° GigaChat:', data);
         return null;
     } catch (error) {
-        console.error('❌ Ошибка GigaChat:', error.message);
+        console.error('вќЊ РћС€РёР±РєР° GigaChat:', error.message);
         return null;
     }
 }
 
-// API эндпоинт для рекомендации отряда через ИИ
+const TEST_SQUAD_CATALOG = {
+    apelsin: {
+        key: 'apelsin',
+        name: 'СПО «Апельсин»',
+        profile: 'творчество, юмор, легкость, яркие идеи, дружелюбная атмосфера'
+    },
+    'vokrug-sveta': {
+        key: 'vokrug-sveta',
+        name: 'СОП «Вокруг Света»',
+        profile: 'путешествия, дорога, новые места, открытость, командные маршруты'
+    },
+    krylya: {
+        key: 'krylya',
+        name: 'СПО «Крылья»',
+        profile: 'педагогика, дети, активность, инициативность, быстрые решения'
+    },
+    prospekt: {
+        key: 'prospekt',
+        name: 'СПО «Проспект»',
+        profile: 'городские проекты, организация процессов, маршруты, практичная польза'
+    },
+    'zhar-ptitsa': {
+        key: 'zhar-ptitsa',
+        name: 'СПО «Жар-Птица»',
+        profile: 'сцена, энергия, события, харизма, умение зажечь команду'
+    },
+    yamaika: {
+        key: 'yamaika',
+        name: 'СПО «Ямайка»',
+        profile: 'легкая коммуникация, дружелюбие, культура, спокойный драйв, теплый вайб'
+    },
+    shum: {
+        key: 'shum',
+        name: 'СПО «Шум»',
+        profile: 'медиа, публичность, коммуникации, инфоповоды, заметные события'
+    },
+    klever: {
+        key: 'klever',
+        name: 'ТОП «Клевер»',
+        profile: 'поддержка, забота, командность, надежная дружеская атмосфера'
+    },
+    femida: {
+        key: 'femida',
+        name: 'ТОП «Фемида»',
+        profile: 'ответственность, справедливость, порядок, правила, спокойная логика'
+    },
+    everest: {
+        key: 'everest',
+        name: 'ТОП «Эверест»',
+        profile: 'цели, выносливость, вызов, дисциплина, движение к результату'
+    },
+    kraski: {
+        key: 'kraski',
+        name: 'ТОП «Краски»',
+        profile: 'визуальное творчество, дизайн, мастерские, эстетика, художественные идеи'
+    }
+};
+
+const LEGACY_TEST_KEYS = {
+    wings: 'krylya',
+    femis: 'femida',
+    femida: 'femida'
+};
+
+function normalizeTestSquadKey(key) {
+    const normalized = LEGACY_TEST_KEYS[key] || key;
+    return TEST_SQUAD_CATALOG[normalized] ? normalized : null;
+}
+
+function addTestScore(scores, key, value) {
+    const normalized = normalizeTestSquadKey(key);
+    if (!normalized) return;
+    scores[normalized] = (scores[normalized] || 0) + Number(value || 0);
+}
+
+function buildSquadTestAnalysis({ answers = [], scores = {} }) {
+    const finalScores = Object.fromEntries(Object.keys(TEST_SQUAD_CATALOG).map(key => [key, 0]));
+    const traits = new Map();
+    const hasWeightedAnswers = Array.isArray(answers)
+        && answers.some(answer => answer && typeof answer === 'object' && answer.weights);
+
+    if (!hasWeightedAnswers) {
+        Object.entries(scores || {}).forEach(([key, value]) => addTestScore(finalScores, key, value));
+    }
+
+    answers.forEach((answer) => {
+        if (typeof answer === 'string') {
+            addTestScore(finalScores, answer, 1);
+            return;
+        }
+
+        if (!answer || typeof answer !== 'object') return;
+
+        Object.entries(answer.weights || {}).forEach(([key, value]) => addTestScore(finalScores, key, value));
+        (answer.traits || []).forEach((trait) => {
+            const cleanTrait = String(trait || '').trim();
+            if (cleanTrait) traits.set(cleanTrait, (traits.get(cleanTrait) || 0) + 1);
+        });
+    });
+
+    const ranked = Object.entries(finalScores)
+        .map(([key, score]) => ({ key, score, ...TEST_SQUAD_CATALOG[key] }))
+        .sort((a, b) => b.score - a.score || a.name.localeCompare(b.name, 'ru'));
+
+    const best = ranked[0] || TEST_SQUAD_CATALOG.apelsin;
+    const second = ranked[1];
+    const topTraits = [...traits.entries()]
+        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'ru'))
+        .slice(0, 4)
+        .map(([trait]) => trait);
+
+    const gap = second ? best.score - second.score : best.score;
+    const confidence = best.score <= 0 ? 'low' : gap >= 6 ? 'high' : gap >= 3 ? 'medium' : 'balanced';
+    const traitText = topTraits.length ? topTraits.join(', ') : best.profile;
+    const reason = `Лучше всего совпадает ${best.name}: по ответам сильнее всего проявились ${traitText}. Профиль отряда: ${best.profile}.`;
+
+    return {
+        success: true,
+        squad: best.key,
+        squadKey: best.key,
+        squadName: best.name,
+        reason,
+        fromAI: false,
+        analysis: {
+            confidence,
+            topTraits,
+            scores: finalScores
+        },
+        top: ranked.slice(0, 3).map(item => ({
+            key: item.key,
+            name: item.name,
+            score: item.score
+        }))
+    };
+}
+
+function getSquadTestPrompt() {
+    const squads = Object.values(TEST_SQUAD_CATALOG)
+        .map(squad => `- ${squad.key}: ${squad.name}. ${squad.profile}`)
+        .join('\n');
+
+    return `Ты анализируешь профориентационный тест для движения «Созвездие».
+Выбери один самый подходящий отряд из списка:
+${squads}
+
+Отвечай только валидным JSON без markdown:
+{"squad":"short_name отряда","reason":"2-4 предложения с объяснением","top":[{"key":"short_name","score":число}]}
+Поле squad обязательно должно быть одним из ключей списка.`;
+}
+
+app.post('/api/ai-recommend', async (req, res) => {
+    const { answers, scores } = req.body || {};
+
+    if (!Array.isArray(answers) && (!scores || typeof scores !== 'object')) {
+        return res.status(400).json({ error: 'Нет данных для анализа' });
+    }
+
+    const localResult = buildSquadTestAnalysis({ answers, scores });
+    const userMessage = JSON.stringify({
+        answers,
+        scores: localResult.analysis.scores,
+        localTop: localResult.top
+    }, null, 2);
+
+    try {
+        const aiResponse = await Promise.race([
+            askGigaChat(userMessage, getSquadTestPrompt()),
+            new Promise(resolve => setTimeout(() => resolve(null), 4500))
+        ]);
+        const jsonMatch = aiResponse && aiResponse.match(/\{[\s\S]*\}/);
+
+        if (jsonMatch) {
+            const aiResult = JSON.parse(jsonMatch[0]);
+            const aiKey = normalizeTestSquadKey(aiResult.squad || aiResult.squadKey || aiResult.key);
+
+            if (aiKey) {
+                const squad = TEST_SQUAD_CATALOG[aiKey];
+                return res.json({
+                    ...localResult,
+                    squad: aiKey,
+                    squadKey: aiKey,
+                    squadName: squad.name,
+                    reason: aiResult.reason || localResult.reason,
+                    top: Array.isArray(aiResult.top) && aiResult.top.length ? aiResult.top : localResult.top,
+                    fromAI: true
+                });
+            }
+        }
+    } catch (error) {
+        console.error('Ошибка анализа теста через GigaChat:', error.message);
+    }
+
+    return res.json(localResult);
+});
+
+// API СЌРЅРґРїРѕРёРЅС‚ РґР»СЏ СЂРµРєРѕРјРµРЅРґР°С†РёРё РѕС‚СЂСЏРґР° С‡РµСЂРµР· РР
 app.post('/api/ai-recommend', async (req, res) => {
     const { answers, scores } = req.body;
 
     if (!answers) {
-        return res.status(400).json({ error: 'Нет данных для анализа' });
+        return res.status(400).json({ error: 'РќРµС‚ РґР°РЅРЅС‹С… РґР»СЏ Р°РЅР°Р»РёР·Р°' });
     }
 
-    // Формируем сообщение для ИИ
+    // Р¤РѕСЂРјРёСЂСѓРµРј СЃРѕРѕР±С‰РµРЅРёРµ РґР»СЏ РР
     const answersText = answers.map((ans, idx) => {
         const qNum = idx + 1;
         let answerText = '';
         switch(ans) {
-            case 'wings': answerText = 'беру инициативу, действую быстро'; break;
-            case 'klever': answerText = 'присматриваюсь, ищу поддержку'; break;
-            case 'femis': answerText = 'анализирую, вникаю в правила'; break;
-            case 'apelsin': answerText = 'разряжаю обстановку шутками, креативлю'; break;
-            case 'everest': answerText = 'иду туда, где сложнее, терплю и достигаю'; break;
+            case 'wings': answerText = 'Р±РµСЂСѓ РёРЅРёС†РёР°С‚РёРІСѓ, РґРµР№СЃС‚РІСѓСЋ Р±С‹СЃС‚СЂРѕ'; break;
+            case 'klever': answerText = 'РїСЂРёСЃРјР°С‚СЂРёРІР°СЋСЃСЊ, РёС‰Сѓ РїРѕРґРґРµСЂР¶РєСѓ'; break;
+            case 'femis': answerText = 'Р°РЅР°Р»РёР·РёСЂСѓСЋ, РІРЅРёРєР°СЋ РІ РїСЂР°РІРёР»Р°'; break;
+            case 'apelsin': answerText = 'СЂР°Р·СЂСЏР¶Р°СЋ РѕР±СЃС‚Р°РЅРѕРІРєСѓ С€СѓС‚РєР°РјРё, РєСЂРµР°С‚РёРІР»СЋ'; break;
+            case 'everest': answerText = 'РёРґСѓ С‚СѓРґР°, РіРґРµ СЃР»РѕР¶РЅРµРµ, С‚РµСЂРїР»СЋ Рё РґРѕСЃС‚РёРіР°СЋ'; break;
             default: answerText = ans;
         }
         return `${qNum}. ${answerText}`;
     }).join('\n');
 
-    const userMessage = `Вот ответы пользователя на 5 вопросов:
+    const userMessage = `Р’РѕС‚ РѕС‚РІРµС‚С‹ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РЅР° 5 РІРѕРїСЂРѕСЃРѕРІ:
 ${answersText}
 
-Определи, какой отряд (Крылья, Клевер, Фемида, Апельсин или Эверест) ему подходит больше всего.`;
+РћРїСЂРµРґРµР»Рё, РєР°РєРѕР№ РѕС‚СЂСЏРґ (РљСЂС‹Р»СЊСЏ, РљР»РµРІРµСЂ, Р¤РµРјРёРґР°, РђРїРµР»СЊСЃРёРЅ РёР»Рё Р­РІРµСЂРµСЃС‚) РµРјСѓ РїРѕРґС…РѕРґРёС‚ Р±РѕР»СЊС€Рµ РІСЃРµРіРѕ.`;
 
     try {
         const aiResponse = await askGigaChat(userMessage);
 
         if (aiResponse) {
-            // Парсим JSON из ответа
+            // РџР°СЂСЃРёРј JSON РёР· РѕС‚РІРµС‚Р°
             const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
                 const result = JSON.parse(jsonMatch[0]);
@@ -595,11 +866,11 @@ ${answersText}
             }
         }
 
-        // Fallback: по баллам
+        // Fallback: РїРѕ Р±Р°Р»Р»Р°Рј
         const squadByScores = getSquadByScores(scores);
         return res.json({ success: true, squad: squadByScores, reason: null, fromAI: false });
     } catch (error) {
-        console.error('Ошибка:', error);
+        console.error('РћС€РёР±РєР°:', error);
         const squadByScores = getSquadByScores(scores);
         res.json({ success: true, squad: squadByScores, reason: null, fromAI: false });
     }
@@ -607,11 +878,11 @@ ${answersText}
 
 function getSquadByScores(scores) {
     const squadMap = {
-        'apelsin': 'Апельсин',
-        'klever': 'Клевер',
-        'femis': 'Фемида',
-        'wings': 'Крылья',
-        'everest': 'Эверест'
+        'apelsin': 'РђРїРµР»СЊСЃРёРЅ',
+        'klever': 'РљР»РµРІРµСЂ',
+        'femis': 'Р¤РµРјРёРґР°',
+        'wings': 'РљСЂС‹Р»СЊСЏ',
+        'everest': 'Р­РІРµСЂРµСЃС‚'
     };
 
     let maxScore = -1;
@@ -624,10 +895,10 @@ function getSquadByScores(scores) {
         }
     }
 
-    return squadMap[bestSquad] || 'Апельсин';
+    return squadMap[bestSquad] || 'РђРїРµР»СЊСЃРёРЅ';
 }
 // =============================================
-// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
+// Р’РЎРџРћРњРћР“РђРўР•Р›Р¬РќР«Р• Р¤РЈРќРљР¦РР
 // =============================================
 function isAuthenticated(req, res, next) {
     if (req.session.userId) {
@@ -637,11 +908,34 @@ function isAuthenticated(req, res, next) {
     }
 }
 
+async function createNotification({ userId, actorId = null, type, body, entityType = null, entityId = null, actionState = null, title = null }) {
+    await dbRun(
+        `INSERT INTO notifications (user_id, actor_id, type, title, body, entity_type, entity_id, action_state)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+        [userId, actorId, type, title, body, entityType, entityId, actionState]
+    );
+}
+
+async function assignSquadMembership({ userId, squadId, source = 'admin', applicationId = null }) {
+    await dbRun(
+        `INSERT OR IGNORE INTO user_squad_memberships (user_id, squad_id, source, application_id)
+         VALUES (?, ?, ?, ?)`,
+        [userId, squadId, source, applicationId]
+    );
+    const squad = await dbGet(`SELECT short_name FROM squads WHERE id = ?`, [squadId]);
+    if (squad?.short_name) {
+        const chat = await dbGet(`SELECT id FROM chats WHERE type = 'group' AND slug = ?`, [`squad-${squad.short_name}`]);
+        if (chat) {
+            await dbRun(`INSERT OR IGNORE INTO chat_members (chat_id, user_id) VALUES (?, ?)`, [chat.id, userId]);
+        }
+    }
+}
+
 // =============================================
-// API: ПОЛЬЗОВАТЕЛИ
+// API: РџРћР›Р¬Р—РћР’РђРўР•Р›Р
 // =============================================
 
-// Регистрация
+// Р РµРіРёСЃС‚СЂР°С†РёСЏ
 app.post('/api/register', async (req, res) => {
     const { fullName, email, phone, password, confirmPassword } = req.body;
 
@@ -704,7 +998,11 @@ app.post('/api/verify-registration', async (req, res) => {
         req.session.userName = payload.fullName;
         req.session.userRole = 'user';
         req.session.pendingRegistrationEmail = null;
-        res.json({ success: true, user: publicUser({
+        req.session.save((saveErr) => {
+            if (saveErr) {
+                return res.status(500).json({ error: 'Не удалось сохранить сессию' });
+            }
+            res.json({ success: true, user: publicUser({
             id: created.lastID,
             full_name: payload.fullName,
             email,
@@ -712,7 +1010,8 @@ app.post('/api/verify-registration', async (req, res) => {
             role: 'user',
             username,
             points: 1000
-        }) });
+            }) });
+        });
     } catch (err) {
         res.status(400).json({ error: err.message || 'Ошибка подтверждения' });
     }
@@ -743,12 +1042,12 @@ app.post('/api/resend-registration-code', async (req, res) => {
     }
 });
 
-// Вход
+// Р’С…РѕРґ
 app.post('/api/login', (req, res) => {
     const { emailOrPhone, password } = req.body;
 
     if (!emailOrPhone || !password) {
-        return res.status(400).json({ error: 'Заполните все поля' });
+        return res.status(400).json({ error: 'Р—Р°РїРѕР»РЅРёС‚Рµ РІСЃРµ РїРѕР»СЏ' });
     }
 
     db.get(
@@ -756,23 +1055,31 @@ app.post('/api/login', (req, res) => {
         [emailOrPhone, emailOrPhone],
         async (err, user) => {
             if (err) {
-                return res.status(500).json({ error: 'Ошибка сервера' });
+                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
             }
 
             if (!user) {
-                return res.status(401).json({ error: 'Неверный email/телефон или пароль' });
+                return res.status(401).json({ error: 'РќРµРІРµСЂРЅС‹Р№ email/С‚РµР»РµС„РѕРЅ РёР»Рё РїР°СЂРѕР»СЊ' });
             }
 
             const isValid = await bcrypt.compare(password, user.password_hash);
             if (!isValid) {
-                return res.status(401).json({ error: 'Неверный email/телефон или пароль' });
+                return res.status(401).json({ error: 'РќРµРІРµСЂРЅС‹Р№ email/С‚РµР»РµС„РѕРЅ РёР»Рё РїР°СЂРѕР»СЊ' });
+            }
+            if (user.is_banned && user.email !== 'ultrasecret@admin.com') {
+                return res.status(403).json({ error: 'Аккаунт заблокирован администратором' });
             }
 
             req.session.userId = user.id;
             req.session.userName = user.full_name;
             req.session.userRole = user.role;
+            req.session.isAdmin = user.role === 'admin' || user.email === 'ultrasecret@admin.com';
 
-            res.json({
+            req.session.save((saveErr) => {
+                if (saveErr) {
+                    return res.status(500).json({ error: 'Не удалось сохранить сессию' });
+                }
+                res.json({
                 success: true,
                 user: {
                     id: user.id,
@@ -780,18 +1087,19 @@ app.post('/api/login', (req, res) => {
                     email: user.email,
                     role: user.role
                 }
+                });
             });
         }
     );
 });
 
-// Выход
+// Р’С‹С…РѕРґ
 app.post('/api/logout', (req, res) => {
     req.session.destroy();
     res.json({ success: true });
 });
 
-// Получение текущего пользователя
+// РџРѕР»СѓС‡РµРЅРёРµ С‚РµРєСѓС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
 app.get('/api/me', (req, res) => {
     if (!req.session.userId) {
         return res.json({ user: null });
@@ -804,14 +1112,14 @@ app.get('/api/me', (req, res) => {
         [req.session.userId],
         (err, user) => {
             if (err) {
-                return res.status(500).json({ error: 'Ошибка сервера' });
+                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
             }
             res.json({ user });
         }
     );
 });
 
-// Обновление профиля
+// РћР±РЅРѕРІР»РµРЅРёРµ РїСЂРѕС„РёР»СЏ
 app.put('/api/profile', isAuthenticated, (req, res) => {
     const {
         lastName, firstName, birthDate, class: userClass,
@@ -840,51 +1148,51 @@ app.put('/api/profile', isAuthenticated, (req, res) => {
          country, region, city, schoolName, schoolNumber, req.session.userId],
         (err) => {
             if (err) {
-                return res.status(500).json({ error: 'Ошибка сервера' });
+                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
             }
             res.json({ success: true });
         }
     );
 });
 
-// Смена пароля
+// РЎРјРµРЅР° РїР°СЂРѕР»СЏ
 app.put('/api/change-password', isAuthenticated, async (req, res) => {
     const { currentPassword, newPassword, confirmPassword } = req.body;
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-        return res.status(400).json({ error: 'Заполните все поля' });
+        return res.status(400).json({ error: 'Р—Р°РїРѕР»РЅРёС‚Рµ РІСЃРµ РїРѕР»СЏ' });
     }
 
     if (newPassword !== confirmPassword) {
-        return res.status(400).json({ error: 'Новый пароль и подтверждение не совпадают' });
+        return res.status(400).json({ error: 'РќРѕРІС‹Р№ РїР°СЂРѕР»СЊ Рё РїРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ РЅРµ СЃРѕРІРїР°РґР°СЋС‚' });
     }
 
     if (newPassword.length < 4) {
-        return res.status(400).json({ error: 'Пароль должен быть не менее 4 символов' });
+        return res.status(400).json({ error: 'РџР°СЂРѕР»СЊ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РЅРµ РјРµРЅРµРµ 4 СЃРёРјРІРѕР»РѕРІ' });
     }
 
     db.get(`SELECT password_hash FROM users WHERE id = ?`, [req.session.userId], async (err, user) => {
         if (err) {
-            return res.status(500).json({ error: 'Ошибка сервера' });
+            return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
         }
 
         const isValid = await bcrypt.compare(currentPassword, user.password_hash);
         if (!isValid) {
-            return res.status(401).json({ error: 'Текущий пароль неверен' });
+            return res.status(401).json({ error: 'РўРµРєСѓС‰РёР№ РїР°СЂРѕР»СЊ РЅРµРІРµСЂРµРЅ' });
         }
 
         const newHash = await bcrypt.hash(newPassword, 10);
         db.run(`UPDATE users SET password_hash = ?, updated_at = datetime('now') WHERE id = ?`,
             [newHash, req.session.userId], (err) => {
             if (err) {
-                return res.status(500).json({ error: 'Ошибка сервера' });
+                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
             }
             res.json({ success: true });
         });
     });
 });
 
-// Загрузка аватара
+// Р—Р°РіСЂСѓР·РєР° Р°РІР°С‚Р°СЂР°
 app.post('/api/security/request-code', async (req, res) => {
     try {
         const user = await requireUser(req, res);
@@ -897,15 +1205,15 @@ app.post('/api/security/request-code', async (req, res) => {
         const dbUser = await dbGet(`SELECT * FROM users WHERE id = ?`, [user.id]);
         const passwordOk = await bcrypt.compare(currentPassword, dbUser.password_hash);
         if (!passwordOk) {
-            return res.status(401).json({ error: 'Текущий пароль неверен' });
+            return res.status(401).json({ error: 'РўРµРєСѓС‰РёР№ РїР°СЂРѕР»СЊ РЅРµРІРµСЂРµРЅ' });
         }
 
         if (action === 'change_email') {
             if (!targetEmail || !targetEmail.includes('@')) {
-                return res.status(400).json({ error: 'Введите корректную почту' });
+                return res.status(400).json({ error: 'Р’РІРµРґРёС‚Рµ РєРѕСЂСЂРµРєС‚РЅСѓСЋ РїРѕС‡С‚Сѓ' });
             }
             const existing = await dbGet(`SELECT id FROM users WHERE email = ? AND id != ?`, [targetEmail, user.id]);
-            if (existing) return res.status(400).json({ error: 'Эта почта уже занята' });
+            if (existing) return res.status(400).json({ error: 'Р­С‚Р° РїРѕС‡С‚Р° СѓР¶Рµ Р·Р°РЅСЏС‚Р°' });
             const result = await createEmailCode({
                 email: targetEmail,
                 purpose: 'change_email',
@@ -917,7 +1225,7 @@ app.post('/api/security/request-code', async (req, res) => {
 
         if (action === 'change_password') {
             if (newPassword.length < 4) {
-                return res.status(400).json({ error: 'Новый пароль должен быть не менее 4 символов' });
+                return res.status(400).json({ error: 'РќРѕРІС‹Р№ РїР°СЂРѕР»СЊ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РЅРµ РјРµРЅРµРµ 4 СЃРёРјРІРѕР»РѕРІ' });
             }
             const result = await createEmailCode({
                 email: user.email,
@@ -928,9 +1236,9 @@ app.post('/api/security/request-code', async (req, res) => {
             return res.json({ success: true, email: user.email, expiresAt: result.expiresAt });
         }
 
-        res.status(400).json({ error: 'Неизвестное действие' });
+        res.status(400).json({ error: 'РќРµРёР·РІРµСЃС‚РЅРѕРµ РґРµР№СЃС‚РІРёРµ' });
     } catch (err) {
-        res.status(500).json({ error: err.message || 'Ошибка сервера' });
+        res.status(500).json({ error: err.message || 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
     }
 });
 
@@ -956,22 +1264,22 @@ app.post('/api/security/confirm-code', async (req, res) => {
             return res.json({ success: true });
         }
 
-        res.status(400).json({ error: 'Неизвестное действие' });
+        res.status(400).json({ error: 'РќРµРёР·РІРµСЃС‚РЅРѕРµ РґРµР№СЃС‚РІРёРµ' });
     } catch (err) {
-        res.status(400).json({ error: err.message || 'Ошибка подтверждения' });
+        res.status(400).json({ error: err.message || 'РћС€РёР±РєР° РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ' });
     }
 });
 
 app.post('/api/upload-avatar', isAuthenticated, upload.single('avatar'), (req, res) => {
     if (!req.file) {
-        return res.status(400).json({ error: 'Файл не загружен' });
+        return res.status(400).json({ error: 'Р¤Р°Р№Р» РЅРµ Р·Р°РіСЂСѓР¶РµРЅ' });
     }
 
     const avatarPath = '/uploads/avatars/' + req.file.filename;
     db.run(`UPDATE users SET avatar = ?, updated_at = datetime('now') WHERE id = ?`,
         [avatarPath, req.session.userId], (err) => {
         if (err) {
-            return res.status(500).json({ error: 'Ошибка сервера' });
+            return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
         }
         res.json({ success: true, avatar: avatarPath });
     });
@@ -992,24 +1300,24 @@ require('./social-routes')({
 });
 
 // =============================================
-// API: ОТРЯДЫ
+// API: РћРўР РЇР”Р«
 // =============================================
 
-// Получить все отряды (для главной)
+// РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ РѕС‚СЂСЏРґС‹ (РґР»СЏ РіР»Р°РІРЅРѕР№)
 app.get('/api/squads', (req, res) => {
     db.all(
         `SELECT id, name, short_name, title, description, icon, color_primary, order_index 
          FROM squads WHERE is_active = 1 ORDER BY order_index`,
         (err, squads) => {
             if (err) {
-                return res.status(500).json({ error: 'Ошибка сервера' });
+                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
             }
             res.json({ squads });
         }
     );
 });
 
-// Получить один отряд по short_name
+// РџРѕР»СѓС‡РёС‚СЊ РѕРґРёРЅ РѕС‚СЂСЏРґ РїРѕ short_name
 app.get('/api/squads/:shortName', (req, res) => {
     const { shortName } = req.params;
 
@@ -1018,19 +1326,19 @@ app.get('/api/squads/:shortName', (req, res) => {
         [shortName],
         (err, squad) => {
             if (err) {
-                return res.status(500).json({ error: 'Ошибка сервера' });
+                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
             }
             if (!squad) {
-                return res.status(404).json({ error: 'Отряд не найден' });
+                return res.status(404).json({ error: 'РћС‚СЂСЏРґ РЅРµ РЅР°Р№РґРµРЅ' });
             }
 
-            // Получаем командиров отряда
+            // РџРѕР»СѓС‡Р°РµРј РєРѕРјР°РЅРґРёСЂРѕРІ РѕС‚СЂСЏРґР°
             db.all(
                 `SELECT * FROM commanders WHERE squad_id = ? AND is_active = 1 ORDER BY order_index`,
                 [squad.id],
                 (err, commanders) => {
                     if (err) {
-                        return res.status(500).json({ error: 'Ошибка сервера' });
+                        return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
                     }
                     squad.commanders = commanders;
                     res.json({ squad });
@@ -1055,10 +1363,10 @@ app.get('/api/squad-page/:shortName', (req, res) => {
         [shortName],
         (err, squad) => {
             if (err) {
-                return res.status(500).json({ error: 'Ошибка сервера' });
+                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
             }
             if (!squad) {
-                return res.status(404).json({ error: 'Страница отряда не найдена' });
+                return res.status(404).json({ error: 'РЎС‚СЂР°РЅРёС†Р° РѕС‚СЂСЏРґР° РЅРµ РЅР°Р№РґРµРЅР°' });
             }
 
             db.all(
@@ -1067,7 +1375,7 @@ app.get('/api/squad-page/:shortName', (req, res) => {
                 [squad.id],
                 (err, trustCards) => {
                     if (err) {
-                        return res.status(500).json({ error: 'Ошибка сервера' });
+                        return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
                     }
 
                     db.all(
@@ -1076,7 +1384,7 @@ app.get('/api/squad-page/:shortName', (req, res) => {
                         [squad.id],
                         (err, structureSteps) => {
                             if (err) {
-                                return res.status(500).json({ error: 'Ошибка сервера' });
+                                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
                             }
 
                             db.all(
@@ -1085,7 +1393,7 @@ app.get('/api/squad-page/:shortName', (req, res) => {
                                 [squad.id],
                                 (err, teamMembers) => {
                                     if (err) {
-                                        return res.status(500).json({ error: 'Ошибка сервера' });
+                                        return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
                                     }
 
                                     let heroBullets = [];
@@ -1141,32 +1449,56 @@ app.get('/api/squad-page/:shortName', (req, res) => {
 });
 
 // =============================================
-// API: ЗАЯВКИ
+// API: Р—РђРЇР’РљР
 // =============================================
 
-// Подать заявку в отряд
-app.post('/api/apply', (req, res) => {
-    const { squadId, fullName, phone, class: userClass } = req.body;
-    const userId = req.session.userId || null;
+// РџРѕРґР°С‚СЊ Р·Р°СЏРІРєСѓ РІ РѕС‚СЂСЏРґ
+app.post('/api/apply', async (req, res) => {
+    try {
+        if (!req.session.userId) return res.status(401).json({ error: 'Необходимо войти в аккаунт' });
+        const user = await requireUser(req, res);
+        if (!user) return;
+        const squadId = Number(req.body.squadId);
+        const fullName = String(req.body.fullName || req.body.name || user.name || '').trim();
+        const phone = String(req.body.phone || user.phone || '').trim();
+        const userClass = String(req.body.class || req.body.userClass || '').trim();
 
-    if (!squadId || !fullName || !phone || !userClass) {
-        return res.status(400).json({ error: 'Заполните все поля' });
-    }
-
-    db.run(
-        `INSERT INTO applications (user_id, squad_id, full_name, phone, class, status, created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'), datetime('now'))`,
-        [userId, squadId, fullName, phone, userClass],
-        function(err) {
-            if (err) {
-                return res.status(500).json({ error: 'Ошибка сервера' });
-            }
-            res.json({ success: true, applicationId: this.lastID });
+        if (!squadId || !fullName || !phone || !userClass) {
+            return res.status(400).json({ error: 'Заполните все поля' });
         }
-    );
+
+        const squad = await dbGet(`SELECT id, name FROM squads WHERE id = ? AND is_active = 1`, [squadId]);
+        if (!squad) return res.status(404).json({ error: 'Отряд не найден' });
+
+        const member = await dbGet(`SELECT id FROM user_squad_memberships WHERE user_id = ? AND squad_id = ?`, [user.id, squadId]);
+        if (member) return res.status(400).json({ error: 'Вы уже состоите в этом отряде' });
+
+        const pending = await dbGet(
+            `SELECT id FROM applications WHERE user_id = ? AND squad_id = ? AND status = 'pending' LIMIT 1`,
+            [user.id, squadId]
+        );
+        if (pending) return res.status(400).json({ error: 'Заявка в этот отряд уже на рассмотрении' });
+
+        const result = await dbRun(
+            `INSERT INTO applications (user_id, squad_id, full_name, phone, class, status, created_at, updated_at)
+             VALUES (?, ?, ?, ?, ?, 'pending', datetime('now'), datetime('now'))`,
+            [user.id, squadId, fullName, phone, userClass]
+        );
+        await createNotification({
+            userId: user.id,
+            type: 'squad_application',
+            body: `Заявка в ${squad.name} отправлена и находится на рассмотрении`,
+            entityType: 'application',
+            entityId: result.lastID,
+            actionState: 'pending'
+        });
+        res.json({ success: true, applicationId: result.lastID });
+    } catch (err) {
+        res.status(500).json({ error: err.message || 'Ошибка сервера' });
+    }
 });
 
-// Получить заявки пользователя (для личного кабинета)
+// РџРѕР»СѓС‡РёС‚СЊ Р·Р°СЏРІРєРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ (РґР»СЏ Р»РёС‡РЅРѕРіРѕ РєР°Р±РёРЅРµС‚Р°)
 app.get('/api/my-applications', isAuthenticated, (req, res) => {
     db.all(
         `SELECT a.*, s.name as squad_name, s.short_name 
@@ -1177,7 +1509,7 @@ app.get('/api/my-applications', isAuthenticated, (req, res) => {
         [req.session.userId],
         (err, applications) => {
             if (err) {
-                return res.status(500).json({ error: 'Ошибка сервера' });
+                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
             }
             res.json({ applications });
         }
@@ -1185,16 +1517,16 @@ app.get('/api/my-applications', isAuthenticated, (req, res) => {
 });
 
 // =============================================
-// API: ВОПРОСЫ
+// API: Р’РћРџР РћРЎР«
 // =============================================
 
-// Отправить вопрос
+// РћС‚РїСЂР°РІРёС‚СЊ РІРѕРїСЂРѕСЃ
 app.post('/api/ask-question', (req, res) => {
     const { name, phone, question } = req.body;
     const userId = req.session.userId || null;
 
     if (!name || !phone || !question) {
-        return res.status(400).json({ error: 'Заполните все поля' });
+        return res.status(400).json({ error: 'Р—Р°РїРѕР»РЅРёС‚Рµ РІСЃРµ РїРѕР»СЏ' });
     }
 
     db.run(
@@ -1203,7 +1535,7 @@ app.post('/api/ask-question', (req, res) => {
         [userId, name, phone, question],
         function(err) {
             if (err) {
-                return res.status(500).json({ error: 'Ошибка сервера' });
+                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
             }
             res.json({ success: true });
         }
@@ -1211,10 +1543,10 @@ app.post('/api/ask-question', (req, res) => {
 });
 
 // =============================================
-// API: ТЕСТ (ПОДБОР ОТРЯДА)
+// API: РўР•РЎРў (РџРћР”Р‘РћР  РћРўР РЇР”Рђ)
 // =============================================
 
-// Сохранить результат теста
+// РЎРѕС…СЂР°РЅРёС‚СЊ СЂРµР·СѓР»СЊС‚Р°С‚ С‚РµСЃС‚Р°
 app.post('/api/test-result', (req, res) => {
     const { recommendedSquadId, answers } = req.body;
     const userId = req.session.userId || null;
@@ -1226,7 +1558,7 @@ app.post('/api/test-result', (req, res) => {
         [userId, sessionId, recommendedSquadId, JSON.stringify(answers)],
         function(err) {
             if (err) {
-                return res.status(500).json({ error: 'Ошибка сервера' });
+                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
             }
             res.json({ success: true });
         }
@@ -1234,13 +1566,13 @@ app.post('/api/test-result', (req, res) => {
 });
 
 // =============================================
-// API: СТАТИСТИКА ДЛЯ ГЛАВНОЙ
+// API: РЎРўРђРўРРЎРўРРљРђ Р”Р›РЇ Р“Р›РђР’РќРћР™
 // =============================================
 
 app.get('/api/stats', (req, res) => {
     db.all(`SELECT stat_key, stat_value, stat_label FROM site_stats ORDER BY order_index`, (err, stats) => {
         if (err) {
-            return res.status(500).json({ error: 'Ошибка сервера' });
+            return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
         }
         res.json({ stats });
     });
@@ -1253,30 +1585,30 @@ app.get('/api/stats', (req, res) => {
 app.get('/api/faq', (req, res) => {
     db.all(`SELECT * FROM faq WHERE is_active = 1 ORDER BY order_index`, (err, faq) => {
         if (err) {
-            return res.status(500).json({ error: 'Ошибка сервера' });
+            return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
         }
         res.json({ faq });
     });
 });
 
 // =============================================
-// API: СЛАЙДЕР ГЛАВНОЙ
+// API: РЎР›РђР™Р”Р•Р  Р“Р›РђР’РќРћР™
 // =============================================
 
 app.get('/api/hero-slides', (req, res) => {
     db.all(`SELECT * FROM hero_slides WHERE is_active = 1 ORDER BY order_index`, (err, slides) => {
         if (err) {
-            return res.status(500).json({ error: 'Ошибка сервера' });
+            return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
         }
         res.json({ slides });
     });
 });
 
 // =============================================
-// API: КОМАНДИРЫ ДЛЯ СЛАЙДЕРА
+// API: РљРћРњРђРќР”РР Р« Р”Р›РЇ РЎР›РђР™Р”Р•Р Рђ
 // =============================================
 
-// API: КОМАНДИРЫ ДЛЯ СЛАЙДЕРА (только главный штаб, squad_id = 1)
+// API: РљРћРњРђРќР”РР Р« Р”Р›РЇ РЎР›РђР™Р”Р•Р Рђ (С‚РѕР»СЊРєРѕ РіР»Р°РІРЅС‹Р№ С€С‚Р°Р±, squad_id = 1)
 app.get('/api/commanders', (req, res) => {
     db.all(
         `SELECT c.*, s.short_name as squad_short_name, s.name as squad_name 
@@ -1286,7 +1618,7 @@ app.get('/api/commanders', (req, res) => {
          ORDER BY c.order_index`,
         (err, commanders) => {
             if (err) {
-                return res.status(500).json({ error: 'Ошибка сервера' });
+                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
             }
             res.json({ commanders });
         }
@@ -1300,14 +1632,14 @@ app.get('/api/commanders/:squadId', (req, res) => {
         [squadId],
         (err, commanders) => {
             if (err) {
-                return res.status(500).json({ error: 'Ошибка сервера' });
+                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
             }
             res.json({ commanders });
         }
     );
 });
 
-// API: КОМАНДИРЫ ПО ID ОТРЯДА (для страницы Крыльев)
+// API: РљРћРњРђРќР”РР Р« РџРћ ID РћРўР РЇР”Рђ (РґР»СЏ СЃС‚СЂР°РЅРёС†С‹ РљСЂС‹Р»СЊРµРІ)
 app.get('/api/squad-commanders/:squadId', (req, res) => {
     const squadId = req.params.squadId;
     db.all(
@@ -1315,24 +1647,24 @@ app.get('/api/squad-commanders/:squadId', (req, res) => {
         [squadId],
         (err, commanders) => {
             if (err) {
-                console.error('Ошибка загрузки командиров:', err);
-                return res.status(500).json({ error: 'Ошибка сервера' });
+                console.error('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РєРѕРјР°РЅРґРёСЂРѕРІ:', err);
+                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
             }
             res.json({ commanders });
         }
     );
 });
 
-// API: КОМАНДА МЕЧТЫ (для страницы "О нас")
+// API: РљРћРњРђРќР”Рђ РњР•Р§РўР« (РґР»СЏ СЃС‚СЂР°РЅРёС†С‹ "Рћ РЅР°СЃ")
 app.get('/api/dream-team', (req, res) => {
     db.all(
         `SELECT * FROM dream_team WHERE is_active = 1 ORDER BY order_index`,
         (err, team) => {
             if (err) {
-                console.error('Ошибка загрузки dream-team:', err);
-                return res.status(500).json({ error: 'Ошибка сервера' });
+                console.error('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё dream-team:', err);
+                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
             }
-            console.log('Dream team loaded:', team); // Для отладки
+            console.log('Dream team loaded:', team); // Р”Р»СЏ РѕС‚Р»Р°РґРєРё
             res.json({ team });
         }
     );
@@ -1343,131 +1675,241 @@ app.get('/group_klever.html', (req, res) => {
 });
 
 // =============================================
-// АДМИН-ПАНЕЛЬ
+// РђР”РњРРќ-РџРђРќР•Р›Р¬
 // =============================================
 
-// Middleware для проверки админа
+// Middleware РґР»СЏ РїСЂРѕРІРµСЂРєРё Р°РґРјРёРЅР°
 function isAdmin(req, res, next) {
-    if (req.session.isAdmin) {
+    if (req.session.isAdmin) return next();
+    if (!req.session.userId) return res.status(401).json({ error: 'Доступ запрещен' });
+    db.get(`SELECT role, email FROM users WHERE id = ?`, [req.session.userId], (err, user) => {
+        if (err || !isAdminUser(user)) return res.status(401).json({ error: 'Доступ запрещен' });
+        req.session.isAdmin = true;
         next();
-    } else {
-        res.status(401).json({ error: 'Доступ запрещен' });
-    }
+    });
 }
 
-// Вход в админку
+// Р’С…РѕРґ РІ Р°РґРјРёРЅРєСѓ
 app.post('/api/admin/login', (req, res) => {
+    const email = String(req.body.email || 'ultrasecret@admin.com').trim().toLowerCase();
     const { password } = req.body;
-    if (password === 'admin123') {
+    db.get(`SELECT * FROM users WHERE email = ?`, [email], async (err, user) => {
+        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
+        if (!user || !isAdminUser(user)) return res.status(401).json({ error: 'Неверный email или пароль' });
+        const isValid = await bcrypt.compare(password || '', user.password_hash);
+        if (!isValid) return res.status(401).json({ error: 'Неверный email или пароль' });
+        req.session.userId = user.id;
+        req.session.userName = user.full_name;
+        req.session.userRole = 'admin';
         req.session.isAdmin = true;
-        req.session.adminId = 1;
-        res.json({ success: true });
-    } else {
-        res.status(401).json({ error: 'Неверный пароль' });
-    }
+        req.session.adminId = user.id;
+        req.session.save((saveErr) => {
+            if (saveErr) return res.status(500).json({ error: 'Не удалось сохранить сессию' });
+            res.json({ success: true });
+        });
+    });
 });
 
-// Выход из админки
+// Р’С‹С…РѕРґ РёР· Р°РґРјРёРЅРєРё
 app.post('/api/admin/logout', (req, res) => {
     req.session.isAdmin = false;
     res.json({ success: true });
 });
 
-// Проверка статуса админа
+// РџСЂРѕРІРµСЂРєР° СЃС‚Р°С‚СѓСЃР° Р°РґРјРёРЅР°
 app.get('/api/admin/check', (req, res) => {
     res.json({ isAdmin: req.session.isAdmin === true });
 });
 
-// Получение всех пользователей
+// РџРѕР»СѓС‡РµРЅРёРµ РІСЃРµС… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№
 app.get('/api/admin/users', isAdmin, (req, res) => {
-    db.all(`SELECT id, full_name, email, phone, role, created_at FROM users ORDER BY id DESC`, (err, users) => {
-        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
+    db.all(
+        `SELECT u.id, u.full_name, u.email, u.phone, u.role, u.is_banned, u.banned_at, u.created_at,
+                GROUP_CONCAT(s.name, ', ') AS squads
+         FROM users u
+         LEFT JOIN user_squad_memberships usm ON usm.user_id = u.id
+         LEFT JOIN squads s ON s.id = usm.squad_id
+         GROUP BY u.id
+         ORDER BY u.id DESC`,
+        (err, users) => {
+        if (err) return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
         res.json({ users });
     });
 });
 
-// Обновление роли пользователя
+// РћР±РЅРѕРІР»РµРЅРёРµ СЂРѕР»Рё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
 app.put('/api/admin/users/:id/role', isAdmin, (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
     db.run(`UPDATE users SET role = ? WHERE id = ?`, [role, id], (err) => {
-        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
+        if (err) return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
         res.json({ success: true });
     });
 });
 
-// Удаление пользователя
+// РЈРґР°Р»РµРЅРёРµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
 app.delete('/api/admin/users/:id', isAdmin, (req, res) => {
     const { id } = req.params;
     db.run(`DELETE FROM users WHERE id = ?`, [id], (err) => {
-        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
+        if (err) return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
         res.json({ success: true });
     });
 });
 
-// Получение всех заявок
+app.put('/api/admin/users/:id/ban', isAdmin, async (req, res) => {
+    try {
+        const userId = Number(req.params.id);
+        const user = await dbGet(`SELECT email FROM users WHERE id = ?`, [userId]);
+        if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
+        if (user.email === 'ultrasecret@admin.com') return res.status(400).json({ error: 'Администратора нельзя забанить' });
+        await dbRun(
+            `UPDATE users SET is_banned = 1, banned_at = datetime('now'), banned_reason = ?, banned_by = ?, updated_at = datetime('now') WHERE id = ?`,
+            [req.body.reason || null, req.session.userId || null, userId]
+        );
+        await dbRun(`UPDATE posts SET status = 'deleted', updated_at = datetime('now') WHERE author_id = ?`, [userId]);
+        await dbRun(
+            `DELETE FROM chat_messages
+             WHERE user_id = ?
+               AND chat_id IN (SELECT id FROM chats WHERE type = 'group' AND slug = 'global-feed')`,
+            [userId]
+        );
+        res.json({ success: true });
+    } catch {
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+app.put('/api/admin/users/:id/unban', isAdmin, async (req, res) => {
+    try {
+        await dbRun(
+            `UPDATE users SET is_banned = 0, banned_at = NULL, banned_reason = NULL, banned_by = NULL, updated_at = datetime('now') WHERE id = ?`,
+            [req.params.id]
+        );
+        res.json({ success: true });
+    } catch {
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+app.post('/api/admin/users/:id/memberships', isAdmin, async (req, res) => {
+    try {
+        const userId = Number(req.params.id);
+        const squadId = Number(req.body.squadId);
+        const user = await dbGet(`SELECT id FROM users WHERE id = ?`, [userId]);
+        const squad = await dbGet(`SELECT id FROM squads WHERE id = ?`, [squadId]);
+        if (!user || !squad) return res.status(404).json({ error: 'Пользователь или отряд не найден' });
+        await assignSquadMembership({ userId, squadId, source: 'admin' });
+        res.json({ success: true });
+    } catch {
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+// РџРѕР»СѓС‡РµРЅРёРµ РІСЃРµС… Р·Р°СЏРІРѕРє
 app.get('/api/admin/applications', isAdmin, (req, res) => {
     db.all(`
-        SELECT a.*, s.name as squad_name 
+        SELECT a.*, s.name as squad_name, s.short_name, u.email AS user_email
         FROM applications a
         JOIN squads s ON a.squad_id = s.id
+        LEFT JOIN users u ON u.id = a.user_id
         ORDER BY a.created_at DESC
     `, (err, apps) => {
-        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
-        res.json({ applications: apps });
+        if (err) return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+        db.all(`SELECT id, name, short_name FROM squads ORDER BY order_index, id`, (squadErr, squads) => {
+            if (squadErr) return res.status(500).json({ error: 'Ошибка сервера' });
+            res.json({ applications: apps, squads });
+        });
     });
 });
 
-// Обновление статуса заявки
-app.put('/api/admin/applications/:id/status', isAdmin, (req, res) => {
-    const { id } = req.params;
-    const { status, comment } = req.body;
-    db.run(`UPDATE applications SET status = ?, comment = ?, updated_at = datetime('now') WHERE id = ?`,
-        [status, comment || null, id], (err) => {
-        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
+// РћР±РЅРѕРІР»РµРЅРёРµ СЃС‚Р°С‚СѓСЃР° Р·Р°СЏРІРєРё
+app.put('/api/admin/applications/:id/status', isAdmin, async (req, res) => {
+    try {
+        const { id } = req.params;
+        const status = req.body.status === 'approved' ? 'approved' : req.body.status === 'rejected' ? 'rejected' : 'pending';
+        const comment = req.body.comment || null;
+        const appRow = await dbGet(
+            `SELECT a.*, s.name AS squad_name FROM applications a JOIN squads s ON s.id = a.squad_id WHERE a.id = ?`,
+            [id]
+        );
+        if (!appRow) return res.status(404).json({ error: 'Заявка не найдена' });
+
+        await dbRun(`UPDATE applications SET status = ?, comment = ?, updated_at = datetime('now') WHERE id = ?`, [status, comment, id]);
+        if (status === 'approved' && appRow.user_id) {
+            await assignSquadMembership({ userId: appRow.user_id, squadId: appRow.squad_id, source: 'application', applicationId: appRow.id });
+        }
+        if (appRow.user_id) {
+            const text = status === 'approved'
+                ? `Заявка в ${appRow.squad_name} принята`
+                : status === 'rejected'
+                    ? `Заявка в ${appRow.squad_name} отклонена`
+                    : `Заявка в ${appRow.squad_name} находится на рассмотрении`;
+            const existing = await dbGet(
+                `SELECT id FROM notifications WHERE user_id = ? AND type = 'squad_application' AND entity_type = 'application' AND entity_id = ? LIMIT 1`,
+                [appRow.user_id, appRow.id]
+            );
+            if (existing) {
+                await dbRun(
+                    `UPDATE notifications SET body = ?, action_state = ?, is_read = 0, read_at = NULL, created_at = CURRENT_TIMESTAMP WHERE id = ?`,
+                    [text, status, existing.id]
+                );
+            } else {
+                await createNotification({
+                    userId: appRow.user_id,
+                    actorId: req.session.userId || null,
+                    type: 'squad_application',
+                    body: text,
+                    entityType: 'application',
+                    entityId: appRow.id,
+                    actionState: status
+                });
+            }
+        }
         res.json({ success: true });
-    });
+    } catch (err) {
+        res.status(500).json({ error: err.message || 'Ошибка сервера' });
+    }
 });
 
-// Получение всех вопросов
+// РџРѕР»СѓС‡РµРЅРёРµ РІСЃРµС… РІРѕРїСЂРѕСЃРѕРІ
 app.get('/api/admin/questions', isAdmin, (req, res) => {
     db.all(`SELECT * FROM questions ORDER BY created_at DESC`, (err, questions) => {
-        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
+        if (err) return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
         res.json({ questions });
     });
 });
 
-// Ответ на вопрос
+// РћС‚РІРµС‚ РЅР° РІРѕРїСЂРѕСЃ
 app.put('/api/admin/questions/:id/answer', isAdmin, (req, res) => {
     const { id } = req.params;
     const { answer } = req.body;
     db.run(`UPDATE questions SET answer = ?, is_answered = 1, answered_at = datetime('now') WHERE id = ?`,
         [answer, id], (err) => {
-        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
+        if (err) return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
         res.json({ success: true });
     });
 });
 
-// Получение отрядов
+// РџРѕР»СѓС‡РµРЅРёРµ РѕС‚СЂСЏРґРѕРІ
 app.get('/api/admin/squads', isAdmin, (req, res) => {
     db.all(`SELECT * FROM squads ORDER BY order_index`, (err, squads) => {
-        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
+        if (err) return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
         res.json({ squads });
     });
 });
 
-// Обновление отряда
+// РћР±РЅРѕРІР»РµРЅРёРµ РѕС‚СЂСЏРґР°
 app.put('/api/admin/squads/:id', isAdmin, (req, res) => {
     const { id } = req.params;
     const { name, description, is_active } = req.body;
     db.run(`UPDATE squads SET name = ?, description = ?, is_active = ? WHERE id = ?`,
         [name, description, is_active, id], (err) => {
-        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
+        if (err) return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
         res.json({ success: true });
     });
 });
 
-// Получение статистики
+// РџРѕР»СѓС‡РµРЅРёРµ СЃС‚Р°С‚РёСЃС‚РёРєРё
 app.get('/api/admin/stats', isAdmin, (req, res) => {
     db.get(`SELECT COUNT(*) as total_users FROM users`, (err, usersCount) => {
         db.get(`SELECT COUNT(*) as total_applications FROM applications`, (err, appsCount) => {
@@ -1482,7 +1924,7 @@ app.get('/api/admin/stats', isAdmin, (req, res) => {
     });
 });
 
-// Страница админки
+// РЎС‚СЂР°РЅРёС†Р° Р°РґРјРёРЅРєРё
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
@@ -1494,7 +1936,7 @@ app.get('/api/squad-gallery/:squadId', (req, res) => {
         [squadId],
         (err, gallery) => {
             if (err) {
-                return res.status(500).json({ error: 'Ошибка сервера' });
+                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
             }
             res.json({ gallery });
         }
@@ -1502,7 +1944,7 @@ app.get('/api/squad-gallery/:squadId', (req, res) => {
 });
 
 // =============================================
-// ОТДАЧА HTML СТРАНИЦ (С ПЕРЕДАЧЕЙ ДАННЫХ)
+// РћРўР”РђР§Рђ HTML РЎРўР РђРќРР¦ (РЎ РџР•Р Р•Р”РђР§Р•Р™ Р”РђРќРќР«РҐ)
 // =============================================
 
 app.get('/', (req, res) => {
@@ -1573,16 +2015,17 @@ app.get('/group_ever.html', (req, res) => {
 });
 
 // =============================================
-// ЗАПУСК СЕРВЕРА
+// Р—РђРџРЈРЎРљ РЎР•Р Р’Р•Р Рђ
 // =============================================
 app.listen(PORT, () => {
-    console.log(`Сервер запущен на http://localhost:${PORT}`);
-    console.log(`Доступные страницы:`);
+    console.log(`РЎРµСЂРІРµСЂ Р·Р°РїСѓС‰РµРЅ РЅР° http://localhost:${PORT}`);
+    console.log(`Р”РѕСЃС‚СѓРїРЅС‹Рµ СЃС‚СЂР°РЅРёС†С‹:`);
     console.log(`  - http://localhost:${PORT}/`);
     console.log(`  - http://localhost:${PORT}/register.html`);
     console.log(`  - http://localhost:${PORT}/test.html`);
     console.log(`  - http://localhost:${PORT}/group_wings.html`);
-    console.log(`  - http://localhost:${PORT}/profile.html (требуется авторизация)`);
+    console.log(`  - http://localhost:${PORT}/profile.html (С‚СЂРµР±СѓРµС‚СЃСЏ Р°РІС‚РѕСЂРёР·Р°С†РёСЏ)`);
 });
+
 
 

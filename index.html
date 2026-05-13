@@ -3114,19 +3114,22 @@
     }
 
     .carousel-track {
-        min-height: 390px;
+        min-height: 520px;
+        height: 520px;
     }
 
     .carousel-card.center {
-        flex-basis: min(88vw, 270px);
+        flex-basis: min(88vw, 300px);
+        width: min(88vw, 300px);
     }
 
     .carousel-card.center .commander-card {
-        height: 380px;
+        height: 490px;
     }
 
     .carousel-card.center .commander-photo-wrap {
-        height: 220px;
+        height: 320px;
+        aspect-ratio: 3 / 4;
     }
 
     .carousel-card.center .commander-role {
@@ -3135,6 +3138,21 @@
 
     .carousel-card.center .commander-desc {
         font-size: 14px;
+    }
+}
+
+@media (max-width: 380px) {
+    .carousel-track {
+        min-height: 500px;
+        height: 500px;
+    }
+
+    .carousel-card.center .commander-card {
+        height: 470px;
+    }
+
+    .carousel-card.center .commander-photo-wrap {
+        height: 300px;
     }
 }
 
@@ -3238,6 +3256,48 @@
         opacity: 0;
         pointer-events: none;
         transform: translateX(-50%) translateY(22px) scale(0.86);
+    }
+}
+
+@media (max-width: 520px) {
+    .carousel-track {
+        min-height: 488px;
+        height: 488px;
+    }
+
+    .carousel-card {
+        width: min(88vw, 300px);
+    }
+
+    .carousel-card.center .commander-card {
+        height: 458px;
+    }
+
+    .carousel-card.center .commander-photo-wrap {
+        height: 294px;
+        aspect-ratio: 3 / 4;
+    }
+
+    .commander-photo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center top;
+    }
+}
+
+@media (max-width: 380px) {
+    .carousel-track {
+        min-height: 468px;
+        height: 468px;
+    }
+
+    .carousel-card.center .commander-card {
+        height: 438px;
+    }
+
+    .carousel-card.center .commander-photo-wrap {
+        height: 274px;
     }
 }
 
@@ -4354,6 +4414,7 @@
         const authButtons = document.getElementById('authButtons');
         const userMenu = document.getElementById('userMenu');
         const userNameDisplay = document.getElementById('userNameDisplay');
+        if (!authButtons || !userMenu || !userNameDisplay) return;
 
         if (currentUser) {
             authButtons.style.display = 'none';
