@@ -8,7 +8,7 @@ const multer = require('multer');
 const fs = require('fs');
 const crypto = require('crypto');
 const https = require('https');
-require('dotenv').config();
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 
 let nodemailer = null;
 try {
@@ -183,7 +183,7 @@ async function sendMail(to, subject, text) {
     const smtpFrom = process.env.SMTP_FROM || smtpUser;
 
     if (!nodemailer || !smtpHost || !smtpUser || !smtpPass || !smtpFrom) {
-        throw new Error('РџРѕС‡С‚Р° РЅРµ РЅР°СЃС‚СЂРѕРµРЅР°. Р—Р°РїРѕР»РЅРёС‚Рµ SMTP-РЅР°СЃС‚СЂРѕР№РєРё РІ .env');
+        throw new Error('Почта не настроена. Заполните SMTP-настройки в .env');
     }
 
     const transporter = nodemailer.createTransport({
@@ -208,11 +208,24 @@ async function createEmailCode({ email, purpose, payload = null, userId = null }
     const codeHash = crypto.createHash('sha256').update(code).digest('hex');
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
-    const mail = await sendMail(
-        normalizedEmail,
-        'РљРѕРґ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ РЎРѕР·РІРµР·РґРёРµ',
-        `Р’Р°С€ РєРѕРґ РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ: ${code}. РћРЅ РґРµР№СЃС‚РІСѓРµС‚ 10 РјРёРЅСѓС‚.`
-    );
+    let mail;
+    try {
+        mail = await sendMail(
+            normalizedEmail,
+            'Код подтверждения Созвездие',
+            `Ваш код подтверждения: ${code}. Он действует 10 минут.`
+        );
+    } catch (err) {
+        console.error('Email verification code send error:', {
+            to: normalizedEmail,
+            host: process.env.SMTP_HOST || null,
+            port: process.env.SMTP_PORT || null,
+            secure: process.env.SMTP_SECURE || null,
+            user: process.env.SMTP_USER || null,
+            message: err.message
+        });
+        throw err;
+    }
 
     await dbRun(
         `INSERT INTO email_verification_codes (user_id, email, purpose, code_hash, payload_json, expires_at)
