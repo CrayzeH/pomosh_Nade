@@ -21,10 +21,26 @@ const app = express();
 const PORT = 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 const sessionSecret = process.env.SESSION_SECRET || 'sozvezdie_secret_key_2026';
-const sessionDbDir = process.env.SESSION_DB_DIR || __dirname;
+const sessionStoreType = String(process.env.SESSION_STORE || 'memory').toLowerCase();
+const configuredSessionDbDir = process.env.SESSION_DB_DIR || '';
+const sessionDbDir = configuredSessionDbDir
+    ? (path.isAbsolute(configuredSessionDbDir) ? configuredSessionDbDir : path.join(__dirname, configuredSessionDbDir))
+    : __dirname;
+const sessionDbPath = path.join(sessionDbDir, 'sessions.db');
 
-if (!fs.existsSync(sessionDbDir)) {
-    fs.mkdirSync(sessionDbDir, { recursive: true });
+let sessionStore = null;
+if (sessionStoreType === 'sqlite') {
+    if (!fs.existsSync(sessionDbDir)) {
+        fs.mkdirSync(sessionDbDir, { recursive: true });
+    }
+
+    try {
+        fs.accessSync(sessionDbDir, fs.constants.R_OK | fs.constants.W_OK);
+        fs.closeSync(fs.openSync(sessionDbPath, 'a'));
+        sessionStore = new SQLiteStore({ db: 'sessions.db', dir: sessionDbDir, table: 'sessions' });
+    } catch (err) {
+        console.error('Session storage is not writable, falling back to memory store:', sessionDbPath, err.message);
+    }
 }
 
 app.set('trust proxy', 1);
@@ -502,7 +518,7 @@ app.use(express.static(path.join(__dirname, 'public/css')));
 
 // РќР°СЃС‚СЂРѕР№РєР° СЃРµСЃСЃРёР№
 app.use(session({
-    store: new SQLiteStore({ db: 'sessions.db', dir: sessionDbDir, table: 'sessions' }),
+    ...(sessionStore ? { store: sessionStore } : {}),
     name: 'soz.sid',
     secret: sessionSecret,
     resave: false,
