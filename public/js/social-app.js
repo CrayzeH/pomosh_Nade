@@ -79,7 +79,14 @@
   function normalizeShell(active) {
     const sidebar = $('.feed-sidebar');
     if (!sidebar) return;
-    $('.brand', sidebar).textContent = 'СОЗВЕЗДИЕ';
+    const brand = $('.brand', sidebar);
+    if (brand) {
+      const brandLink = brand.matches('a') ? brand : document.createElement('a');
+      brandLink.className = brand.className;
+      brandLink.href = '/';
+      brandLink.textContent = 'СОЗВЕЗДИЕ';
+      if (brandLink !== brand) brand.replaceWith(brandLink);
+    }
     const items = [
       ['feed', '/feed.html', '/images/лента.png', 'Лента'],
       ['create', '/create.html', '/images/создавай.png', 'Создавай'],
