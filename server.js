@@ -21,6 +21,11 @@ const app = express();
 const PORT = 3000;
 const isProduction = process.env.NODE_ENV === 'production';
 const sessionSecret = process.env.SESSION_SECRET || 'sozvezdie_secret_key_2026';
+const sessionDbDir = process.env.SESSION_DB_DIR || __dirname;
+
+if (!fs.existsSync(sessionDbDir)) {
+    fs.mkdirSync(sessionDbDir, { recursive: true });
+}
 
 app.set('trust proxy', 1);
 
@@ -497,7 +502,7 @@ app.use(express.static(path.join(__dirname, 'public/css')));
 
 // РќР°СЃС‚СЂРѕР№РєР° СЃРµСЃСЃРёР№
 app.use(session({
-    store: new SQLiteStore({ db: 'sessions.db', table: 'sessions' }),
+    store: new SQLiteStore({ db: 'sessions.db', dir: sessionDbDir, table: 'sessions' }),
     name: 'soz.sid',
     secret: sessionSecret,
     resave: false,
@@ -1000,6 +1005,7 @@ app.post('/api/verify-registration', async (req, res) => {
         req.session.pendingRegistrationEmail = null;
         req.session.save((saveErr) => {
             if (saveErr) {
+                console.error('Session save error after registration:', saveErr);
                 return res.status(500).json({ error: 'Не удалось сохранить сессию' });
             }
             res.json({ success: true, user: publicUser({
@@ -1077,6 +1083,7 @@ app.post('/api/login', (req, res) => {
 
             req.session.save((saveErr) => {
                 if (saveErr) {
+                    console.error('Session save error after login:', saveErr);
                     return res.status(500).json({ error: 'Не удалось сохранить сессию' });
                 }
                 res.json({
@@ -1704,7 +1711,10 @@ app.post('/api/admin/login', (req, res) => {
         req.session.isAdmin = true;
         req.session.adminId = user.id;
         req.session.save((saveErr) => {
-            if (saveErr) return res.status(500).json({ error: 'Не удалось сохранить сессию' });
+            if (saveErr) {
+                console.error('Session save error after admin login:', saveErr);
+                return res.status(500).json({ error: 'Не удалось сохранить сессию' });
+            }
             res.json({ success: true });
         });
     });
