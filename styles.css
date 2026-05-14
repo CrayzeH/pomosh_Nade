@@ -1240,6 +1240,16 @@ h1 {
   min-width: 0;
 }
 
+.profile-loading .profile-main {
+  visibility: hidden;
+}
+
+.profile-loading .profile-main::before {
+  content: "";
+  display: block;
+  min-height: 520px;
+}
+
 .profile-cover {
   background: #7d8aa1;
   border-radius: 32px;
