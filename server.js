@@ -96,6 +96,32 @@ const dbGet = (sql, params = []) => new Promise((resolve, reject) => {
     });
 });
 
+async function checkDatabaseWritable() {
+    try {
+        await dbRun(`CREATE TABLE IF NOT EXISTS _db_write_probe (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )`);
+        const probe = await dbRun(`INSERT INTO _db_write_probe DEFAULT VALUES`);
+        await dbRun(`DELETE FROM _db_write_probe WHERE id = ?`, [probe.lastID]);
+        console.log('SQLite write check passed:', {
+            dbPath,
+            dbDir,
+            cwd: process.cwd(),
+            uid: typeof process.getuid === 'function' ? process.getuid() : null
+        });
+    } catch (err) {
+        console.error('SQLite write check failed:', {
+            dbPath,
+            dbDir,
+            cwd: process.cwd(),
+            uid: typeof process.getuid === 'function' ? process.getuid() : null,
+            code: err.code,
+            message: err.message
+        });
+    }
+}
+
 const dbAll = (sql, params = []) => new Promise((resolve, reject) => {
     db.all(sql, params, (err, rows) => {
         if (err) reject(err);
@@ -544,9 +570,11 @@ async function initSocialSchema() {
     }
 }
 
-initSocialSchema().catch((err) => {
-    console.error('Ошибка инициализации социальной схемы:', err.message);
-});
+checkDatabaseWritable()
+    .then(() => initSocialSchema())
+    .catch((err) => {
+        console.error('Ошибка инициализации социальной схемы:', err.message);
+    });
 
 // =============================================
 // MIDDLEWARE
