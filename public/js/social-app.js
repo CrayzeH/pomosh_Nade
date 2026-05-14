@@ -290,7 +290,7 @@
           method: 'POST',
           body: JSON.stringify({ email, code })
         });
-        window.location.href = '/feed.html';
+        window.location.href = '/profile-setup.html';
       } catch (err) {
         if (errorNode) errorNode.textContent = err.message;
       }
@@ -305,6 +305,84 @@
         startResendTimer();
       } catch (err) {
         if (errorNode) errorNode.textContent = err.message;
+      }
+    });
+  }
+
+  async function initProfileSetup() {
+    if (!['profile-setup.html', 'profile-setup-step2.html'].includes(path)) return;
+    await loadMe();
+
+    if (path === 'profile-setup.html') {
+      const form = $('#profile-setup-form');
+      const nameInput = $('#setup-name');
+      const handleInput = $('#setup-handle');
+      if (nameInput) nameInput.value = me.name || '';
+      if (handleInput) handleInput.value = me.handle || '';
+
+      form?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          const data = await api('/api/social/profile', {
+            method: 'PUT',
+            body: JSON.stringify({
+              name: nameInput?.value.trim() || me.name,
+              username: handleInput?.value.trim() || me.handle,
+              bio: me.bio || '',
+              avatar: me.avatar,
+              cover: me.cover
+            })
+          });
+          me = data.user;
+          window.location.href = '/profile-setup-step2.html';
+        } catch (err) {
+          alert(err.message);
+        }
+      });
+      return;
+    }
+
+    const pickButton = $('#photo-pick-btn');
+    const fileInput = $('#photo-input');
+    const finishButton = $('#profile-setup-finish');
+    let selectedAvatar = me.avatar;
+
+    const applyPickPreview = (imageUrl) => {
+      if (!pickButton || !imageUrl) return;
+      pickButton.style.backgroundImage = `url("${imageUrl}")`;
+      pickButton.style.backgroundSize = 'cover';
+      pickButton.style.backgroundPosition = 'center';
+      pickButton.style.backgroundRepeat = 'no-repeat';
+      pickButton.textContent = '';
+      pickButton.setAttribute('aria-label', 'Изменить фото профиля');
+      pickButton.classList.add('photo-pick--selected');
+    };
+
+    applyPickPreview(selectedAvatar);
+    pickButton?.addEventListener('click', () => fileInput?.click());
+    fileInput?.addEventListener('change', async () => {
+      const [image] = await readImages(Array.from(fileInput.files || []).slice(0, 1));
+      if (!image) return;
+      selectedAvatar = image;
+      applyPickPreview(image);
+    });
+
+    finishButton?.addEventListener('click', async (event) => {
+      event.preventDefault();
+      try {
+        await api('/api/social/profile', {
+          method: 'PUT',
+          body: JSON.stringify({
+            name: me.name,
+            username: me.handle,
+            bio: me.bio || '',
+            avatar: selectedAvatar,
+            cover: me.cover
+          })
+        });
+        window.location.href = '/feed.html';
+      } catch (err) {
+        alert(err.message);
       }
     });
   }
@@ -364,6 +442,8 @@
     $('.profile-name').textContent = viewed.name;
     $('.profile-handle').textContent = `@${viewed.handle}`;
     $('.profile-avatar').src = viewed.avatar;
+    const composerAvatar = isOwn ? $('#profile-composer-avatar') : $('#other-composer .avatar');
+    if (composerAvatar) composerAvatar.src = me.avatar;
     const profileNameRow = $('.profile-name-row');
     if (profileNameRow) {
       const memberships = viewed.memberships?.length
@@ -813,6 +893,7 @@
     try {
       await initAuthPages();
       await initVerify();
+      await initProfileSetup();
       await initFeed();
       await initProfile();
       await initNotifications();

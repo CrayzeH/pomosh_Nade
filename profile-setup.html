@@ -39,52 +39,6 @@
     </section>
   </main>
 
-  <script>
-    const USER_PROFILE_STORAGE_KEY = 'sozvezdie_user_profile_v1';
-    const AUTH_SESSION_STORAGE_KEY = 'sozvezdie_auth_session_v1';
-    const requireAuth = () => {
-      try {
-        if (localStorage.getItem(AUTH_SESSION_STORAGE_KEY)) return;
-      } catch {}
-      window.location.replace('login.html');
-    };
-    requireAuth();
-    const setupForm = document.querySelector('#profile-setup-form');
-    const nameInput = document.querySelector('#setup-name');
-    const handleInput = document.querySelector('#setup-handle');
-
-    const readCurrentUser = () => {
-      try {
-        const raw = localStorage.getItem(USER_PROFILE_STORAGE_KEY);
-        if (!raw) return null;
-        const parsed = JSON.parse(raw);
-        if (!parsed || typeof parsed !== 'object') return null;
-        return parsed;
-      } catch {
-        return null;
-      }
-    };
-
-    const saveCurrentUser = (nextUser) => {
-      try {
-        localStorage.setItem(USER_PROFILE_STORAGE_KEY, JSON.stringify(nextUser));
-      } catch {}
-    };
-
-    const existingUser = readCurrentUser();
-    if (existingUser?.name && nameInput) nameInput.value = existingUser.name;
-    if (existingUser?.handle && handleInput) handleInput.value = existingUser.handle;
-
-    setupForm?.addEventListener('submit', () => {
-      const name = nameInput?.value.trim() || 'Persona';
-      const handle = (handleInput?.value.trim().replace(/^@+/, '') || 'persona');
-      saveCurrentUser({
-        ...(existingUser || {}),
-        name,
-        handle,
-        avatar: existingUser?.avatar || ''
-      });
-    });
-  </script>
+  <script src="/js/social-app.js"></script>
 </body>
 </html>
