@@ -1,4 +1,4 @@
-﻿(function () {
+(function () {
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => Array.from(root.querySelectorAll(selector));
   const path = window.location.pathname.split('/').pop() || 'index.html';
@@ -643,6 +643,27 @@
         <div class="quiz-options">${question.options.map((option, index) => `<button class="quiz-option" data-answer="${index}" type="button">${escapeHtml(option)}</button>`).join('')}</div></div>`;
     }
 
+    function renderTestResult(result) {
+      const passed = Number(result.score || 0) > 0;
+      const alreadyCompleted = Boolean(result.alreadyCompleted);
+      const pointsAwarded = Number(result.pointsAwarded || 0);
+      const title = alreadyCompleted ? 'Тест уже пройден' : passed ? 'Тест пройден' : 'Тест не пройден';
+      const desc = alreadyCompleted
+        ? 'Баллы за этот тест уже были начислены ранее.'
+        : pointsAwarded > 0
+          ? `Вы набрали ${result.score} из ${result.maxScore}. Начислено ${pointsAwarded} баллов.`
+          : `Вы набрали ${result.score} из ${result.maxScore}. Баллы не начислены, попробуйте другой тест.`;
+      shell.innerHTML = `<div class="quiz-result">
+        <p class="quiz-result-label">${title}</p>
+        <p class="quiz-result-stars">${pointsAwarded > 0 ? `+${pointsAwarded}` : '0'}<img class="result-star-icon" src="/images/звезда.png" alt="" /></p>
+        <p class="quiz-result-desc">${escapeHtml(desc)}</p>
+        <button class="quiz-nav quiz-nav--primary" id="quiz-again" type="button">К списку тестов</button>
+      </div>`;
+      if (typeof result.points !== 'undefined' && $('#profile-points-value')) {
+        $('#profile-points-value').innerHTML = `${result.points}<img class="profile-points-star" src="/images/звезда.png" alt="" />`;
+      }
+    }
+
     shell.addEventListener('click', async (event) => {
       const testButton = event.target.closest('[data-test-id]');
       if (testButton) {
@@ -661,6 +682,7 @@
         } else {
           const result = await api(`/api/social/tests/${activeTest.id}/complete`, { method: 'POST', body: JSON.stringify({ answers }) });
           data = await api('/api/social/create-data');
+          renderTestResult(result);
         }
         return;
       }
