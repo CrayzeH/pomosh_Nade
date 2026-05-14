@@ -224,6 +224,12 @@ async function createEmailCode({ email, purpose, payload = null, userId = null }
     const codeHash = crypto.createHash('sha256').update(code).digest('hex');
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString();
 
+    await dbRun(
+        `INSERT INTO email_verification_codes (user_id, email, purpose, code_hash, payload_json, expires_at)
+         VALUES (?, ?, ?, ?, ?, ?)`,
+        [userId, normalizedEmail, purpose, codeHash, payload ? JSON.stringify(payload) : null, expiresAt]
+    );
+
     let mail;
     try {
         mail = await sendMail(
@@ -242,12 +248,6 @@ async function createEmailCode({ email, purpose, payload = null, userId = null }
         });
         throw err;
     }
-
-    await dbRun(
-        `INSERT INTO email_verification_codes (user_id, email, purpose, code_hash, payload_json, expires_at)
-         VALUES (?, ?, ?, ?, ?, ?)`,
-        [userId, normalizedEmail, purpose, codeHash, payload ? JSON.stringify(payload) : null, expiresAt]
-    );
 
     return {
         email: normalizedEmail,
