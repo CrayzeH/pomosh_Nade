@@ -444,6 +444,7 @@
     $('.profile-avatar').src = viewed.avatar;
     const composerAvatar = isOwn ? $('#profile-composer-avatar') : $('#other-composer .avatar');
     if (composerAvatar) composerAvatar.src = me.avatar;
+    document.body.classList.remove('profile-loading');
     const profileNameRow = $('.profile-name-row');
     if (profileNameRow) {
       const memberships = viewed.memberships?.length
