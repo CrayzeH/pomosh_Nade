@@ -482,6 +482,18 @@ async function initSocialSchema() {
         FOREIGN KEY (squad_id) REFERENCES squads(id) ON DELETE CASCADE,
         FOREIGN KEY (application_id) REFERENCES applications(id) ON DELETE SET NULL
     )`);
+    await dbRun(`CREATE VIEW IF NOT EXISTS application_analytics AS
+        SELECT
+            s.id AS squad_id,
+            s.name AS squad_name,
+            s.short_name AS squad_short_name,
+            COUNT(a.id) AS total_applications,
+            SUM(CASE WHEN a.status = 'pending' THEN 1 ELSE 0 END) AS pending_applications,
+            SUM(CASE WHEN a.status = 'approved' THEN 1 ELSE 0 END) AS approved_applications,
+            SUM(CASE WHEN a.status = 'rejected' THEN 1 ELSE 0 END) AS rejected_applications
+        FROM squads s
+        LEFT JOIN applications a ON a.squad_id = s.id
+        GROUP BY s.id, s.name, s.short_name`);
 
     const adminEmail = 'ultrasecret@admin.com';
     const adminPasswordHash = await bcrypt.hash('adminpass567', 10);
@@ -1915,6 +1927,26 @@ app.get('/api/admin/applications', isAdmin, (req, res) => {
             res.json({ applications: apps, squads });
         });
     });
+});
+
+// Аналитика заявок по отрядам
+app.get('/api/admin/application-analytics', isAdmin, (req, res) => {
+    db.all(
+        `SELECT
+            squad_id,
+            squad_name,
+            squad_short_name,
+            COALESCE(total_applications, 0) AS total_applications,
+            COALESCE(pending_applications, 0) AS pending_applications,
+            COALESCE(approved_applications, 0) AS approved_applications,
+            COALESCE(rejected_applications, 0) AS rejected_applications
+         FROM application_analytics
+         ORDER BY total_applications DESC, squad_name`,
+        (err, rows) => {
+            if (err) return res.status(500).json({ error: 'Ошибка сервера' });
+            res.json({ analytics: rows });
+        }
+    );
 });
 
 // Обновление статуса заявки
