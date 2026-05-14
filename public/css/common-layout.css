@@ -89,7 +89,7 @@ body.common-layout-ready {
 }
 
 .pick-header-btn {
-    padding: 10px 24px;
+    padding: 10px 34px;
 }
 
 .login-header-btn {
@@ -102,8 +102,8 @@ body.common-layout-ready {
 
 .search-wrapper {
     flex: 1;
-    max-width: 360px;
-    min-width: 200px;
+    max-width: 460px;
+    min-width: 340px;
 }
 
 .search-input {
@@ -123,6 +123,51 @@ body.common-layout-ready {
     display: flex;
     align-items: center;
     gap: 16px;
+}
+
+.menu-btn-black {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.menu-btn-black img {
+    width: 28px;
+    height: 28px;
+    object-fit: contain;
+}
+
+.menu-btn-label {
+    line-height: 1;
+}
+
+.header-search-icon {
+    border: 0;
+    background: transparent;
+    width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.header-search-icon img {
+    width: 22px;
+    height: 22px;
+    object-fit: contain;
+}
+
+.login-header-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.login-header-btn img {
+    width: 24px;
+    height: 24px;
+    object-fit: contain;
 }
 
 .user-name {
@@ -490,3 +535,4 @@ body.common-layout-ready {
         justify-content: center;
     }
 }
+

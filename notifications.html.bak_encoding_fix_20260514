@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Созвездие — Уведомления</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="feed-page">
+    <div class="feed-layout">
+      <aside class="feed-sidebar">
+        <p class="brand">СОЗВЕЗДИЕ</p>
+        <nav class="menu">
+          <a class="menu-item" href="/feed.html"><img class="menu-icon" src="/images/лента.png" alt="" />Лента</a>
+          <a class="menu-item" href="/create.html"><img class="menu-icon" src="/images/создавай.png" alt="" />Создавай</a>
+          <a class="menu-item is-active" href="/notifications.html"><img class="menu-icon" src="/images/уведомления.png" alt="" />Уведомления</a>
+          <a class="menu-item" href="/profile_new.html"><img class="menu-icon" src="/images/профиль.png" alt="" />Профиль</a>
+          <a class="menu-item" href="/chats.html"><img class="menu-icon" src="/images/чаты.png" alt="" />Чаты</a>
+        </nav>
+        <button class="menu-item menu-item-logout" type="button" data-logout><img class="menu-icon" src="/images/выход.png" alt="" />Выйти</button>
+      </aside>
+
+      <section class="notifications-main" aria-label="Уведомления">
+        <div class="notifications-shell">
+          <header class="notifications-header">
+            <h1 class="notifications-title">Уведомления</h1>
+          </header>
+          <section class="notifications-section" aria-label="Новые уведомления">
+            <h2 class="notifications-section-title">НОВЫЕ</h2>
+            <div class="notifications-list" id="notifications-list"></div>
+          </section>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <script src="/js/social-app.js"></script>
+</body>
+</html>

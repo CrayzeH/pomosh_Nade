@@ -1313,7 +1313,109 @@
             }
         }
     </style>
-    <link rel="stylesheet" href="/css/common-layout.css">
+    <link rel="stylesheet" href="/css/common-layout.css?v=5">
+    <style>
+    /* Final header override (loaded after common-layout.css) */
+    .header {
+        background: #fff !important;
+        border-bottom: 1px solid #ececf2 !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+    }
+    .header .header-container { max-width: 1120px !important; width: calc(100% - 48px) !important; }
+    .header .header-top { padding: 4px 0 8px !important; gap: 23px !important; }
+    .header .logo {
+        font-size: 28px !important;
+        font-weight: 900 !important;
+        color: #06060a !important;
+        text-transform: lowercase !important;
+        line-height: 1 !important;
+    }
+    .header .logo-area { gap: 23px !important; }
+    .header .menu-btn-black {
+        height: 38px !important;
+        min-width: 132px !important;
+        padding: 0 20px !important;
+        border-radius: 40px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 10px !important;
+        font-size: 16px !important;
+    }
+    .header .menu-btn-black img {
+        width: 30px !important;
+        height: 30px !important;
+        object-fit: contain !important;
+    }
+    .header .menu-btn-black .menu-btn-label { font-size: 14px !important; }
+    .header .search-wrapper {
+        flex: 0 0 460px !important;
+        width: 460px !important;
+        max-width: 460px !important;
+        min-width: 460px !important;
+    }
+    .header .search-input {
+        height: 38px !important;
+        border-radius: 9px !important;
+        border: 1px solid #3a3a3a !important;
+        padding: 0 14px !important;
+        font-size: 15px !important;
+    }
+    .header .header-actions { gap: 23px !important; }
+    .header .header-search-icon {
+        border: none !important;
+        background: transparent !important;
+        width: 30px !important;
+        height: 30px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 16px !important;
+        color: #111 !important;
+    }
+    .header .header-search-icon img {
+        width: 30px !important;
+        height: 30px !important;
+        object-fit: contain !important;
+    }
+    .header .pick-header-btn {
+        background: #fff !important;
+        color: #1f2f73 !important;
+        border: 1px solid #8ea2ff !important;
+        height: 38px !important;
+        border-radius: 20px !important;
+        padding: 0 34px !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+    }
+    .header .login-header-btn {
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        font-size: 11px !important;
+        color: #272727 !important;
+        display: inline-flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 2px !important;
+        text-transform: lowercase !important;
+    }
+    .header .login-header-btn i { font-size: 12px !important; }
+    .header .login-header-btn img {
+        width: 30px !important;
+        height: 30px !important;
+        object-fit: contain !important;
+    }
+    .header .header-bottom { border-top: none !important; padding: 8px 0 10px !important; }
+    .header .bottom-nav { justify-content: space-between !important; gap: 24px !important; font-size: 16px !important; font-weight: 700 !important; }
+    .header .bottom-nav span {
+        color: #08080d !important;
+        border-bottom: none !important;
+        padding: 2px 0 !important;
+    }
+    </style>
 </head>
 <body>
     <script src="/js/common-layout.js"></script>
@@ -1363,15 +1465,16 @@
         <div class="header-top">
             <div class="logo-area">
                 <div class="logo" onclick="window.location.href='/'">СОЗВЕЗДИЕ</div>
-                <button class="menu-btn-black" id="menuToggleBtn">Меню</button>
+                <button class="menu-btn-black" id="menuToggleBtn" onclick="toggleMobileMenu()"><img src="/images/icon-menu-crop.png?v=8" alt=""><span class="menu-btn-label">Меню</span></button>
             </div>
             <div class="search-wrapper">
-                <input type="text" class="search-input" id="searchInput" placeholder="Найти отряд по названию">
+                <input type="text" class="search-input" id="searchInput" placeholder="Найти отряд">
             </div>
             <div class="header-actions" id="headerActions">
+                <button class="header-search-icon" type="button" aria-label="Поиск"><img src="/images/icon-search-crop.png?v=8" alt=""></button>
                 <button class="pick-header-btn" id="pickHeaderBtn">Подобрать отряд</button>
                 <div id="authButtons">
-                    <button class="login-header-btn" id="loginHeaderBtn">Войти</button>
+                    <button class="login-header-btn" id="loginHeaderBtn"><img src="/images/icon-login-crop.png?v=8" alt=""><span>войти</span></button>
                 </div>
                 <div id="userMenu" style="display: none;">
                     <span class="user-name" id="userNameDisplay"></span>
@@ -1380,22 +1483,12 @@
         </div>
         <div class="header-bottom">
             <div class="bottom-nav" id="bottomNav">
-                <span data-page="about">О нас</span>
-                <span data-page="directions">Направления</span>
-                <span data-page="squads">Отряды</span>
+                <span data-page="about" onclick="document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'})">О нас</span>
+                <span data-page="squads" onclick="document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'})">Отряды</span>
                 <span data-page="create">Создавай</span>
-                <span data-page="interactive">Интерактивы</span>
                 <span data-page="contacts">Контакты</span>
             </div>
         </div>
-    </div>
-    <div class="mobile-menu-drop" id="mobileMenuDrop">
-        <span data-page="about">О нас</span>
-        <span data-page="directions">Направления</span>
-        <span data-page="squads">Отряды</span>
-        <span data-page="create">Создавай</span>
-        <span data-page="interactive">Интерактивы</span>
-        <span data-page="contacts">Контакты</span>
     </div>
 </header>
 
@@ -1916,3 +2009,8 @@
 </script>
 </body>
 </html>
+
+
+
+
+

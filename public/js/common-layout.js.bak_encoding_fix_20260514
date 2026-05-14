@@ -1,0 +1,334 @@
+﻿(function () {
+    // Р¤СѓРЅРєС†РёСЏ РґР»СЏ РѕР±РЅРѕРІР»РµРЅРёСЏ UI Р°РІС‚РѕСЂРёР·Р°С†РёРё
+    function updateAuthUI() {
+        const loginBtn = document.getElementById('loginHeaderBtn');
+        const authButtons = document.getElementById('authButtons');
+        const userMenu = document.getElementById('userProfile');
+        const userNameDisplay = document.getElementById('userNameDisplay');
+
+        // РџСЂРѕРІРµСЂСЏРµРј localStorage
+        const user = localStorage.getItem('currentUser');
+
+        if (user && user !== 'undefined') {
+            try {
+                const userData = JSON.parse(user);
+                if (authButtons) authButtons.style.display = 'none';
+                if (userMenu) userMenu.style.display = 'block';
+                if (userNameDisplay) {
+                    const name = userData.full_name?.split(' ')[0] || userData.name || 'РџСЂРѕС„РёР»СЊ';
+                    userNameDisplay.textContent = name;
+                }
+            } catch(e) {
+                console.error('РћС€РёР±РєР°:', e);
+                if (authButtons) authButtons.style.display = 'flex';
+                if (userMenu) userMenu.style.display = 'none';
+            }
+        } else {
+            if (authButtons) authButtons.style.display = 'flex';
+            if (userMenu) userMenu.style.display = 'none';
+        }
+    }
+
+    // Р—Р°РіСЂСѓР·РєР° РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ СЃ СЃРµСЂРІРµСЂР°
+    async function loadCurrentUser() {
+        try {
+            const response = await fetch('/api/me');
+            const data = await response.json();
+            if (data.user) {
+                localStorage.setItem('currentUser', JSON.stringify(data.user));
+            } else {
+                localStorage.removeItem('currentUser');
+            }
+            updateAuthUI();
+        } catch (error) {
+            console.error('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ:', error);
+            updateAuthUI();
+        }
+    }
+
+    const headerHtml = `
+<header class="header">
+    <div class="header-container">
+        <div class="header-top">
+            <div class="logo-area">
+                <div class="logo" onclick="window.location.href='/'">СОЗВЕЗДИЕ</div>
+                <button class="menu-btn-black" id="menuToggleBtn" type="button"><img src="/images/icon-menu-crop.png?v=8" alt=""><span class="menu-btn-label">Меню</span></button>
+            </div>
+            <div class="search-wrapper">
+                <input type="text" class="search-input" id="globalSearchInput" placeholder="Найти отряд" autocomplete="off">
+                <div id="searchResultsDropdown" class="search-dropdown" style="display: none;"></div>
+            </div>
+            <div class="header-actions" id="headerActions">
+                <button class="header-search-icon" type="button" aria-label="Поиск"><img src="/images/icon-search-crop.png?v=8" alt=""></button>
+                <button class="pick-header-btn" id="pickHeaderBtn" type="button">Подобрать отряд</button>
+                <div id="authButtons">
+                    <button class="login-header-btn" id="loginHeaderBtn" type="button"><img src="/images/icon-login-crop.png?v=8" alt=""><span>войти</span></button>
+                </div>
+                <div id="userProfile" style="display: none;">
+                    <span class="user-name" id="userNameDisplay"></span>
+                </div>
+            </div>
+        </div>
+        <div class="header-bottom">
+            <div class="bottom-nav">
+                <span data-page="about">О нас</span>
+                <span data-page="squads">Отряды</span>
+                <span data-page="create">Создавай</span>
+                <span onclick="window.location.href='/about.html#contacts'">Контакты</span>
+            </div>
+        </div>
+    </div>
+</header>
+<div class="mobile-menu-drop" id="mobileMenuDrop">
+    <span data-page="about">О нас</span>
+    <span data-page="squads">Отряды</span>
+    <span data-page="create">Создавай</span>
+    <span onclick="window.location.href='/about.html#contacts'">Контакты</span>
+</div>`;
+    const footerHtml = `
+<footer class="site-footer">
+    <button class="footer-pick-btn" id="footerPickBtn" type="button">РџРѕРґРѕР±СЂР°С‚СЊ РѕС‚СЂСЏРґ</button>
+    <div class="footer-inner">
+        <div class="footer-main">
+            <div class="footer-brand">
+                <h4>РЎРћР—Р’Р•Р—Р”РР•</h4>
+                <a href="/about.html">Рћ РЅР°СЃ</a>
+                <a href="/about.html#contacts">РљРѕРЅС‚Р°РєС‚С‹</a>
+            </div>
+            <div class="footer-squads">
+                <h4>РћС‚СЂСЏРґС‹</h4>
+                <a href="/squad/apelsin">РЎРџРћ "РђРїРµР»СЊСЃРёРЅ"</a>
+                <a href="/squad/yamaika">РЎРџРћ "РЇРјР°Р№РєР°"</a>
+                <a href="/squad/prospekt">РЎРџРћ "РџСЂРѕСЃРїРµРєС‚"</a>
+                <a href="/squad/zhar-ptitsa">РЎРџРћ "Р–Р°СЂ-РџС‚РёС†Р°"</a>
+                <a href="/squad/shum">РЎРџРћ "РЁСѓРј"</a>
+                <a href="/squad/krylya">РЎРџРћ "РљСЂС‹Р»СЊСЏ"</a>
+                <a href="/squad/vokrug-sveta">РЎРћРџ "Р’РѕРєСЂСѓРі РЎРІРµС‚Р°"</a>
+                <a href="/squad/femida">РўРћРџ "Р¤РµРјРёРґР°"</a>
+                <a href="/squad/klever">РўРћРџ "РљР»РµРІРµСЂ"</a>
+                <a href="/squad/everest">РўРћРџ "Р­РІРµСЂРµСЃС‚"</a>
+                <a href="/squad/kraski">РўРћРџ "РљСЂР°СЃРєРё"</a>
+            </div>
+            <div class="footer-social">
+                <h4>РЎРѕС†РёР°Р»СЊРЅС‹Рµ СЃРµС‚Рё</h4>
+                <div class="footer-social-icons">
+                    <a href="#" aria-label="VK"><i class="fab fa-vk"></i></a>
+                    <a href="#" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
+                </div>
+            </div>
+            <div class="footer-cards">
+                <div class="footer-card footer-survey-card">
+                    <h4>РћС‚РІРµС‚СЊС‚Рµ РЅР° РЅРµСЃРєРѕР»СЊРєРѕ РІРѕРїСЂРѕСЃРѕРІ</h4>
+                    <p>РџСЂРµРґР»РѕР¶РёРј РѕС‚СЂСЏРґ РїРѕ РІР°С€РёРј РёРЅС‚РµСЂРµСЃР°Рј</p>
+                    <button type="button" onclick="window.location.href='/test.html'">РќР°С‡Р°С‚СЊ РѕРїСЂРѕСЃ</button>
+                </div>
+                <div class="footer-card footer-contact-card">
+                    <div class="footer-contact-images">
+                        <img src="/images/footer-staff-logo.png" alt="РЎРѕР·РІРµР·РґРёРµ">
+                        <img src="/images/footer-qr.png" alt="QR-РєРѕРґ">
+                    </div>
+                    <p>РџРѕ Р»СЋР±С‹Рј РІРѕРїСЂРѕСЃР°Рј РѕР±СЂР°С‰Р°С‚СЊСЃСЏ Рє РєРѕРјР°РЅРґРёСЂСѓ С€С‚Р°Р±Р° - РџР°С€РєРµРІРёС‡СѓСЃ Р’РёРєС‚РѕСЂРёРё</p>
+                </div>
+            </div>
+        </div>
+        <div class="footer-legal">
+            <div>В© РЎРѕР·РІРµР·РґРёРµ, 2009вЂ“2026</div>
+            <a href="#">РџРѕР»РёС‚РёРєР° РѕР±СЂР°Р±РѕС‚РєРё<br>РїРµСЂСЃРѕРЅР°Р»СЊРЅС‹С… РґР°РЅРЅС‹С…</a>
+            <div>Р’РЅРµСЃРµРЅР° РІ СЂРµРµСЃС‚СЂ СЂРѕСЃСЃРёР№СЃРєРёС…<br>РїСЂРѕРіСЂР°РјРј: Р·Р°РїРёСЃСЊ в„–15676 РѕС‚ 25.11.2022 РіРѕРґР°</div>
+            <div class="footer-legal-logos">
+                <img src="/images/footer-bottom-logo-1.png" alt="">
+                <img src="/images/footer-bottom-logo-2.png" alt="">
+            </div>
+        </div>
+    </div>
+</footer>`;
+
+    // РЎРїРёСЃРѕРє РѕС‚СЂСЏРґРѕРІ РґР»СЏ РїРѕРёСЃРєР°
+    const squadsList = [
+        { name: "РђРїРµР»СЊСЃРёРЅ", slug: "apelsin", type: "РЎРџРћ" },
+        { name: "РЇРјР°Р№РєР°", slug: "yamaika", type: "РЎРџРћ" },
+        { name: "РџСЂРѕСЃРїРµРєС‚", slug: "prospekt", type: "РЎРџРћ" },
+        { name: "Р–Р°СЂ-РџС‚РёС†Р°", slug: "zhar-ptitsa", type: "РЎРџРћ" },
+        { name: "РЁСѓРј", slug: "shum", type: "РЎРџРћ" },
+        { name: "РљСЂС‹Р»СЊСЏ", slug: "krylya", type: "РЎРџРћ" },
+        { name: "Р’РѕРєСЂСѓРі РЎРІРµС‚Р°", slug: "vokrug-sveta", type: "РЎРћРџ" },
+        { name: "Р¤РµРјРёРґР°", slug: "femida", type: "РўРћРџ" },
+        { name: "РљР»РµРІРµСЂ", slug: "klever", type: "РўРћРџ" },
+        { name: "Р­РІРµСЂРµСЃС‚", slug: "everest", type: "РўРћРџ" },
+        { name: "РљСЂР°СЃРєРё", slug: "kraski", type: "РўРћРџ" }
+    ];
+
+    function addSearchStyles() {
+        if (document.getElementById('searchStyles')) return;
+
+        const styles = document.createElement('style');
+        styles.id = 'searchStyles';
+        styles.textContent = `
+            .search-wrapper { position: relative; }
+            .search-dropdown {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: white;
+                border: 1px solid #e0d9f0;
+                border-radius: 12px;
+                box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+                max-height: 320px;
+                overflow-y: auto;
+                z-index: 1001;
+                margin-top: 4px;
+            }
+            .search-dropdown-item {
+                padding: 12px 16px;
+                cursor: pointer;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            .search-dropdown-item:last-child { border-bottom: none; }
+            .search-dropdown-item:hover { background: #f5f5f5; }
+            .search-dropdown-item .squad-name { font-weight: 700; color: #1f1a2e; }
+            .search-dropdown-item .squad-type { font-size: 12px; color: #6b6b73; margin-left: 8px; }
+            .search-dropdown-item .squad-slug { font-size: 11px; color: #999; display: block; margin-top: 4px; }
+            .search-no-results { padding: 16px; text-align: center; color: #6b6b73; }
+        `;
+        document.head.appendChild(styles);
+    }
+
+    function initSearch() {
+        const searchInput = document.getElementById('globalSearchInput');
+        const dropdown = document.getElementById('searchResultsDropdown');
+        if (!searchInput || !dropdown) return;
+
+        function filterSquads(query) {
+            const lowerQuery = query.toLowerCase().trim();
+            if (!lowerQuery) return [];
+            return squadsList.filter(squad =>
+                squad.name.toLowerCase().includes(lowerQuery) ||
+                squad.slug.toLowerCase().includes(lowerQuery)
+            );
+        }
+
+        function renderDropdown(results, query) {
+            if (!query.trim()) {
+                dropdown.style.display = 'none';
+                return;
+            }
+            if (results.length === 0) {
+                dropdown.innerHTML = '<div class="search-no-results">РќРёС‡РµРіРѕ РЅРµ РЅР°Р№РґРµРЅРѕ рџ”</div>';
+                dropdown.style.display = 'block';
+                return;
+            }
+            dropdown.innerHTML = results.map(squad => `
+                <div class="search-dropdown-item" data-slug="${squad.slug}">
+                    <span class="squad-name">${squad.name}</span>
+                    <span class="squad-type">${squad.type}</span>
+                    <span class="squad-slug">/${squad.slug}</span>
+                </div>
+            `).join('');
+            dropdown.style.display = 'block';
+
+            document.querySelectorAll('.search-dropdown-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    window.location.href = `/squad/${item.dataset.slug}`;
+                });
+            });
+        }
+
+        let debounceTimer;
+        searchInput.addEventListener('input', (e) => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                renderDropdown(filterSquads(e.target.value), e.target.value);
+            }, 200);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!searchInput.contains(e.target) && !dropdown.contains(e.target)) {
+                dropdown.style.display = 'none';
+            }
+        });
+    }
+
+    function initLayout() {
+        if (document.body.dataset.commonLayoutApplied === 'true') return;
+        document.body.dataset.commonLayoutApplied = 'true';
+
+        addSearchStyles();
+
+        // РЈРґР°Р»СЏРµРј СЃС‚Р°СЂС‹Р№ С…РµРґРµСЂ Рё С„СѓС‚РµСЂ
+        const oldMobileMenu = document.getElementById('mobileMenuDrop');
+        if (oldMobileMenu) oldMobileMenu.remove();
+
+        const oldHeader = document.querySelector('header.header');
+        if (oldHeader) {
+            oldHeader.insertAdjacentHTML('beforebegin', headerHtml);
+            oldHeader.remove();
+        } else {
+            document.body.insertAdjacentHTML('afterbegin', headerHtml);
+        }
+
+        const footers = Array.from(document.querySelectorAll('footer'));
+        const visibleFooter = footers.find(f => !f.hidden) || footers[0];
+        if (visibleFooter) {
+            visibleFooter.insertAdjacentHTML('beforebegin', footerHtml);
+            footers.forEach(f => f.remove());
+        } else {
+            document.body.insertAdjacentHTML('beforeend', footerHtml);
+        }
+
+        document.body.classList.add('common-layout-ready');
+
+        // РРЅРёС†РёР°Р»РёР·Р°С†РёСЏ
+        initSearch();
+        loadCurrentUser();
+
+        // РљРЅРѕРїРєРё
+        document.getElementById('pickHeaderBtn')?.addEventListener('click', () => {
+            window.location.href = '/test.html';
+        });
+        document.getElementById('footerPickBtn')?.addEventListener('click', () => {
+            window.location.href = '/test.html';
+        });
+        document.getElementById('loginHeaderBtn')?.addEventListener('click', () => {
+            window.location.href = '/register.html';
+        });
+        document.getElementById('userProfile')?.addEventListener('click', () => {
+            window.location.href = '/profile_new.html';
+        });
+
+        // РњРѕР±РёР»СЊРЅРѕРµ РјРµРЅСЋ
+        const menuBtn = document.getElementById('menuToggleBtn');
+        const mobileMenu = document.getElementById('mobileMenuDrop');
+        menuBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            mobileMenu?.classList.toggle('open');
+            document.body.classList.toggle('menu-open', mobileMenu?.classList.contains('open'));
+        });
+
+        document.addEventListener('click', (e) => {
+            if (mobileMenu?.classList.contains('open') &&
+                !mobileMenu.contains(e.target) &&
+                !menuBtn?.contains(e.target)) {
+                mobileMenu.classList.remove('open');
+                document.body.classList.remove('menu-open');
+            }
+        });
+
+        // РќР°РІРёРіР°С†РёСЏ
+        document.querySelectorAll('[data-page="squads"], [data-page="about"]').forEach((item) => {
+            item.addEventListener('click', () => {
+                document.querySelector('footer')?.scrollIntoView({ behavior: 'smooth' });
+                document.getElementById('mobileMenuDrop')?.classList.remove('open');
+                document.body.classList.remove('menu-open');
+            });
+        });
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initLayout);
+    } else {
+        initLayout();
+    }
+})();
+
+

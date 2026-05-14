@@ -530,8 +530,8 @@
         .cta-copy p {
             margin-top: clamp(18px, 1.2vw, 24px);
             font-family: var(--hero-font);
-            font-weight: 800;
-            font-size: clamp(28px, 1.95vw, 38px);
+            font-weight: 500;
+            font-size: clamp(20px, 1.35vw, 26px);
             line-height: 1.05;
         }
 
@@ -551,10 +551,10 @@
 
         @media (max-width: 2100px) {
             .cta-copy h2 {
-                font-size: 40px;
+                font-size: 38px;
             }
             .cta-copy p {
-                font-size: 32px;
+                font-size: 24px;
             }
             .cta-btn {
                 width: 300px;
@@ -566,7 +566,7 @@
                 font-size: 34px;
             }
             .cta-copy p {
-                font-size: 28px;
+                font-size: 21px;
             }
             .cta-btn {
                 width: 240px;
@@ -578,7 +578,7 @@
                 font-size: 26px;
             }
             .cta-copy p {
-                font-size: 20px;
+                font-size: 15px;
             }
             .cta-btn {
                 width: 200px;
@@ -591,7 +591,7 @@
                 font-size: 22px;
             }
             .cta-copy p {
-                font-size: 15px;
+                font-size: 12px;
             }
         }
         @media (max-width: 1140px) {
@@ -599,7 +599,7 @@
                 font-size: 16px;
             }
             .cta-copy p {
-                font-size: 11px;
+                font-size: 10px;
             }
         }
         @media (max-width: 1000px) {
@@ -615,7 +615,7 @@
                 font-size: 20px;
             }
             .cta-copy p {
-                font-size: 12px;
+                font-size: 11px;
             }
         }
 
@@ -942,6 +942,14 @@
             line-height: 1.05;
         }
 
+        .structure-card h3.structure-title-kraski-register {
+            font-size: clamp(40px, 3.12vw, 60px);
+        }
+
+        .structure-card h3.structure-title-apelsin-online {
+            font-size: clamp(38px, 2.95vw, 56px);
+        }
+
         .structure-card p {
             position: relative;
             z-index: 1;
@@ -1083,6 +1091,63 @@
             height: 100%;
             object-fit: cover;
             object-position: center top;
+        }
+
+        /* Bigger portrait only for Апельсин / Пресс-секретарь card */
+        .team-photo.team-photo-apelsin-press img {
+            transform: scale(1.24);
+            transform-origin: center 8%;
+        }
+
+        /* Fallback: force the same zoom for Апельсин / Пресс-секретарь image by file name */
+        .team-photo img[src*="squad-apelsin-team-4.png"] {
+            transform: translateY(-38%) scale(1.62) !important;
+            transform-origin: center top !important;
+        }
+
+        /* Шум / Комиссар: небольшое увеличение фото */
+        .team-photo.team-photo-shum-commissar img {
+            transform: scale(1.08) !important;
+            transform-origin: center top !important;
+        }
+
+        /* Шум / Пресс-секретарь: увеличить портрет девушки */
+        .team-photo.team-photo-shum-press img,
+        .team-photo img[src*="squad-shum-team-4.png"] {
+            transform: translateY(-36%) scale(1.58) !important;
+            transform-origin: center top !important;
+        }
+
+        /* Клевер / Комиссар: увеличить и поднять портрет */
+        .team-photo.team-photo-klever-commissar img,
+        .team-photo img[src*="com-clover2.png"] {
+            transform: translate(7%, -39%) scale(1.62) !important;
+            transform-origin: center top !important;
+        }
+
+        /* Эверест: поднять и увеличить портреты состава */
+        .team-photo.team-photo-everest-commissar img,
+        .team-photo img[src*="squad-everest-team-2.png"] {
+            transform: translateY(-36%) scale(1.7) !important;
+            transform-origin: center top !important;
+        }
+
+        .team-photo.team-photo-everest-press img,
+        .team-photo img[src*="squad-everest-team-4.png"] {
+            transform: translateY(-24%) scale(1.45) !important;
+            transform-origin: center top !important;
+        }
+
+        /* Крылья / Командир: немного увеличить фото */
+        .team-photo.team-photo-krylya-commander img {
+            transform: translateY(-18%) scale(1.35) !important;
+            transform-origin: center top !important;
+        }
+
+        /* Fallback: Крылья / Командир by file name */
+        .team-photo img[src*="squad-krylya-team-1.png"] {
+            transform: translateY(-18%) scale(1.35) !important;
+            transform-origin: center top !important;
         }
 
         .team-copy {
@@ -1825,7 +1890,109 @@
     }
 }
     </style>
-    <link rel="stylesheet" href="/css/common-layout.css">
+    <link rel="stylesheet" href="/css/common-layout.css?v=5">
+    <style>
+    /* Final header override (loaded after common-layout.css) */
+    .header {
+        background: #fff !important;
+        border-bottom: 1px solid #ececf2 !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+    }
+    .header .header-container { max-width: 1120px !important; width: calc(100% - 48px) !important; }
+    .header .header-top { padding: 4px 0 8px !important; gap: 23px !important; }
+    .header .logo {
+        font-size: 28px !important;
+        font-weight: 900 !important;
+        color: #06060a !important;
+        text-transform: lowercase !important;
+        line-height: 1 !important;
+    }
+    .header .logo-area { gap: 23px !important; }
+    .header .menu-btn-black {
+        height: 38px !important;
+        min-width: 132px !important;
+        padding: 0 20px !important;
+        border-radius: 40px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 10px !important;
+        font-size: 16px !important;
+    }
+    .header .menu-btn-black img {
+        width: 30px !important;
+        height: 30px !important;
+        object-fit: contain !important;
+    }
+    .header .menu-btn-black .menu-btn-label { font-size: 14px !important; }
+    .header .search-wrapper {
+        flex: 0 0 460px !important;
+        width: 460px !important;
+        max-width: 460px !important;
+        min-width: 460px !important;
+    }
+    .header .search-input {
+        height: 38px !important;
+        border-radius: 9px !important;
+        border: 1px solid #3a3a3a !important;
+        padding: 0 14px !important;
+        font-size: 15px !important;
+    }
+    .header .header-actions { gap: 23px !important; }
+    .header .header-search-icon {
+        border: none !important;
+        background: transparent !important;
+        width: 30px !important;
+        height: 30px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 16px !important;
+        color: #111 !important;
+    }
+    .header .header-search-icon img {
+        width: 30px !important;
+        height: 30px !important;
+        object-fit: contain !important;
+    }
+    .header .pick-header-btn {
+        background: #fff !important;
+        color: #1f2f73 !important;
+        border: 1px solid #8ea2ff !important;
+        height: 38px !important;
+        border-radius: 20px !important;
+        padding: 0 34px !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+    }
+    .header .login-header-btn {
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        font-size: 11px !important;
+        color: #272727 !important;
+        display: inline-flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 2px !important;
+        text-transform: lowercase !important;
+    }
+    .header .login-header-btn i { font-size: 12px !important; }
+    .header .login-header-btn img {
+        width: 30px !important;
+        height: 30px !important;
+        object-fit: contain !important;
+    }
+    .header .header-bottom { border-top: none !important; padding: 8px 0 10px !important; }
+    .header .bottom-nav { justify-content: space-between !important; gap: 24px !important; font-size: 16px !important; font-weight: 700 !important; }
+    .header .bottom-nav span {
+        color: #08080d !important;
+        border-bottom: none !important;
+        padding: 2px 0 !important;
+    }
+    </style>
 </head>
 <body>
     <script src="/js/common-layout.js"></script>
@@ -1834,24 +2001,28 @@
         <div class="header-top">
             <div class="logo-area">
                 <div class="logo" onclick="window.location.href='/'">СОЗВЕЗДИЕ</div>
-                <button class="menu-btn-black">Меню</button>
+                <button class="menu-btn-black" id="menuToggleBtn" onclick="toggleMobileMenu()"><img src="/images/icon-menu-crop.png?v=8" alt=""><span class="menu-btn-label">Меню</span></button>
             </div>
             <div class="search-wrapper">
-                <input type="text" class="search-input" placeholder="Найти отряд по названию">
+                <input type="text" class="search-input" id="searchInput" placeholder="Найти отряд">
             </div>
-            <div class="header-actions">
-                <button class="pick-header-btn" onclick="window.location.href='/test.html'">Подобрать отряд</button>
-                <button class="login-header-btn" onclick="window.location.href='/register.html'">Войти</button>
+            <div class="header-actions" id="headerActions">
+                <button class="header-search-icon" type="button" aria-label="Поиск"><img src="/images/icon-search-crop.png?v=8" alt=""></button>
+                <button class="pick-header-btn" id="pickHeaderBtn">Подобрать отряд</button>
+                <div id="authButtons">
+                    <button class="login-header-btn" id="loginHeaderBtn"><img src="/images/icon-login-crop.png?v=8" alt=""><span>войти</span></button>
+                </div>
+                <div id="userMenu" style="display: none;">
+                    <span class="user-name" id="userNameDisplay"></span>
+                </div>
             </div>
         </div>
         <div class="header-bottom">
-            <div class="bottom-nav">
-                <span>О нас</span>
-                <span>Направления</span>
-                <span data-page="squads">Отряды</span>
-                <span>Создавай</span>
-                <span>Интерактивы</span>
-                <span>Контакты</span>
+            <div class="bottom-nav" id="bottomNav">
+                <span data-page="about" onclick="document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'})">О нас</span>
+                <span data-page="squads" onclick="document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'})">Отряды</span>
+                <span data-page="create">Создавай</span>
+                <span data-page="contacts">Контакты</span>
             </div>
         </div>
     </div>
@@ -2047,8 +2218,8 @@
             <div class="footer-social">
                 <h4>Социальные сети</h4>
                 <div class="footer-social-icons">
-                    <a href="#" aria-label="VK"><i class="fab fa-vk"></i></a>
-                    <a href="#" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
+                    <a href="https://vk.com/shtab.sozvezdie" target="_blank" rel="noopener noreferrer" aria-label="VK"><i class="fab fa-vk"></i></a>
+                    <a href="https://t.me/shtab_sozvezdie" target="_blank" rel="noopener noreferrer" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
                 </div>
             </div>
             <div class="footer-cards">
@@ -2069,11 +2240,6 @@
         <div class="footer-legal">
             <div>© Созвездие, 2009–2026</div>
             <a href="#">Политика обработки<br>персональных данных</a>
-            <div>Внесена в реестр российских<br>программ: запись №15676 от 25.11.2022 года</div>
-            <div class="footer-legal-logos">
-                <img src="/images/footer-bottom-logo-1.png" alt="">
-                <img src="/images/footer-bottom-logo-2.png" alt="">
-            </div>
         </div>
     </div>
 </footer>
@@ -2192,13 +2358,37 @@
         });
     }
 
+    function formatStructureTitle(title) {
+        const value = String(title || '');
+        if (getSquadShortName() === 'vokrug-sveta' && value === 'Станция отправления — подача заявки') {
+            return 'Станция отправления —<br>подача&nbsp;заявки';
+        }
+        if (getSquadShortName() === 'prospekt' && value === 'Выход на старт — подача заявки') {
+            return 'Выход на старт — подача<br>заявки';
+        }
+        if (getSquadShortName() === 'apelsin' && value === 'Стань частью «Апельсина» онлайн') {
+            return 'Стань частью «Апельсина»<br>онлайн';
+        }
+        return escapeHtml(value);
+    }
+
+    function getStructureTitleClass(title) {
+        if (getSquadShortName() === 'kraski' && String(title || '') === 'Выбор цвета — регистрация') {
+            return ' class="structure-title-kraski-register"';
+        }
+        if (getSquadShortName() === 'apelsin' && String(title || '') === 'Стань частью «Апельсина» онлайн') {
+            return ' class="structure-title-apelsin-online"';
+        }
+        return '';
+    }
+
     function renderStructure(page) {
         document.querySelector('.path-title').textContent = page.pathTitle;
         document.querySelector('.guide h3').textContent = page.guideTitle;
         document.querySelector('#structure .section-title').textContent = page.structureTitle;
         document.querySelector('.structure-list').innerHTML = page.structureSteps.map((step, index) => `
             <article class="structure-card">
-                <h3>${escapeHtml(step.title)}</h3>
+                <h3${getStructureTitleClass(step.title)}>${formatStructureTitle(step.title)}</h3>
                 <p>${escapeHtml(step.body)}</p>
                 ${step.image || index === 1 || index === 2 ? `<div class="structure-art"><img src="${escapeHtml(step.image || (index === 1 ? '/images/squad-structure-step-2.png' : '/images/squad-structure-step-3.png'))}" alt=""></div>` : ''}
             </article>
@@ -2272,9 +2462,33 @@
             return teamMembers[(teamStartIndex + offset) % teamMembers.length];
         });
 
-        grid.innerHTML = visible.map((member) => `
+        const currentShortName = getSquadShortName();
+        grid.innerHTML = visible.map((member) => {
+            let photoClass = 'team-photo';
+            if (currentShortName === 'apelsin' && member.role === 'Пресс-секретарь') {
+                photoClass = 'team-photo team-photo-apelsin-press';
+            }
+            if (currentShortName === 'shum' && member.role === 'Комиссар') {
+                photoClass = 'team-photo team-photo-shum-commissar';
+            }
+            if (currentShortName === 'shum' && member.role === 'Пресс-секретарь') {
+                photoClass = 'team-photo team-photo-shum-press';
+            }
+            if (currentShortName === 'klever' && member.role === 'Комиссар') {
+                photoClass = 'team-photo team-photo-klever-commissar';
+            }
+            if (currentShortName === 'everest' && member.role === 'Комиссар') {
+                photoClass = 'team-photo team-photo-everest-commissar';
+            }
+            if (currentShortName === 'everest' && member.role === 'Пресс-секретарь') {
+                photoClass = 'team-photo team-photo-everest-press';
+            }
+            if (currentShortName === 'krylya' && member.role === 'Командир') {
+                photoClass = 'team-photo team-photo-krylya-commander';
+            }
+            return `
             <article class="team-card">
-                <div class="team-photo">
+                <div class="${photoClass}">
                     <img src="${escapeHtml(member.image)}" alt="${escapeHtml(member.name)}">
                     <span class="team-role">${escapeHtml(member.role)}</span>
                 </div>
@@ -2283,7 +2497,8 @@
                     <p>${escapeHtml(member.body)}</p>
                 </div>
             </article>
-        `).join('');
+        `;
+        }).join('');
     }
 
     function initTeamSlider(members) {
@@ -2437,3 +2652,9 @@
 </script>
 </body>
 </html>
+
+
+
+
+
+

@@ -52,16 +52,17 @@
         <div class="header-top">
             <div class="logo-area">
                 <div class="logo" onclick="window.location.href='/'">СОЗВЕЗДИЕ</div>
-                <button class="menu-btn-black" id="menuToggleBtn" type="button">Меню</button>
+                <button class="menu-btn-black" id="menuToggleBtn" type="button"><img src="/images/icon-menu-crop.png?v=8" alt=""><span class="menu-btn-label">Меню</span></button>
             </div>
             <div class="search-wrapper">
-                <input type="text" class="search-input" id="globalSearchInput" placeholder="Найти отряд по названию" autocomplete="off">
+                <input type="text" class="search-input" id="globalSearchInput" placeholder="Найти отряд" autocomplete="off">
                 <div id="searchResultsDropdown" class="search-dropdown" style="display: none;"></div>
             </div>
             <div class="header-actions" id="headerActions">
+                <button class="header-search-icon" type="button" aria-label="Поиск"><img src="/images/icon-search-crop.png?v=8" alt=""></button>
                 <button class="pick-header-btn" id="pickHeaderBtn" type="button">Подобрать отряд</button>
                 <div id="authButtons">
-                    <button class="login-header-btn" id="loginHeaderBtn" type="button">Войти</button>
+                    <button class="login-header-btn" id="loginHeaderBtn" type="button"><img src="/images/icon-login-crop.png?v=8" alt=""><span>войти</span></button>
                 </div>
                 <div id="userProfile" style="display: none;">
                     <span class="user-name" id="userNameDisplay"></span>
@@ -71,10 +72,8 @@
         <div class="header-bottom">
             <div class="bottom-nav">
                 <span data-page="about">О нас</span>
-                <span onclick="window.location.href='/'">Направления</span>
                 <span data-page="squads">Отряды</span>
-                <span onclick="window.location.href='/'">Создавай</span>
-                <span onclick="window.location.href='/'">Интерактивы</span>
+                <span data-page="create">Создавай</span>
                 <span onclick="window.location.href='/about.html#contacts'">Контакты</span>
             </div>
         </div>
@@ -82,13 +81,10 @@
 </header>
 <div class="mobile-menu-drop" id="mobileMenuDrop">
     <span data-page="about">О нас</span>
-    <span onclick="window.location.href='/'">Направления</span>
     <span data-page="squads">Отряды</span>
-    <span onclick="window.location.href='/'">Создавай</span>
-    <span onclick="window.location.href='/'">Интерактивы</span>
+    <span data-page="create">Создавай</span>
     <span onclick="window.location.href='/about.html#contacts'">Контакты</span>
 </div>`;
-
     const footerHtml = `
 <footer class="site-footer">
     <button class="footer-pick-btn" id="footerPickBtn" type="button">Подобрать отряд</button>
@@ -116,8 +112,8 @@
             <div class="footer-social">
                 <h4>Социальные сети</h4>
                 <div class="footer-social-icons">
-                    <a href="#" aria-label="VK"><i class="fab fa-vk"></i></a>
-                    <a href="#" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
+                    <a href="https://vk.com/shtab.sozvezdie" target="_blank" rel="noopener noreferrer" aria-label="VK"><i class="fab fa-vk"></i></a>
+                    <a href="https://t.me/shtab_sozvezdie" target="_blank" rel="noopener noreferrer" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
                 </div>
             </div>
             <div class="footer-cards">
@@ -138,11 +134,6 @@
         <div class="footer-legal">
             <div>© Созвездие, 2009–2026</div>
             <a href="#">Политика обработки<br>персональных данных</a>
-            <div>Внесена в реестр российских<br>программ: запись №15676 от 25.11.2022 года</div>
-            <div class="footer-legal-logos">
-                <img src="/images/footer-bottom-logo-1.png" alt="">
-                <img src="/images/footer-bottom-logo-2.png" alt="">
-            </div>
         </div>
     </div>
 </footer>`;
@@ -334,3 +325,7 @@
         initLayout();
     }
 })();
+
+
+
+

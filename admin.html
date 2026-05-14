@@ -15,6 +15,7 @@
     .login-card { width: min(420px, 100%); display: grid; gap: 14px; padding: 28px; background: #fff; border-radius: 8px; }
     .login-card h1 { margin: 0 0 8px; font-size: 28px; }
     .input, select, textarea { width: 100%; min-height: 42px; padding: 10px 12px; border: 1px solid #d0d5dd; border-radius: 8px; background: #fff; }
+    textarea { min-height: 84px; resize: vertical; }
     .btn { border: 0; border-radius: 8px; min-height: 40px; padding: 9px 14px; background: #175cd3; color: #fff; font-weight: 700; cursor: pointer; }
     .btn.secondary { background: #eef4ff; color: #175cd3; }
     .btn.danger { background: #d92d20; }
@@ -31,7 +32,7 @@
     .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
     .top h1 { margin: 0; font-size: 30px; }
     .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
-    .card, .panel { background: #fff; border: 1px solid #eaecf0; border-radius: 8px; padding: 18px; }
+    .card { background: #fff; border: 1px solid #eaecf0; border-radius: 8px; padding: 18px; }
     .card strong { display: block; font-size: 34px; margin-bottom: 6px; }
     .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
     .table-wrap { overflow-x: auto; background: #fff; border: 1px solid #eaecf0; border-radius: 8px; }
@@ -39,11 +40,25 @@
     th, td { padding: 12px; border-bottom: 1px solid #eaecf0; text-align: left; vertical-align: top; }
     th { color: #475467; font-size: 13px; background: #f9fafb; }
     .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .toolbar { display: flex; justify-content: flex-end; gap: 10px; margin: 0 0 12px; }
+    .admin-form { display: grid; gap: 12px; padding: 16px; margin: 0 0 16px; background: #fff; border: 1px solid #eaecf0; border-radius: 8px; }
+    .admin-form h2 { margin: 0; font-size: 18px; }
+    .form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .form-grid .wide { grid-column: span 2; }
+    .form-grid .full { grid-column: 1 / -1; }
+    .admin-thumb { width: 58px; height: 58px; object-fit: cover; border-radius: 8px; background: #f2f4f7; }
+    .test-editor { display: grid; gap: 10px; min-width: 320px; }
+    .test-question { display: grid; gap: 8px; padding: 10px; border: 1px solid #eaecf0; border-radius: 8px; background: #f9fafb; }
+    .test-question-title { margin: 0; font-size: 13px; font-weight: 800; color: #475467; }
+    .test-question-row { display: grid; grid-template-columns: 1fr 120px; gap: 8px; align-items: start; }
+    .test-question-actions { display: flex; flex-wrap: wrap; gap: 8px; }
     .badge { display: inline-flex; padding: 4px 9px; border-radius: 999px; font-size: 12px; font-weight: 800; background: #f2f4f7; }
     .badge.pending { background: #fffaeb; color: #b54708; }
     .badge.approved { background: #ecfdf3; color: #027a48; }
     .badge.rejected, .badge.banned { background: #fef3f2; color: #b42318; }
-    @media (max-width: 800px) { .app { grid-template-columns: 1fr; } .sidebar { position: static; } .cards { grid-template-columns: 1fr; } }
+    .question-text { max-width: 420px; white-space: pre-wrap; }
+    @media (max-width: 1000px) { .form-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .test-question-row { grid-template-columns: 1fr; } }
+    @media (max-width: 800px) { .app { grid-template-columns: 1fr; } .cards { grid-template-columns: 1fr; } .form-grid { grid-template-columns: 1fr; } .form-grid .wide { grid-column: auto; } }
   </style>
 </head>
 <body>
@@ -63,9 +78,12 @@
       <nav class="nav">
         <button class="active" data-page="dashboard">Дашборд</button>
         <button data-page="applications">Заявки</button>
+        <button data-page="questions">Вопросы с главной</button>
         <button data-page="users">Пользователи</button>
-        <button data-page="questions">Вопросы</button>
         <button data-page="squads">Отряды</button>
+        <button data-page="commanders">Люди в отрядах</button>
+        <button data-page="merch">Мерч</button>
+        <button data-page="tests">Тесты за баллы</button>
       </nav>
     </aside>
     <main class="main">
@@ -87,8 +105,15 @@
       if (!res.ok) throw new Error(data.error || 'Ошибка сервера');
       return data;
     };
-    const esc = (v) => String(v ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
-    const statusText = (s) => s === 'approved' ? 'принята' : s === 'rejected' ? 'отклонена' : 'на рассмотрении';
+    const esc = (value) => String(value ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+    const statusText = (status) => status === 'approved' ? 'принята' : status === 'rejected' ? 'отклонена' : 'на рассмотрении';
+    const dateText = (value) => value ? new Date(value).toLocaleString('ru-RU') : '';
+    const exportsData = {};
+    const fieldValue = (id) => document.getElementById(id)?.value.trim() || '';
+    const fieldChecked = (id) => document.getElementById(id)?.checked ? 1 : 0;
+    const asNumber = (value, fallback = 0) => Number.isFinite(Number(value)) ? Number(value) : fallback;
+    const squadOptions = (selected) => squads.map((s) => `<option value="${s.id}" ${String(selected) === String(s.id) ? 'selected' : ''}>${esc(s.name)}</option>`).join('');
+    const activeOptions = (selected) => `<option value="1" ${Number(selected) ? 'selected' : ''}>да</option><option value="0" ${Number(selected) ? '' : 'selected'}>нет</option>`;
 
     async function showApp() {
       login.style.display = 'none';
@@ -133,9 +158,12 @@
     async function load(page) {
       if (page === 'dashboard') return loadDashboard();
       if (page === 'applications') return loadApplications();
-      if (page === 'users') return loadUsers();
       if (page === 'questions') return loadQuestions();
+      if (page === 'users') return loadUsers();
       if (page === 'squads') return loadSquads();
+      if (page === 'commanders') return loadCommanders();
+      if (page === 'merch') return loadMerch();
+      if (page === 'tests') return loadTests();
     }
 
     async function loadDashboard() {
@@ -151,10 +179,20 @@
       const data = await api('/api/admin/applications');
       squads = data.squads || squads;
       const apps = filter === 'all' ? data.applications : data.applications.filter((item) => String(item.squad_id) === String(filter));
+      const exportName = filter === 'all' ? 'zayavki-vse-otryady' : `zayavki-${apps[0]?.short_name || filter}`;
+      setExportData('applications', exportName, ['Отряд', 'ФИО', 'Телефон', 'Email', 'Класс', 'Статус', 'Дата'], apps.map((item) => [
+        item.squad_name,
+        item.full_name,
+        item.phone,
+        item.user_email || '',
+        item.class,
+        statusText(item.status),
+        dateText(item.created_at)
+      ]));
       content.innerHTML = `<div class="tabs">
         <button class="btn small ${filter === 'all' ? '' : 'secondary'}" onclick="loadApplications('all')">Все отряды</button>
         ${squads.map((s) => `<button class="btn small ${String(filter) === String(s.id) ? '' : 'secondary'}" onclick="loadApplications('${s.id}')">${esc(s.name)}</button>`).join('')}
-      </div>${table(['Отряд', 'ФИО', 'Контакт', 'Класс', 'Статус', 'Действия'], apps.map((item) => [
+      </div>${exportButton('applications')}${table(['Отряд', 'ФИО', 'Контакт', 'Класс', 'Статус', 'Действия'], apps.map((item) => [
         esc(item.squad_name),
         esc(item.full_name),
         `${esc(item.phone)}<br>${esc(item.user_email || '')}`,
@@ -164,40 +202,337 @@
       ]))}`;
     }
 
+    async function loadQuestions() {
+      const data = await api('/api/admin/questions');
+      setExportData('questions', 'voprosy-s-glavnoy', ['Дата', 'Имя', 'Телефон', 'Вопрос', 'Статус', 'Ответ'], data.questions.map((q) => [
+        dateText(q.created_at),
+        q.name,
+        q.phone,
+        q.question,
+        q.is_answered ? 'отвечен' : 'новый',
+        q.answer || ''
+      ]));
+      content.innerHTML = `${exportButton('questions')}${table(['Дата', 'Имя', 'Телефон', 'Вопрос', 'Статус', 'Ответ/действие'], data.questions.map((q) => [
+        dateText(q.created_at),
+        esc(q.name),
+        esc(q.phone),
+        `<div class="question-text">${esc(q.question)}</div>`,
+        q.is_answered ? '<span class="badge approved">отвечен</span>' : '<span class="badge pending">новый</span>',
+        q.is_answered
+          ? `<div class="question-text">${esc(q.answer || '')}</div>`
+          : `<textarea id="answer-${q.id}" placeholder="Комментарий админа"></textarea><button class="btn ok small" onclick="answerQuestion(${q.id})">Отметить отвеченным</button>`
+      ]))}`;
+    }
+
     async function loadUsers() {
       const [usersData, squadsData] = await Promise.all([api('/api/admin/users'), api('/api/admin/squads')]);
       squads = squadsData.squads || [];
-      content.innerHTML = table(['ID', 'Пользователь', 'Отряды', 'Статус', 'Назначить', 'Действия'], usersData.users.map((user) => [
+      setExportData('users', 'polzovateli', ['ID', 'ФИО', 'Email', 'Телефон', 'Отряды', 'Статус', 'Дата регистрации'], usersData.users.map((user) => [
+        user.id,
+        user.full_name,
+        user.email,
+        user.phone || '',
+        user.squads || 'нет',
+        user.is_banned ? 'забанен' : 'активен',
+        dateText(user.created_at)
+      ]));
+      content.innerHTML = `${exportButton('users')}${table(['ID', 'Пользователь', 'Отряды', 'Статус', 'Назначить', 'Действия'], usersData.users.map((user) => [
         user.id,
         `${esc(user.full_name)}<br>${esc(user.email)}<br>${esc(user.phone || '')}`,
         esc(user.squads || 'нет'),
         user.is_banned ? '<span class="badge banned">забанен</span>' : '<span class="badge approved">активен</span>',
         `<select id="squad-${user.id}">${squads.map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select><button class="btn secondary small" onclick="assignSquad(${user.id})">Назначить</button>`,
         `<div class="actions">${user.is_banned ? `<button class="btn ok small" onclick="unbanUser(${user.id})">Разбанить</button>` : `<button class="btn danger small" onclick="banUser(${user.id})">Бан</button>`}</div>`
-      ]));
-    }
-
-    async function loadQuestions() {
-      const data = await api('/api/admin/questions');
-      content.innerHTML = table(['Имя', 'Телефон', 'Вопрос', 'Статус'], data.questions.map((q) => [
-        esc(q.name), esc(q.phone), esc(q.question), q.is_answered ? 'отвечен' : 'ожидает'
-      ]));
+      ]))}`;
     }
 
     async function loadSquads() {
       const data = await api('/api/admin/squads');
-      content.innerHTML = table(['ID', 'Отряд', 'Описание', 'Активен'], data.squads.map((s) => [
-        s.id, esc(s.name), esc(s.description), s.is_active ? 'да' : 'нет'
+      setExportData('squads', 'otryady', ['ID', 'Отряд', 'Описание', 'Активен'], data.squads.map((s) => [
+        s.id,
+        s.name,
+        s.description,
+        s.is_active ? 'да' : 'нет'
       ]));
+      content.innerHTML = `${exportButton('squads')}${table(['ID', 'Отряд', 'Описание', 'Активен'], data.squads.map((s) => [
+        s.id, esc(s.name), esc(s.description), s.is_active ? 'да' : 'нет'
+      ]))}`;
+    }
+
+    async function loadCommanders(filter = 'all') {
+      if (!squads.length) {
+        const squadsData = await api('/api/admin/squads');
+        squads = squadsData.squads || [];
+      }
+      const data = await api(`/api/admin/commanders?squadId=${encodeURIComponent(filter)}`);
+      const commanders = data.commanders || [];
+      setExportData('commanders', filter === 'all' ? 'lyudi-v-otryadah' : `lyudi-${filter}`, ['Отряд', 'Роль', 'Имя', 'Описание', 'Опыт', 'Фото', 'Порядок', 'Активен'], commanders.map((item) => [
+        item.squad_name,
+        item.role,
+        item.name,
+        item.description,
+        item.experience || '',
+        item.photo || '',
+        item.order_index,
+        item.is_active ? 'да' : 'нет'
+      ]));
+      content.innerHTML = `<div class="tabs">
+        <button class="btn small ${filter === 'all' ? '' : 'secondary'}" onclick="loadCommanders('all')">Все отряды</button>
+        ${squads.map((s) => `<button class="btn small ${String(filter) === String(s.id) ? '' : 'secondary'}" onclick="loadCommanders('${s.id}')">${esc(s.name)}</button>`).join('')}
+      </div>
+      <form class="admin-form" id="commanderCreateForm">
+        <h2>Добавить карточку человека</h2>
+        <div class="form-grid">
+          <select id="commanderNewSquad">${squadOptions(filter === 'all' ? squads[0]?.id : filter)}</select>
+          <input class="input" id="commanderNewRole" placeholder="Роль: Командир, Комиссар...">
+          <input class="input wide" id="commanderNewName" placeholder="Имя">
+          <input class="input full" id="commanderNewPhoto" placeholder="Фото, например /images/squad-krylya-team-1.png">
+          <textarea class="full" id="commanderNewDescription" placeholder="Описание"></textarea>
+          <input class="input wide" id="commanderNewExperience" placeholder="Опыт / подпись">
+          <input class="input" id="commanderNewOrder" type="number" placeholder="Порядок" value="0">
+          <label><input id="commanderNewActive" type="checkbox" checked> Активен</label>
+        </div>
+        <button class="btn" type="submit">Добавить</button>
+      </form>
+      ${exportButton('commanders')}${table(['Фото', 'Отряд', 'Роль', 'Имя', 'Описание', 'Опыт', 'Порядок', 'Активен', 'Действия'], commanders.map((item) => [
+        item.photo ? `<img class="admin-thumb" src="${esc(item.photo)}" alt="">` : '',
+        `<select id="commander-squad-${item.id}">${squadOptions(item.squad_id)}</select>`,
+        `<input class="input" id="commander-role-${item.id}" value="${esc(item.role)}">`,
+        `<input class="input" id="commander-name-${item.id}" value="${esc(item.name)}">`,
+        `<textarea id="commander-description-${item.id}">${esc(item.description)}</textarea><input class="input" id="commander-photo-${item.id}" value="${esc(item.photo || '')}" placeholder="Фото">`,
+        `<input class="input" id="commander-experience-${item.id}" value="${esc(item.experience || '')}">`,
+        `<input class="input" id="commander-order-${item.id}" type="number" value="${Number(item.order_index || 0)}">`,
+        `<select id="commander-active-${item.id}">${activeOptions(item.is_active)}</select>`,
+        `<div class="actions"><button class="btn ok small" onclick="saveCommander(${item.id}, '${filter}')">Сохранить</button><button class="btn danger small" onclick="deleteCommander(${item.id}, '${filter}')">Удалить</button></div>`
+      ]))}`;
+      document.getElementById('commanderCreateForm')?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        await api('/api/admin/commanders', {
+          method: 'POST',
+          body: JSON.stringify({
+            squad_id: fieldValue('commanderNewSquad'),
+            role: fieldValue('commanderNewRole'),
+            name: fieldValue('commanderNewName'),
+            photo: fieldValue('commanderNewPhoto'),
+            description: fieldValue('commanderNewDescription'),
+            experience: fieldValue('commanderNewExperience'),
+            order_index: asNumber(fieldValue('commanderNewOrder')),
+            is_active: fieldChecked('commanderNewActive')
+          })
+        });
+        await loadCommanders(filter);
+      });
+    }
+
+    async function loadMerch() {
+      const data = await api('/api/admin/merch');
+      const merch = data.merch || [];
+      setExportData('merch', 'merch', ['ID', 'Название', 'Цена', 'Картинка', 'Порядок', 'Активен'], merch.map((item) => [
+        item.id,
+        item.name,
+        item.price,
+        item.image_url || '',
+        item.order_index,
+        item.is_active ? 'да' : 'нет'
+      ]));
+      content.innerHTML = `<form class="admin-form" id="merchCreateForm">
+        <h2>Добавить мерч</h2>
+        <div class="form-grid">
+          <input class="input wide" id="merchNewName" placeholder="Название">
+          <input class="input" id="merchNewPrice" type="number" placeholder="Цена в баллах">
+          <input class="input" id="merchNewOrder" type="number" placeholder="Порядок" value="0">
+          <input class="input full" id="merchNewImage" placeholder="Картинка, например /images/футболка.png">
+          <label><input id="merchNewActive" type="checkbox" checked> Активен</label>
+        </div>
+        <button class="btn" type="submit">Добавить</button>
+      </form>
+      ${exportButton('merch')}${table(['Картинка', 'Название', 'Цена', 'Порядок', 'Активен', 'Действия'], merch.map((item) => [
+        item.image_url ? `<img class="admin-thumb" src="${esc(item.image_url)}" alt="">` : '',
+        `<input class="input" id="merch-name-${item.id}" value="${esc(item.name)}"><input class="input" id="merch-image-${item.id}" value="${esc(item.image_url || '')}" placeholder="Картинка">`,
+        `<input class="input" id="merch-price-${item.id}" type="number" value="${Number(item.price || 0)}">`,
+        `<input class="input" id="merch-order-${item.id}" type="number" value="${Number(item.order_index || 0)}">`,
+        `<select id="merch-active-${item.id}">${activeOptions(item.is_active)}</select>`,
+        `<div class="actions"><button class="btn ok small" onclick="saveMerch(${item.id})">Сохранить</button><button class="btn danger small" onclick="deleteMerch(${item.id})">Удалить</button></div>`
+      ]))}`;
+      document.getElementById('merchCreateForm')?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        await api('/api/admin/merch', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: fieldValue('merchNewName'),
+            price: asNumber(fieldValue('merchNewPrice')),
+            image_url: fieldValue('merchNewImage'),
+            order_index: asNumber(fieldValue('merchNewOrder')),
+            is_active: fieldChecked('merchNewActive')
+          })
+        });
+        await loadMerch();
+      });
+    }
+
+    function renderTestQuestionEditor(prefix, questions) {
+      const list = Array.isArray(questions) && questions.length ? questions : [{ text: '', options: ['', ''], correctIndex: 0 }];
+      return `<div class="test-editor" id="${prefix}-questions">
+        ${list.map((question, index) => renderTestQuestionBlock(prefix, question, index)).join('')}
+      </div>
+      <button class="btn secondary small" type="button" onclick="addTestQuestion('${prefix}')">Добавить вопрос</button>`;
+    }
+
+    function renderTestQuestionBlock(prefix, question, index) {
+      const options = Array.isArray(question.options) && question.options.length ? question.options : ['', ''];
+      return `<div class="test-question" data-question-index="${index}">
+        <p class="test-question-title">Вопрос ${index + 1}</p>
+        <textarea id="${prefix}-q-${index}-text" placeholder="Текст вопроса">${esc(question.text || '')}</textarea>
+        <div class="test-question-row">
+          <textarea id="${prefix}-q-${index}-options" placeholder="Варианты ответов, каждый с новой строки">${esc(options.join('\n'))}</textarea>
+          <input class="input" id="${prefix}-q-${index}-correct" type="number" min="1" value="${Number(question.correctIndex || 0) + 1}" placeholder="Правильный N">
+        </div>
+        <div class="test-question-actions">
+          <button class="btn danger small" type="button" onclick="removeTestQuestion('${prefix}', ${index})">Удалить вопрос</button>
+        </div>
+      </div>`;
+    }
+
+    function readTestQuestionDrafts(prefix) {
+      const root = document.getElementById(`${prefix}-questions`);
+      if (!root) return [];
+      return Array.from(root.querySelectorAll('.test-question')).map((block) => {
+        const index = Number(block.dataset.questionIndex);
+        return {
+          text: fieldValue(`${prefix}-q-${index}-text`),
+          options: fieldValue(`${prefix}-q-${index}-options`).split(/\r?\n/).map((item) => item.trim()).filter(Boolean),
+          correctIndex: Math.max(0, asNumber(fieldValue(`${prefix}-q-${index}-correct`), 1) - 1)
+        };
+      });
+    }
+
+    function collectTestQuestions(prefix) {
+      const questions = readTestQuestionDrafts(prefix);
+      if (!questions.length) throw new Error('Добавьте хотя бы один вопрос');
+      questions.forEach((question, index) => {
+        if (!question.text) throw new Error(`Вопрос ${index + 1}: заполните текст`);
+        if (question.options.length < 2) throw new Error(`Вопрос ${index + 1}: нужно минимум 2 варианта ответа`);
+        if (question.correctIndex < 0 || question.correctIndex >= question.options.length) {
+          throw new Error(`Вопрос ${index + 1}: номер правильного ответа больше количества вариантов`);
+        }
+      });
+      return questions;
+    }
+
+    function rerenderTestQuestions(prefix, questions) {
+      const root = document.getElementById(`${prefix}-questions`);
+      if (root) root.innerHTML = questions.map((question, index) => renderTestQuestionBlock(prefix, question, index)).join('');
+    }
+
+    function addTestQuestion(prefix) {
+      const questions = readTestQuestionDrafts(prefix);
+      questions.push({ text: '', options: ['', ''], correctIndex: 0 });
+      rerenderTestQuestions(prefix, questions);
+    }
+
+    function removeTestQuestion(prefix, index) {
+      const questions = readTestQuestionDrafts(prefix).filter((_, itemIndex) => itemIndex !== index);
+      rerenderTestQuestions(prefix, questions.length ? questions : [{ text: '', options: ['', ''], correctIndex: 0 }]);
+    }
+
+    async function loadTests() {
+      const data = await api('/api/admin/social-tests');
+      const tests = data.tests || [];
+      setExportData('tests', 'testy-za-bally', ['ID', 'Название', 'Награда', 'Вопросов', 'Порядок', 'Активен'], tests.map((test) => [
+        test.id,
+        test.title,
+        test.reward,
+        test.questions.length,
+        test.order_index,
+        test.is_active ? 'да' : 'нет'
+      ]));
+      content.innerHTML = `<form class="admin-form" id="testCreateForm">
+        <h2>Добавить тест</h2>
+        <div class="form-grid">
+          <input class="input" id="testNewId" placeholder="ID латиницей, например safety">
+          <input class="input wide" id="testNewTitle" placeholder="Название">
+          <input class="input" id="testNewReward" type="number" placeholder="Баллы">
+          <input class="input" id="testNewOrder" type="number" placeholder="Порядок" value="0">
+          <label><input id="testNewActive" type="checkbox" checked> Активен</label>
+          <div class="full">${renderTestQuestionEditor('testNew', [{ text: '', options: ['', ''], correctIndex: 0 }])}</div>
+        </div>
+        <button class="btn" type="submit">Добавить</button>
+      </form>
+      ${exportButton('tests')}${table(['ID', 'Название', 'Баллы', 'Вопросы', 'Порядок', 'Активен', 'Действия'], tests.map((test) => [
+        `<code>${esc(test.id)}</code>`,
+        `<input class="input" id="test-title-${test.id}" value="${esc(test.title)}">`,
+        `<input class="input" id="test-reward-${test.id}" type="number" value="${Number(test.reward || 0)}">`,
+        renderTestQuestionEditor(`test-${test.id}`, test.questions),
+        `<input class="input" id="test-order-${test.id}" type="number" value="${Number(test.order_index || 0)}">`,
+        `<select id="test-active-${test.id}">${activeOptions(test.is_active)}</select>`,
+        `<div class="actions"><button class="btn ok small" onclick="saveTest('${test.id}')">Сохранить</button><button class="btn danger small" onclick="deleteTest('${test.id}')">Удалить</button></div>`
+      ]))}`;
+      document.getElementById('testCreateForm')?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          await api('/api/admin/social-tests', {
+            method: 'POST',
+            body: JSON.stringify({
+              id: fieldValue('testNewId'),
+              title: fieldValue('testNewTitle'),
+              reward: asNumber(fieldValue('testNewReward')),
+              questions: collectTestQuestions('testNew'),
+              order_index: asNumber(fieldValue('testNewOrder')),
+              is_active: fieldChecked('testNewActive')
+            })
+          });
+          await loadTests();
+        } catch (err) {
+          alert(err.message || 'Не удалось сохранить тест');
+        }
+      });
+    }
+
+    function setExportData(key, fileName, headers, rows) {
+      exportsData[key] = { fileName, headers, rows };
+    }
+
+    function exportButton(key) {
+      return `<div class="toolbar"><button class="btn secondary small" onclick="downloadExcel('${key}')">Скачать Excel</button></div>`;
     }
 
     function table(headers, rows) {
       return `<div class="table-wrap"><table><thead><tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length ? rows.map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${headers.length}">Нет данных</td></tr>`}</tbody></table></div>`;
     }
 
+    function downloadExcel(key) {
+      const data = exportsData[key];
+      if (!data) return;
+      const safeCell = (value) => {
+        let text = String(value ?? '');
+        if (/^[=+\-@]/.test(text.trim())) text = `'${text}`;
+        return esc(text).replace(/\r?\n/g, '<br>');
+      };
+      const rows = [
+        data.headers,
+        ...data.rows
+      ].map((row) => `<tr>${row.map((cell) => `<td>${safeCell(cell)}</td>`).join('')}</tr>`).join('');
+      const html = `<!doctype html><html><head><meta charset="UTF-8"></head><body><table>${rows}</table></body></html>`;
+      const blob = new Blob([html], { type: 'application/vnd.ms-excel;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const date = new Date().toISOString().slice(0, 10);
+      a.href = url;
+      a.download = `${data.fileName}-${date}.xls`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    }
+
     async function setAppStatus(id, status) {
       await api(`/api/admin/applications/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
       await loadApplications();
+    }
+    async function answerQuestion(id) {
+      const answer = document.getElementById(`answer-${id}`)?.value || 'Отвечено администратором';
+      await api(`/api/admin/questions/${id}/answer`, { method: 'PUT', body: JSON.stringify({ answer }) });
+      await loadQuestions();
     }
     async function banUser(id) {
       if (!confirm('Забанить пользователя?')) return;
@@ -214,7 +549,91 @@
       await loadUsers();
     }
 
-    Object.assign(window, { loadApplications, setAppStatus, banUser, unbanUser, assignSquad });
+    async function saveCommander(id, filter = 'all') {
+      await api(`/api/admin/commanders/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          squad_id: fieldValue(`commander-squad-${id}`),
+          role: fieldValue(`commander-role-${id}`),
+          name: fieldValue(`commander-name-${id}`),
+          photo: fieldValue(`commander-photo-${id}`),
+          description: fieldValue(`commander-description-${id}`),
+          experience: fieldValue(`commander-experience-${id}`),
+          order_index: asNumber(fieldValue(`commander-order-${id}`)),
+          is_active: asNumber(fieldValue(`commander-active-${id}`), 1)
+        })
+      });
+      await loadCommanders(filter);
+    }
+
+    async function deleteCommander(id, filter = 'all') {
+      if (!confirm('Удалить карточку человека?')) return;
+      await api(`/api/admin/commanders/${id}`, { method: 'DELETE' });
+      await loadCommanders(filter);
+    }
+
+    async function saveMerch(id) {
+      await api(`/api/admin/merch/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          name: fieldValue(`merch-name-${id}`),
+          price: asNumber(fieldValue(`merch-price-${id}`)),
+          image_url: fieldValue(`merch-image-${id}`),
+          order_index: asNumber(fieldValue(`merch-order-${id}`)),
+          is_active: asNumber(fieldValue(`merch-active-${id}`), 1)
+        })
+      });
+      await loadMerch();
+    }
+
+    async function deleteMerch(id) {
+      if (!confirm('Удалить товар?')) return;
+      await api(`/api/admin/merch/${id}`, { method: 'DELETE' });
+      await loadMerch();
+    }
+
+    async function saveTest(id) {
+      try {
+        await api(`/api/admin/social-tests/${encodeURIComponent(id)}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            title: fieldValue(`test-title-${id}`),
+            reward: asNumber(fieldValue(`test-reward-${id}`)),
+            questions: collectTestQuestions(`test-${id}`),
+            order_index: asNumber(fieldValue(`test-order-${id}`)),
+            is_active: asNumber(fieldValue(`test-active-${id}`), 1)
+          })
+        });
+        await loadTests();
+      } catch (err) {
+        alert(err.message || 'Не удалось сохранить тест');
+      }
+    }
+
+    async function deleteTest(id) {
+      if (!confirm('Удалить тест? Уже полученные пользователями баллы не откатятся.')) return;
+      await api(`/api/admin/social-tests/${encodeURIComponent(id)}`, { method: 'DELETE' });
+      await loadTests();
+    }
+
+    Object.assign(window, {
+      loadApplications,
+      loadCommanders,
+      downloadExcel,
+      setAppStatus,
+      answerQuestion,
+      banUser,
+      unbanUser,
+      assignSquad,
+      saveCommander,
+      deleteCommander,
+      saveMerch,
+      deleteMerch,
+      saveTest,
+      deleteTest,
+      addTestQuestion,
+      removeTestQuestion
+    });
     check().catch(() => {});
   </script>
 </body>

@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const bcrypt = require('bcryptjs');
@@ -14,11 +14,11 @@ let nodemailer = null;
 try {
     nodemailer = require('nodemailer');
 } catch (err) {
-    console.warn('nodemailer РЅРµ СѓСЃС‚Р°РЅРѕРІР»РµРЅ, email-РєРѕРґС‹ Р±СѓРґСѓС‚ РІС‹РІРѕРґРёС‚СЊСЃСЏ РІ РєРѕРЅСЃРѕР»СЊ');
+    console.warn('nodemailer не установлен, email-коды будут выводиться в консоль');
 }
 
 const app = express();
-const PORT = 3000;
+const PORT = Number(process.env.PORT || 3000);
 const isProduction = process.env.NODE_ENV === 'production';
 const sessionSecret = process.env.SESSION_SECRET || 'sozvezdie_secret_key_2026';
 const sessionStoreType = String(process.env.SESSION_STORE || 'memory').toLowerCase();
@@ -46,7 +46,7 @@ if (sessionStoreType === 'sqlite') {
 app.set('trust proxy', 1);
 
 // =============================================
-// РќРђРЎРўР РћР™РљРђ РџРЈРўР•Р™
+// НАСТРОЙКА ПУТЕЙ
 // =============================================
 
 
@@ -56,13 +56,29 @@ if (!fs.existsSync(publicDir)) {
 }
 
 // =============================================
-// РџРћР”РљР›Р®Р§Р•РќРР• Рљ Р‘Р”
+// ПОДКЛЮЧЕНИЕ К БД
 // =============================================
-const db = new sqlite3.Database('./soz.db', (err) => {
+const configuredDbPath = process.env.SQLITE_DB_PATH || process.env.DB_PATH || 'soz.db';
+const dbPath = path.isAbsolute(configuredDbPath)
+    ? configuredDbPath
+    : path.join(__dirname, configuredDbPath);
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) {
+    fs.mkdirSync(dbDir, { recursive: true });
+}
+
+try {
+    fs.accessSync(dbDir, fs.constants.R_OK | fs.constants.W_OK);
+    fs.closeSync(fs.openSync(dbPath, 'a'));
+} catch (err) {
+    console.error('SQLite database path is not writable:', dbPath, err.message);
+}
+
+const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
-        console.error('РћС€РёР±РєР° РїРѕРґРєР»СЋС‡РµРЅРёСЏ Рє Р‘Р”:', err.message);
+        console.error('Ошибка подключения к БД:', err.message);
     } else {
-        console.log('РџРѕРґРєР»СЋС‡РµРЅРѕ Рє SQLite Р±Р°Р·Рµ РґР°РЅРЅС‹С…');
+        console.log('Подключено к SQLite базе данных:', dbPath);
     }
 });
 
@@ -91,8 +107,8 @@ function slugify(value, fallback = 'user') {
     const slug = String(value || '')
         .trim()
         .toLowerCase()
-        .replace(/С‘/g, 'Рµ')
-        .replace(/[^a-z0-9Р°-СЏ_-]+/gi, '_')
+        .replace(/ё/g, 'е')
+        .replace(/[^a-z0-9а-я_-]+/gi, '_')
         .replace(/^_+|_+$/g, '')
         .slice(0, 32);
     return slug || fallback;
@@ -251,13 +267,13 @@ async function verifyEmailCode({ email, purpose, code, userId = null }) {
         [normalizedEmail, purpose, userId, userId]
     );
     if (!row) {
-        throw new Error('РљРѕРґ РЅРµ РЅР°Р№РґРµРЅ. Р—Р°РїСЂРѕСЃРёС‚Рµ РЅРѕРІС‹Р№ РєРѕРґ.');
+        throw new Error('Код не найден. Запросите новый код.');
     }
     if (new Date(row.expires_at).getTime() < Date.now()) {
-        throw new Error('РЎСЂРѕРє РґРµР№СЃС‚РІРёСЏ РєРѕРґР° РёСЃС‚С‘Рє.');
+        throw new Error('Срок действия кода истёк.');
     }
     if (row.code_hash !== codeHash) {
-        throw new Error('РќРµРІРµСЂРЅС‹Р№ РєРѕРґ.');
+        throw new Error('Неверный код.');
     }
     await dbRun(`UPDATE email_verification_codes SET used_at = datetime('now') WHERE id = ?`, [row.id]);
     return row.payload_json ? JSON.parse(row.payload_json) : {};
@@ -318,6 +334,18 @@ async function initSocialSchema() {
         read_at TEXT,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE SET NULL
+    )`);
+    await dbRun(`CREATE TABLE IF NOT EXISTS questions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        user_id INTEGER,
+        name TEXT NOT NULL,
+        phone TEXT NOT NULL,
+        question TEXT NOT NULL,
+        answer TEXT,
+        is_answered INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        answered_at TEXT,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
     )`);
     await dbRun(`CREATE TABLE IF NOT EXISTS social_tests (
         id TEXT PRIMARY KEY,
@@ -448,20 +476,20 @@ async function initSocialSchema() {
     const testsCount = await dbGet(`SELECT COUNT(*) AS count FROM social_tests`);
     if (!testsCount.count) {
         const tests = [
-            { id: 'safety', title: 'Р‘РµР·РѕРїР°СЃРЅРѕСЃС‚СЊ РІ СЃРµС‚Рё', reward: 12, order: 1, questions: [
-                { text: 'РљР°РєРѕР№ РїР°СЂРѕР»СЊ СЃС‡РёС‚Р°РµС‚СЃСЏ РЅР°РґС‘Р¶РЅС‹Рј?', options: ['12345678', 'qwerty2024', 'РЎР»СѓС‡Р°Р№РЅС‹Р№ РґР»РёРЅРЅС‹Р№ РїР°СЂРѕР»СЊ СЃ СЂР°Р·РЅС‹РјРё СЃРёРјРІРѕР»Р°РјРё'], correctIndex: 2 },
-                { text: 'Р§С‚Рѕ РґРµР»Р°С‚СЊ, РµСЃР»Рё РїСЂРёС€Р»Р° РїРѕРґРѕР·СЂРёС‚РµР»СЊРЅР°СЏ СЃСЃС‹Р»РєР°?', options: ['РћС‚РєСЂС‹С‚СЊ Рё РїСЂРѕРІРµСЂРёС‚СЊ', 'РРіРЅРѕСЂРёСЂРѕРІР°С‚СЊ Рё СѓРґР°Р»РёС‚СЊ', 'РџРµСЂРµСЃР»Р°С‚СЊ РІСЃРµРј РґСЂСѓР·СЊСЏРј'], correctIndex: 1 },
-                { text: 'Р”Р»СЏ С‡РµРіРѕ РЅСѓР¶РЅР° РґРІСѓС…С„Р°РєС‚РѕСЂРЅР°СЏ Р°СѓС‚РµРЅС‚РёС„РёРєР°С†РёСЏ?', options: ['Р”Р»СЏ РґРѕРїРѕР»РЅРёС‚РµР»СЊРЅРѕР№ Р·Р°С‰РёС‚С‹ Р°РєРєР°СѓРЅС‚Р°', 'Р”Р»СЏ РєСЂР°СЃРѕС‚С‹ РїСЂРѕС„РёР»СЏ', 'Р§С‚РѕР±С‹ Р±С‹СЃС‚СЂРµРµ РІС…РѕРґРёС‚СЊ Р±РµР· РїР°СЂРѕР»СЏ'], correctIndex: 0 }
+            { id: 'safety', title: 'Безопасность в сети', reward: 12, order: 1, questions: [
+                { text: 'Какой пароль считается надёжным?', options: ['12345678', 'qwerty2024', 'Случайный длинный пароль с разными символами'], correctIndex: 2 },
+                { text: 'Что делать, если пришла подозрительная ссылка?', options: ['Открыть и проверить', 'Игнорировать и удалить', 'Переслать всем друзьям'], correctIndex: 1 },
+                { text: 'Для чего нужна двухфакторная аутентификация?', options: ['Для дополнительной защиты аккаунта', 'Для красоты профиля', 'Чтобы быстрее входить без пароля'], correctIndex: 0 }
             ] },
-            { id: 'content', title: 'Р­С‚РёС‡РЅС‹Р№ РєРѕРЅС‚РµРЅС‚', reward: 8, order: 2, questions: [
-                { text: 'РњРѕР¶РЅРѕ Р»Рё РїСѓР±Р»РёРєРѕРІР°С‚СЊ С‡СѓР¶РѕРµ С„РѕС‚Рѕ Р±РµР· СЂР°Р·СЂРµС€РµРЅРёСЏ?', options: ['Р”Р°, РµСЃР»Рё С„РѕС‚Рѕ РєСЂР°СЃРёРІРѕРµ', 'РќРµС‚, РЅСѓР¶РЅРѕ СЂР°Р·СЂРµС€РµРЅРёРµ', 'Р”Р°, РµСЃР»Рё СѓРґР°Р»РёС‚СЊ Р°РІС‚РѕСЂР°'], correctIndex: 1 },
-                { text: 'РљР°Рє СЂРµР°РіРёСЂРѕРІР°С‚СЊ РЅР° С‚РѕРєСЃРёС‡РЅС‹Рµ РєРѕРјРјРµРЅС‚Р°СЂРёРё?', options: ['РћС‚РІРµС‚РёС‚СЊ Р°РіСЂРµСЃСЃРёРµР№', 'РџРѕР¶Р°Р»РѕРІР°С‚СЊСЃСЏ Рё РЅРµ СЂР°Р·Р¶РёРіР°С‚СЊ РєРѕРЅС„Р»РёРєС‚', 'РџСѓР±Р»РёРєРѕРІР°С‚СЊ СЃРєСЂРёРЅС‹ СЃ РѕСЃРєРѕСЂР±Р»РµРЅРёСЏРјРё'], correctIndex: 1 }
+            { id: 'content', title: 'Этичный контент', reward: 8, order: 2, questions: [
+                { text: 'Можно ли публиковать чужое фото без разрешения?', options: ['Да, если фото красивое', 'Нет, нужно разрешение', 'Да, если удалить автора'], correctIndex: 1 },
+                { text: 'Как реагировать на токсичные комментарии?', options: ['Ответить агрессией', 'Пожаловаться и не разжигать конфликт', 'Публиковать скрины с оскорблениями'], correctIndex: 1 }
             ] },
-            { id: 'creative', title: 'РљСЂРµР°С‚РёРІРЅС‹Р№ РјРёРЅРё-С‚РµСЃС‚', reward: 15, order: 3, questions: [
-                { text: 'Р§С‚Рѕ РІР°Р¶РЅРµРµ РІ РїРµСЂРІРѕРј РєР°РґСЂРµ СЂРѕР»РёРєР°?', options: ['РЎРёР»СЊРЅС‹Р№ С…СѓРє Рё РїРѕРЅСЏС‚РЅР°СЏ РёРґРµСЏ', 'РЎР»СѓС‡Р°Р№РЅС‹Р№ РєР°РґСЂ', 'РўРѕР»СЊРєРѕ РјСѓР·С‹РєР°'], correctIndex: 0 },
-                { text: 'РљР°Рє РїРѕРІС‹СЃРёС‚СЊ РІРѕРІР»РµС‡РµРЅРёРµ РІ РїРѕСЃС‚Рµ?', options: ['Р—Р°РґР°С‚СЊ РІРѕРїСЂРѕСЃ Р°СѓРґРёС‚РѕСЂРёРё', 'РЎРґРµР»Р°С‚СЊ РґР»РёРЅРЅС‹Р№ Р·Р°РіРѕР»РѕРІРѕРє Р±РµР· СЃРјС‹СЃР»Р°', 'РћС‚РєР»СЋС‡РёС‚СЊ РєРѕРјРјРµРЅС‚Р°СЂРёРё'], correctIndex: 0 },
-                { text: 'Р—Р°С‡РµРј РёСЃРїРѕР»СЊР·РѕРІР°С‚СЊ РµРґРёРЅС‹Р№ РІРёР·СѓР°Р»СЊРЅС‹Р№ СЃС‚РёР»СЊ РїСЂРѕС„РёР»СЏ?', options: ['Р§С‚РѕР±С‹ РїСЂРѕС„РёР»СЊ Р»РµРіС‡Рµ Р·Р°РїРѕРјРёРЅР°Р»СЃСЏ', 'Р­С‚Рѕ РЅРёРєР°Рє РЅРµ РІР»РёСЏРµС‚', 'Р§С‚РѕР±С‹ СЃРєСЂС‹С‚СЊ С‚РµРєСЃС‚'], correctIndex: 0 },
-                { text: 'Р§С‚Рѕ Р»СѓС‡С€Рµ РґР»СЏ РїРѕРЅСЏС‚РЅРѕРіРѕ СЃРѕРѕР±С‰РµРЅРёСЏ?', options: ['РћРґРёРЅ РіР»Р°РІРЅС‹Р№ С‚РµР·РёСЃ', 'РЎСЂР°Р·Сѓ 10 СЂР°Р·РЅС‹С… РјС‹СЃР»РµР№', 'РўРѕР»СЊРєРѕ СЌРјРѕРґР·Рё'], correctIndex: 0 }
+            { id: 'creative', title: 'Креативный мини-тест', reward: 15, order: 3, questions: [
+                { text: 'Что важнее в первом кадре ролика?', options: ['Сильный хук и понятная идея', 'Случайный кадр', 'Только музыка'], correctIndex: 0 },
+                { text: 'Как повысить вовлечение в посте?', options: ['Задать вопрос аудитории', 'Сделать длинный заголовок без смысла', 'Отключить комментарии'], correctIndex: 0 },
+                { text: 'Зачем использовать единый визуальный стиль профиля?', options: ['Чтобы профиль легче запоминался', 'Это никак не влияет', 'Чтобы скрыть текст'], correctIndex: 0 },
+                { text: 'Что лучше для понятного сообщения?', options: ['Один главный тезис', 'Сразу 10 разных мыслей', 'Только эмодзи'], correctIndex: 0 }
             ] }
         ];
         for (const test of tests) {
@@ -475,9 +503,9 @@ async function initSocialSchema() {
     const merchCount = await dbGet(`SELECT COUNT(*) AS count FROM merch_items`);
     if (!merchCount.count) {
         const merch = [
-            ['Р¤СѓС‚Р±РѕР»РєР°', 4000, '/images/С„СѓС‚Р±РѕР»РєР°.png', 1],
-            ['РўРµСЂРјРѕРєСЂСѓР¶РєР°', 1000, '/images/С‚РµСЂРјРѕРєСЂСѓР¶РєР°.png', 2],
-            ['РЁРѕРїРїРµСЂ', 7000, '/images/С€РѕРїРїРµСЂ.png', 3]
+            ['Футболка', 4000, '/images/футболка.png', 1],
+            ['Термокружка', 1000, '/images/термокружка.png', 2],
+            ['Шоппер', 7000, '/images/шоппер.png', 3]
         ];
         for (const item of merch) {
             await dbRun(`INSERT INTO merch_items (name, price, image_url, order_index) VALUES (?, ?, ?, ?)`, item);
@@ -487,8 +515,8 @@ async function initSocialSchema() {
     const feedChat = await dbGet(`SELECT id FROM chats WHERE type = 'group' AND slug = 'global-feed'`);
     if (!feedChat) {
         await dbRun(
-            `INSERT INTO chats (type, title, slug, avatar) VALUES ('group', 'Р›РµРЅС‚Р°', 'global-feed', ?)`,
-            ['/images/Р»РµРЅС‚Р°.png']
+            `INSERT INTO chats (type, title, slug, avatar) VALUES ('group', 'Лента', 'global-feed', ?)`,
+            ['/images/лента.png']
         );
     }
 
@@ -498,7 +526,7 @@ async function initSocialSchema() {
         if (!exists) {
             await dbRun(
                 `INSERT INTO chats (type, title, slug, avatar) VALUES ('group', ?, ?, ?)`,
-                [squad.name, `squad-${squad.short_name}`, squad.icon || 'в…']
+                [squad.name, `squad-${squad.short_name}`, squad.icon || '★']
             );
         }
     }
@@ -517,7 +545,7 @@ async function initSocialSchema() {
 }
 
 initSocialSchema().catch((err) => {
-    console.error('РћС€РёР±РєР° РёРЅРёС†РёР°Р»РёР·Р°С†РёРё СЃРѕС†РёР°Р»СЊРЅРѕР№ СЃС…РµРјС‹:', err.message);
+    console.error('Ошибка инициализации социальной схемы:', err.message);
 });
 
 // =============================================
@@ -529,7 +557,7 @@ app.use(express.static(publicDir));
 
 app.use(express.static(path.join(__dirname, 'public/css')));
 
-// РќР°СЃС‚СЂРѕР№РєР° СЃРµСЃСЃРёР№
+// Настройка сессий
 app.use(session({
     ...(sessionStore ? { store: sessionStore } : {}),
     name: 'soz.sid',
@@ -545,7 +573,7 @@ app.use(session({
     }
 }));
 
-// РќР°СЃС‚СЂРѕР№РєР° Р·Р°РіСЂСѓР·РєРё С„Р°Р№Р»РѕРІ (Р°РІР°С‚Р°СЂС‹)
+// Настройка загрузки файлов (аватары)
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         const uploadDir = path.join(__dirname, 'public/uploads/avatars');
@@ -567,7 +595,7 @@ const upload = multer({
         if (allowedTypes.includes(file.mimetype)) {
             cb(null, true);
         } else {
-            cb(new Error('РўРѕР»СЊРєРѕ РёР·РѕР±СЂР°Р¶РµРЅРёСЏ!'));
+            cb(new Error('Только изображения!'));
         }
     }
 });
@@ -603,13 +631,13 @@ async function getGigaChatToken() {
         if (data.access_token) {
             tokenCache.token = data.access_token;
             tokenCache.expiresAt = (Date.now() / 1000) + (data.expires_in || 1800) - 60;
-            console.log('вњ… РўРѕРєРµРЅ GigaChat РїРѕР»СѓС‡РµРЅ');
+            console.log('✅ Токен GigaChat получен');
             return data.access_token;
         }
-        console.error('вќЊ РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ С‚РѕРєРµРЅР°:', data);
+        console.error('❌ Ошибка получения токена:', data);
         return null;
     } catch (error) {
-        console.error('вќЊ РћС€РёР±РєР° РїРѕР»СѓС‡РµРЅРёСЏ С‚РѕРєРµРЅР°:', error.message);
+        console.error('❌ Ошибка получения токена:', error.message);
         return null;
     }
 }
@@ -618,17 +646,17 @@ async function askGigaChat(userMessage, systemPromptOverride = null) {
     const token = await getGigaChatToken();
     if (!token) return null;
 
-    const systemPrompt = `РўС‹ РґСЂСѓР¶РµР»СЋР±РЅС‹Р№ РР-Р°СЃСЃРёСЃС‚РµРЅС‚ РѕС‚СЂСЏРґРЅРѕРіРѕ РґРІРёР¶РµРЅРёСЏ "РЎРѕР·РІРµР·РґРёРµ".
+    const systemPrompt = `Ты дружелюбный ИИ-ассистент отрядного движения "Созвездие".
 
-РћРўР РЇР”Р«:
-- РљР Р«Р›Р¬РЇ рџ’™: СЌРЅРµСЂРіРёС‡РЅС‹Рµ, РёРЅРёС†РёР°С‚РёРІРЅС‹Рµ, Р»СЋР±СЏС‚ РґРёРЅР°РјРёРєСѓ, РЅРѕРІС‹Рµ Р·Р°РґР°С‡Рё Рё Р°РєС‚РёРІРЅС‹Р№ РѕС‚РґС‹С…. Р”СЂР°Р№РІ, СЃРєРѕСЂРѕСЃС‚СЊ, СЂР°Р·РІРёС‚РёРµ.
-- РљР›Р•Р’Р•Р  рџЌЂ: РґСѓС€РµРІРЅС‹Рµ, СЃРїРѕРєРѕР№РЅС‹Рµ, С†РµРЅСЏС‚ РєРѕР»Р»РµРєС‚РёРІ, РїРѕРґРґРµСЂР¶РєСѓ, РґСЂСѓР¶Р±Сѓ Рё С‚С‘РїР»СѓСЋ Р°С‚РјРѕСЃС„РµСЂСѓ.
-- Р¤Р•РњРР”Рђ вљ–пёЏ: СЃРµСЂСЊС‘Р·РЅС‹Рµ, РґРёСЃС†РёРїР»РёРЅРёСЂРѕРІР°РЅРЅС‹Рµ, Р»РѕРіРёС‡РЅС‹Рµ. Р›СЋР±СЏС‚ РїРѕСЂСЏРґРѕРє, СЃС‚СЂСѓРєС‚СѓСЂСѓ, РїСЂР°РІРёР»Р° Рё РѕС‚РІРµС‚СЃС‚РІРµРЅРЅРѕСЃС‚СЊ.
-- РђРџР•Р›Р¬РЎРРќ рџЌЉ: С‚РІРѕСЂС‡РµСЃРєРёРµ, РѕС‚РєСЂС‹С‚С‹Рµ, Р»СЋР±СЏС‚ РІРЅРёРјР°РЅРёРµ, СЋРјРѕСЂ, РєСЂРµР°С‚РёРІ, РІРµСЃРµР»СЊРµ Рё Р»С‘РіРєРѕСЃС‚СЊ.
-- Р­Р’Р•Р Р•РЎРў рџЏ”: С†РµР»РµСѓСЃС‚СЂРµРјР»С‘РЅРЅС‹Рµ, РІС‹РЅРѕСЃР»РёРІС‹Рµ, Р»СЋР±СЏС‚ РїСЂРµРѕРґРѕР»РµРІР°С‚СЊ С‚СЂСѓРґРЅРѕСЃС‚Рё. РЎРёР»Р°, СѓРїРѕСЂСЃС‚РІРѕ, СЂРµР·СѓР»СЊС‚Р°С‚.
+ОТРЯДЫ:
+- КРЫЛЬЯ 💙: энергичные, инициативные, любят динамику, новые задачи и активный отдых. Драйв, скорость, развитие.
+- КЛЕВЕР 🍀: душевные, спокойные, ценят коллектив, поддержку, дружбу и тёплую атмосферу.
+- ФЕМИДА ⚖️: серьёзные, дисциплинированные, логичные. Любят порядок, структуру, правила и ответственность.
+- АПЕЛЬСИН 🍊: творческие, открытые, любят внимание, юмор, креатив, веселье и лёгкость.
+- ЭВЕРЕСТ 🏔: целеустремлённые, выносливые, любят преодолевать трудности. Сила, упорство, результат.
 
-РќР° РѕСЃРЅРѕРІРµ РѕС‚РІРµС‚РѕРІ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РѕРїСЂРµРґРµР»Рё, РєР°РєРѕР№ РѕС‚СЂСЏРґ РµРјСѓ РїРѕРґС…РѕРґРёС‚.
-РћС‚РІРµС‚СЊ РўРћР›Р¬РљРћ РІ С„РѕСЂРјР°С‚Рµ JSON: {"squad": "РЅР°Р·РІР°РЅРёРµ РѕС‚СЂСЏРґР°", "reason": "РїРѕС‡РµРјСѓ РїРѕРґС…РѕРґРёС‚"}`;
+На основе ответов пользователя определи, какой отряд ему подходит.
+Ответь ТОЛЬКО в формате JSON: {"squad": "название отряда", "reason": "почему подходит"}`;
     const finalSystemPrompt = systemPromptOverride || systemPrompt;
 
     try {
@@ -657,10 +685,10 @@ async function askGigaChat(userMessage, systemPromptOverride = null) {
         if (response.status === 200 && data.choices && data.choices[0]) {
             return data.choices[0].message.content;
         }
-        console.error('РћС€РёР±РєР° GigaChat:', data);
+        console.error('Ошибка GigaChat:', data);
         return null;
     } catch (error) {
-        console.error('вќЊ РћС€РёР±РєР° GigaChat:', error.message);
+        console.error('❌ Ошибка GigaChat:', error.message);
         return null;
     }
 }
@@ -669,57 +697,57 @@ const TEST_SQUAD_CATALOG = {
     apelsin: {
         key: 'apelsin',
         name: 'СПО «Апельсин»',
-        profile: 'творчество, юмор, легкость, яркие идеи, дружелюбная атмосфера'
+        profile: 'общение, юмор, креатив, тепло команды, позитивная атмосфера'
     },
     'vokrug-sveta': {
         key: 'vokrug-sveta',
-        name: 'СОП «Вокруг Света»',
-        profile: 'путешествия, дорога, новые места, открытость, командные маршруты'
+        name: 'СОП «Вокруг света»',
+        profile: 'путешествия, сервис, новые места, мобильность, командная поддержка'
     },
     krylya: {
         key: 'krylya',
         name: 'СПО «Крылья»',
-        profile: 'педагогика, дети, активность, инициативность, быстрые решения'
+        profile: 'инициатива, дети, активность, ответственность, яркие проекты'
     },
     prospekt: {
         key: 'prospekt',
         name: 'СПО «Проспект»',
-        profile: 'городские проекты, организация процессов, маршруты, практичная польза'
+        profile: 'педагогическая работа, организация мероприятий, энергия, командная работа'
     },
     'zhar-ptitsa': {
         key: 'zhar-ptitsa',
         name: 'СПО «Жар-Птица»',
-        profile: 'сцена, энергия, события, харизма, умение зажечь команду'
+        profile: 'сцена, эмоции, творчество, события, умение зажигать других'
     },
     yamaika: {
         key: 'yamaika',
         name: 'СПО «Ямайка»',
-        profile: 'легкая коммуникация, дружелюбие, культура, спокойный драйв, теплый вайб'
+        profile: 'дружная атмосфера, наставничество, поддержка, позитивный вайб, помощь детям'
     },
     shum: {
         key: 'shum',
         name: 'СПО «Шум»',
-        profile: 'медиа, публичность, коммуникации, инфоповоды, заметные события'
+        profile: 'лидерство, организация, коммуникация, активность, большие события'
     },
     klever: {
         key: 'klever',
         name: 'ТОП «Клевер»',
-        profile: 'поддержка, забота, командность, надежная дружеская атмосфера'
+        profile: 'забота, сервис, внимательность, спокойная командная поддержка'
     },
     femida: {
         key: 'femida',
         name: 'ТОП «Фемида»',
-        profile: 'ответственность, справедливость, порядок, правила, спокойная логика'
+        profile: 'ответственность, справедливость, порядок, правила, системная работа'
     },
     everest: {
         key: 'everest',
         name: 'ТОП «Эверест»',
-        profile: 'цели, выносливость, вызов, дисциплина, движение к результату'
+        profile: 'цель, настойчивость, рост, дисциплина, движение к результату'
     },
     kraski: {
         key: 'kraski',
         name: 'ТОП «Краски»',
-        profile: 'визуальное творчество, дизайн, мастерские, эстетика, художественные идеи'
+        profile: 'визуальное творчество, дизайн, мастерские, эстетика, художественный вкус'
     }
 };
 
@@ -779,7 +807,7 @@ function buildSquadTestAnalysis({ answers = [], scores = {} }) {
     const gap = second ? best.score - second.score : best.score;
     const confidence = best.score <= 0 ? 'low' : gap >= 6 ? 'high' : gap >= 3 ? 'medium' : 'balanced';
     const traitText = topTraits.length ? topTraits.join(', ') : best.profile;
-    const reason = `Лучше всего совпадает ${best.name}: по ответам сильнее всего проявились ${traitText}. Профиль отряда: ${best.profile}.`;
+    const reason = `Тебе больше подходит ${best.name}: по ответам сильнее всего проявились ${traitText}. Профиль отряда: ${best.profile}.`;
 
     return {
         success: true,
@@ -806,11 +834,11 @@ function getSquadTestPrompt() {
         .map(squad => `- ${squad.key}: ${squad.name}. ${squad.profile}`)
         .join('\n');
 
-    return `Ты анализируешь профориентационный тест для движения «Созвездие».
-Выбери один самый подходящий отряд из списка:
+    return `Ты анализируешь профориентационный тест для выбора студенческого отряда.
+Нужно выбрать самый подходящий отряд из списка:
 ${squads}
 
-Отвечай только валидным JSON без markdown:
+Верни только валидный JSON без markdown:
 {"squad":"short_name отряда","reason":"2-4 предложения с объяснением","top":[{"key":"short_name","score":число}]}
 Поле squad обязательно должно быть одним из ключей списка.`;
 }
@@ -854,45 +882,45 @@ app.post('/api/ai-recommend', async (req, res) => {
             }
         }
     } catch (error) {
-        console.error('Ошибка анализа теста через GigaChat:', error.message);
+        console.error('Ошибка подбора через GigaChat:', error.message);
     }
 
     return res.json(localResult);
 });
 
-// API СЌРЅРґРїРѕРёРЅС‚ РґР»СЏ СЂРµРєРѕРјРµРЅРґР°С†РёРё РѕС‚СЂСЏРґР° С‡РµСЂРµР· РР
+// API эндпоинт для рекомендации отряда через ИИ
 app.post('/api/ai-recommend', async (req, res) => {
     const { answers, scores } = req.body;
 
     if (!answers) {
-        return res.status(400).json({ error: 'РќРµС‚ РґР°РЅРЅС‹С… РґР»СЏ Р°РЅР°Р»РёР·Р°' });
+        return res.status(400).json({ error: 'Нет данных для анализа' });
     }
 
-    // Р¤РѕСЂРјРёСЂСѓРµРј СЃРѕРѕР±С‰РµРЅРёРµ РґР»СЏ РР
+    // Формируем сообщение для ИИ
     const answersText = answers.map((ans, idx) => {
         const qNum = idx + 1;
         let answerText = '';
         switch(ans) {
-            case 'wings': answerText = 'Р±РµСЂСѓ РёРЅРёС†РёР°С‚РёРІСѓ, РґРµР№СЃС‚РІСѓСЋ Р±С‹СЃС‚СЂРѕ'; break;
-            case 'klever': answerText = 'РїСЂРёСЃРјР°С‚СЂРёРІР°СЋСЃСЊ, РёС‰Сѓ РїРѕРґРґРµСЂР¶РєСѓ'; break;
-            case 'femis': answerText = 'Р°РЅР°Р»РёР·РёСЂСѓСЋ, РІРЅРёРєР°СЋ РІ РїСЂР°РІРёР»Р°'; break;
-            case 'apelsin': answerText = 'СЂР°Р·СЂСЏР¶Р°СЋ РѕР±СЃС‚Р°РЅРѕРІРєСѓ С€СѓС‚РєР°РјРё, РєСЂРµР°С‚РёРІР»СЋ'; break;
-            case 'everest': answerText = 'РёРґСѓ С‚СѓРґР°, РіРґРµ СЃР»РѕР¶РЅРµРµ, С‚РµСЂРїР»СЋ Рё РґРѕСЃС‚РёРіР°СЋ'; break;
+            case 'wings': answerText = 'беру инициативу, действую быстро'; break;
+            case 'klever': answerText = 'присматриваюсь, ищу поддержку'; break;
+            case 'femis': answerText = 'анализирую, вникаю в правила'; break;
+            case 'apelsin': answerText = 'разряжаю обстановку шутками, креативлю'; break;
+            case 'everest': answerText = 'иду туда, где сложнее, терплю и достигаю'; break;
             default: answerText = ans;
         }
         return `${qNum}. ${answerText}`;
     }).join('\n');
 
-    const userMessage = `Р’РѕС‚ РѕС‚РІРµС‚С‹ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ РЅР° 5 РІРѕРїСЂРѕСЃРѕРІ:
+    const userMessage = `Вот ответы пользователя на 5 вопросов:
 ${answersText}
 
-РћРїСЂРµРґРµР»Рё, РєР°РєРѕР№ РѕС‚СЂСЏРґ (РљСЂС‹Р»СЊСЏ, РљР»РµРІРµСЂ, Р¤РµРјРёРґР°, РђРїРµР»СЊСЃРёРЅ РёР»Рё Р­РІРµСЂРµСЃС‚) РµРјСѓ РїРѕРґС…РѕРґРёС‚ Р±РѕР»СЊС€Рµ РІСЃРµРіРѕ.`;
+Определи, какой отряд (Крылья, Клевер, Фемида, Апельсин или Эверест) ему подходит больше всего.`;
 
     try {
         const aiResponse = await askGigaChat(userMessage);
 
         if (aiResponse) {
-            // РџР°СЂСЃРёРј JSON РёР· РѕС‚РІРµС‚Р°
+            // Парсим JSON из ответа
             const jsonMatch = aiResponse.match(/\{[\s\S]*\}/);
             if (jsonMatch) {
                 const result = JSON.parse(jsonMatch[0]);
@@ -900,11 +928,11 @@ ${answersText}
             }
         }
 
-        // Fallback: РїРѕ Р±Р°Р»Р»Р°Рј
+        // Fallback: по баллам
         const squadByScores = getSquadByScores(scores);
         return res.json({ success: true, squad: squadByScores, reason: null, fromAI: false });
     } catch (error) {
-        console.error('РћС€РёР±РєР°:', error);
+        console.error('Ошибка:', error);
         const squadByScores = getSquadByScores(scores);
         res.json({ success: true, squad: squadByScores, reason: null, fromAI: false });
     }
@@ -912,11 +940,11 @@ ${answersText}
 
 function getSquadByScores(scores) {
     const squadMap = {
-        'apelsin': 'РђРїРµР»СЊСЃРёРЅ',
-        'klever': 'РљР»РµРІРµСЂ',
-        'femis': 'Р¤РµРјРёРґР°',
-        'wings': 'РљСЂС‹Р»СЊСЏ',
-        'everest': 'Р­РІРµСЂРµСЃС‚'
+        'apelsin': 'Апельсин',
+        'klever': 'Клевер',
+        'femis': 'Фемида',
+        'wings': 'Крылья',
+        'everest': 'Эверест'
     };
 
     let maxScore = -1;
@@ -929,10 +957,10 @@ function getSquadByScores(scores) {
         }
     }
 
-    return squadMap[bestSquad] || 'РђРїРµР»СЊСЃРёРЅ';
+    return squadMap[bestSquad] || 'Апельсин';
 }
 // =============================================
-// Р’РЎРџРћРњРћР“РђРўР•Р›Р¬РќР«Р• Р¤РЈРќРљР¦РР
+// ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ
 // =============================================
 function isAuthenticated(req, res, next) {
     if (req.session.userId) {
@@ -966,10 +994,10 @@ async function assignSquadMembership({ userId, squadId, source = 'admin', applic
 }
 
 // =============================================
-// API: РџРћР›Р¬Р—РћР’РђРўР•Р›Р
+// API: ПОЛЬЗОВАТЕЛИ
 // =============================================
 
-// Р РµРіРёСЃС‚СЂР°С†РёСЏ
+// Регистрация
 app.post('/api/register', async (req, res) => {
     const { fullName, email, phone, password, confirmPassword } = req.body;
 
@@ -1077,12 +1105,12 @@ app.post('/api/resend-registration-code', async (req, res) => {
     }
 });
 
-// Р’С…РѕРґ
+// Вход
 app.post('/api/login', (req, res) => {
     const { emailOrPhone, password } = req.body;
 
     if (!emailOrPhone || !password) {
-        return res.status(400).json({ error: 'Р—Р°РїРѕР»РЅРёС‚Рµ РІСЃРµ РїРѕР»СЏ' });
+        return res.status(400).json({ error: 'Заполните все поля' });
     }
 
     db.get(
@@ -1090,16 +1118,16 @@ app.post('/api/login', (req, res) => {
         [emailOrPhone, emailOrPhone],
         async (err, user) => {
             if (err) {
-                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                return res.status(500).json({ error: 'Ошибка сервера' });
             }
 
             if (!user) {
-                return res.status(401).json({ error: 'РќРµРІРµСЂРЅС‹Р№ email/С‚РµР»РµС„РѕРЅ РёР»Рё РїР°СЂРѕР»СЊ' });
+                return res.status(401).json({ error: 'Неверный email/телефон или пароль' });
             }
 
             const isValid = await bcrypt.compare(password, user.password_hash);
             if (!isValid) {
-                return res.status(401).json({ error: 'РќРµРІРµСЂРЅС‹Р№ email/С‚РµР»РµС„РѕРЅ РёР»Рё РїР°СЂРѕР»СЊ' });
+                return res.status(401).json({ error: 'Неверный email/телефон или пароль' });
             }
             if (user.is_banned && user.email !== 'ultrasecret@admin.com') {
                 return res.status(403).json({ error: 'Аккаунт заблокирован администратором' });
@@ -1129,13 +1157,13 @@ app.post('/api/login', (req, res) => {
     );
 });
 
-// Р’С‹С…РѕРґ
+// Выход
 app.post('/api/logout', (req, res) => {
     req.session.destroy();
     res.json({ success: true });
 });
 
-// РџРѕР»СѓС‡РµРЅРёРµ С‚РµРєСѓС‰РµРіРѕ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+// Получение текущего пользователя
 app.get('/api/me', (req, res) => {
     if (!req.session.userId) {
         return res.json({ user: null });
@@ -1148,14 +1176,14 @@ app.get('/api/me', (req, res) => {
         [req.session.userId],
         (err, user) => {
             if (err) {
-                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                return res.status(500).json({ error: 'Ошибка сервера' });
             }
             res.json({ user });
         }
     );
 });
 
-// РћР±РЅРѕРІР»РµРЅРёРµ РїСЂРѕС„РёР»СЏ
+// Обновление профиля
 app.put('/api/profile', isAuthenticated, (req, res) => {
     const {
         lastName, firstName, birthDate, class: userClass,
@@ -1184,51 +1212,51 @@ app.put('/api/profile', isAuthenticated, (req, res) => {
          country, region, city, schoolName, schoolNumber, req.session.userId],
         (err) => {
             if (err) {
-                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                return res.status(500).json({ error: 'Ошибка сервера' });
             }
             res.json({ success: true });
         }
     );
 });
 
-// РЎРјРµРЅР° РїР°СЂРѕР»СЏ
+// Смена пароля
 app.put('/api/change-password', isAuthenticated, async (req, res) => {
     const { currentPassword, newPassword, confirmPassword } = req.body;
 
     if (!currentPassword || !newPassword || !confirmPassword) {
-        return res.status(400).json({ error: 'Р—Р°РїРѕР»РЅРёС‚Рµ РІСЃРµ РїРѕР»СЏ' });
+        return res.status(400).json({ error: 'Заполните все поля' });
     }
 
     if (newPassword !== confirmPassword) {
-        return res.status(400).json({ error: 'РќРѕРІС‹Р№ РїР°СЂРѕР»СЊ Рё РїРѕРґС‚РІРµСЂР¶РґРµРЅРёРµ РЅРµ СЃРѕРІРїР°РґР°СЋС‚' });
+        return res.status(400).json({ error: 'Новый пароль и подтверждение не совпадают' });
     }
 
     if (newPassword.length < 4) {
-        return res.status(400).json({ error: 'РџР°СЂРѕР»СЊ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РЅРµ РјРµРЅРµРµ 4 СЃРёРјРІРѕР»РѕРІ' });
+        return res.status(400).json({ error: 'Пароль должен быть не менее 4 символов' });
     }
 
     db.get(`SELECT password_hash FROM users WHERE id = ?`, [req.session.userId], async (err, user) => {
         if (err) {
-            return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+            return res.status(500).json({ error: 'Ошибка сервера' });
         }
 
         const isValid = await bcrypt.compare(currentPassword, user.password_hash);
         if (!isValid) {
-            return res.status(401).json({ error: 'РўРµРєСѓС‰РёР№ РїР°СЂРѕР»СЊ РЅРµРІРµСЂРµРЅ' });
+            return res.status(401).json({ error: 'Текущий пароль неверен' });
         }
 
         const newHash = await bcrypt.hash(newPassword, 10);
         db.run(`UPDATE users SET password_hash = ?, updated_at = datetime('now') WHERE id = ?`,
             [newHash, req.session.userId], (err) => {
             if (err) {
-                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                return res.status(500).json({ error: 'Ошибка сервера' });
             }
             res.json({ success: true });
         });
     });
 });
 
-// Р—Р°РіСЂСѓР·РєР° Р°РІР°С‚Р°СЂР°
+// Загрузка аватара
 app.post('/api/security/request-code', async (req, res) => {
     try {
         const user = await requireUser(req, res);
@@ -1241,15 +1269,15 @@ app.post('/api/security/request-code', async (req, res) => {
         const dbUser = await dbGet(`SELECT * FROM users WHERE id = ?`, [user.id]);
         const passwordOk = await bcrypt.compare(currentPassword, dbUser.password_hash);
         if (!passwordOk) {
-            return res.status(401).json({ error: 'РўРµРєСѓС‰РёР№ РїР°СЂРѕР»СЊ РЅРµРІРµСЂРµРЅ' });
+            return res.status(401).json({ error: 'Текущий пароль неверен' });
         }
 
         if (action === 'change_email') {
             if (!targetEmail || !targetEmail.includes('@')) {
-                return res.status(400).json({ error: 'Р’РІРµРґРёС‚Рµ РєРѕСЂСЂРµРєС‚РЅСѓСЋ РїРѕС‡С‚Сѓ' });
+                return res.status(400).json({ error: 'Введите корректную почту' });
             }
             const existing = await dbGet(`SELECT id FROM users WHERE email = ? AND id != ?`, [targetEmail, user.id]);
-            if (existing) return res.status(400).json({ error: 'Р­С‚Р° РїРѕС‡С‚Р° СѓР¶Рµ Р·Р°РЅСЏС‚Р°' });
+            if (existing) return res.status(400).json({ error: 'Эта почта уже занята' });
             const result = await createEmailCode({
                 email: targetEmail,
                 purpose: 'change_email',
@@ -1261,7 +1289,7 @@ app.post('/api/security/request-code', async (req, res) => {
 
         if (action === 'change_password') {
             if (newPassword.length < 4) {
-                return res.status(400).json({ error: 'РќРѕРІС‹Р№ РїР°СЂРѕР»СЊ РґРѕР»Р¶РµРЅ Р±С‹С‚СЊ РЅРµ РјРµРЅРµРµ 4 СЃРёРјРІРѕР»РѕРІ' });
+                return res.status(400).json({ error: 'Новый пароль должен быть не менее 4 символов' });
             }
             const result = await createEmailCode({
                 email: user.email,
@@ -1272,9 +1300,9 @@ app.post('/api/security/request-code', async (req, res) => {
             return res.json({ success: true, email: user.email, expiresAt: result.expiresAt });
         }
 
-        res.status(400).json({ error: 'РќРµРёР·РІРµСЃС‚РЅРѕРµ РґРµР№СЃС‚РІРёРµ' });
+        res.status(400).json({ error: 'Неизвестное действие' });
     } catch (err) {
-        res.status(500).json({ error: err.message || 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+        res.status(500).json({ error: err.message || 'Ошибка сервера' });
     }
 });
 
@@ -1300,22 +1328,22 @@ app.post('/api/security/confirm-code', async (req, res) => {
             return res.json({ success: true });
         }
 
-        res.status(400).json({ error: 'РќРµРёР·РІРµСЃС‚РЅРѕРµ РґРµР№СЃС‚РІРёРµ' });
+        res.status(400).json({ error: 'Неизвестное действие' });
     } catch (err) {
-        res.status(400).json({ error: err.message || 'РћС€РёР±РєР° РїРѕРґС‚РІРµСЂР¶РґРµРЅРёСЏ' });
+        res.status(400).json({ error: err.message || 'Ошибка подтверждения' });
     }
 });
 
 app.post('/api/upload-avatar', isAuthenticated, upload.single('avatar'), (req, res) => {
     if (!req.file) {
-        return res.status(400).json({ error: 'Р¤Р°Р№Р» РЅРµ Р·Р°РіСЂСѓР¶РµРЅ' });
+        return res.status(400).json({ error: 'Файл не загружен' });
     }
 
     const avatarPath = '/uploads/avatars/' + req.file.filename;
     db.run(`UPDATE users SET avatar = ?, updated_at = datetime('now') WHERE id = ?`,
         [avatarPath, req.session.userId], (err) => {
         if (err) {
-            return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+            return res.status(500).json({ error: 'Ошибка сервера' });
         }
         res.json({ success: true, avatar: avatarPath });
     });
@@ -1336,24 +1364,24 @@ require('./social-routes')({
 });
 
 // =============================================
-// API: РћРўР РЇР”Р«
+// API: ОТРЯДЫ
 // =============================================
 
-// РџРѕР»СѓС‡РёС‚СЊ РІСЃРµ РѕС‚СЂСЏРґС‹ (РґР»СЏ РіР»Р°РІРЅРѕР№)
+// Получить все отряды (для главной)
 app.get('/api/squads', (req, res) => {
     db.all(
         `SELECT id, name, short_name, title, description, icon, color_primary, order_index 
          FROM squads WHERE is_active = 1 ORDER BY order_index`,
         (err, squads) => {
             if (err) {
-                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                return res.status(500).json({ error: 'Ошибка сервера' });
             }
             res.json({ squads });
         }
     );
 });
 
-// РџРѕР»СѓС‡РёС‚СЊ РѕРґРёРЅ РѕС‚СЂСЏРґ РїРѕ short_name
+// Получить один отряд по short_name
 app.get('/api/squads/:shortName', (req, res) => {
     const { shortName } = req.params;
 
@@ -1362,19 +1390,19 @@ app.get('/api/squads/:shortName', (req, res) => {
         [shortName],
         (err, squad) => {
             if (err) {
-                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                return res.status(500).json({ error: 'Ошибка сервера' });
             }
             if (!squad) {
-                return res.status(404).json({ error: 'РћС‚СЂСЏРґ РЅРµ РЅР°Р№РґРµРЅ' });
+                return res.status(404).json({ error: 'Отряд не найден' });
             }
 
-            // РџРѕР»СѓС‡Р°РµРј РєРѕРјР°РЅРґРёСЂРѕРІ РѕС‚СЂСЏРґР°
+            // Получаем командиров отряда
             db.all(
                 `SELECT * FROM commanders WHERE squad_id = ? AND is_active = 1 ORDER BY order_index`,
                 [squad.id],
                 (err, commanders) => {
                     if (err) {
-                        return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                        return res.status(500).json({ error: 'Ошибка сервера' });
                     }
                     squad.commanders = commanders;
                     res.json({ squad });
@@ -1399,10 +1427,10 @@ app.get('/api/squad-page/:shortName', (req, res) => {
         [shortName],
         (err, squad) => {
             if (err) {
-                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                return res.status(500).json({ error: 'Ошибка сервера' });
             }
             if (!squad) {
-                return res.status(404).json({ error: 'РЎС‚СЂР°РЅРёС†Р° РѕС‚СЂСЏРґР° РЅРµ РЅР°Р№РґРµРЅР°' });
+                return res.status(404).json({ error: 'Страница отряда не найдена' });
             }
 
             db.all(
@@ -1411,7 +1439,7 @@ app.get('/api/squad-page/:shortName', (req, res) => {
                 [squad.id],
                 (err, trustCards) => {
                     if (err) {
-                        return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                        return res.status(500).json({ error: 'Ошибка сервера' });
                     }
 
                     db.all(
@@ -1420,7 +1448,7 @@ app.get('/api/squad-page/:shortName', (req, res) => {
                         [squad.id],
                         (err, structureSteps) => {
                             if (err) {
-                                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                                return res.status(500).json({ error: 'Ошибка сервера' });
                             }
 
                             db.all(
@@ -1429,7 +1457,7 @@ app.get('/api/squad-page/:shortName', (req, res) => {
                                 [squad.id],
                                 (err, teamMembers) => {
                                     if (err) {
-                                        return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                                        return res.status(500).json({ error: 'Ошибка сервера' });
                                     }
 
                                     let heroBullets = [];
@@ -1485,10 +1513,10 @@ app.get('/api/squad-page/:shortName', (req, res) => {
 });
 
 // =============================================
-// API: Р—РђРЇР’РљР
+// API: ЗАЯВКИ
 // =============================================
 
-// РџРѕРґР°С‚СЊ Р·Р°СЏРІРєСѓ РІ РѕС‚СЂСЏРґ
+// Подать заявку в отряд
 app.post('/api/apply', async (req, res) => {
     try {
         if (!req.session.userId) return res.status(401).json({ error: 'Необходимо войти в аккаунт' });
@@ -1534,7 +1562,7 @@ app.post('/api/apply', async (req, res) => {
     }
 });
 
-// РџРѕР»СѓС‡РёС‚СЊ Р·Р°СЏРІРєРё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ (РґР»СЏ Р»РёС‡РЅРѕРіРѕ РєР°Р±РёРЅРµС‚Р°)
+// Получить заявки пользователя (для личного кабинета)
 app.get('/api/my-applications', isAuthenticated, (req, res) => {
     db.all(
         `SELECT a.*, s.name as squad_name, s.short_name 
@@ -1545,7 +1573,7 @@ app.get('/api/my-applications', isAuthenticated, (req, res) => {
         [req.session.userId],
         (err, applications) => {
             if (err) {
-                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                return res.status(500).json({ error: 'Ошибка сервера' });
             }
             res.json({ applications });
         }
@@ -1553,16 +1581,16 @@ app.get('/api/my-applications', isAuthenticated, (req, res) => {
 });
 
 // =============================================
-// API: Р’РћРџР РћРЎР«
+// API: ВОПРОСЫ
 // =============================================
 
-// РћС‚РїСЂР°РІРёС‚СЊ РІРѕРїСЂРѕСЃ
+// Отправить вопрос
 app.post('/api/ask-question', (req, res) => {
     const { name, phone, question } = req.body;
     const userId = req.session.userId || null;
 
     if (!name || !phone || !question) {
-        return res.status(400).json({ error: 'Р—Р°РїРѕР»РЅРёС‚Рµ РІСЃРµ РїРѕР»СЏ' });
+        return res.status(400).json({ error: 'Заполните все поля' });
     }
 
     db.run(
@@ -1571,7 +1599,7 @@ app.post('/api/ask-question', (req, res) => {
         [userId, name, phone, question],
         function(err) {
             if (err) {
-                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                return res.status(500).json({ error: 'Ошибка сервера' });
             }
             res.json({ success: true });
         }
@@ -1579,10 +1607,10 @@ app.post('/api/ask-question', (req, res) => {
 });
 
 // =============================================
-// API: РўР•РЎРў (РџРћР”Р‘РћР  РћРўР РЇР”Рђ)
+// API: ТЕСТ (ПОДБОР ОТРЯДА)
 // =============================================
 
-// РЎРѕС…СЂР°РЅРёС‚СЊ СЂРµР·СѓР»СЊС‚Р°С‚ С‚РµСЃС‚Р°
+// Сохранить результат теста
 app.post('/api/test-result', (req, res) => {
     const { recommendedSquadId, answers } = req.body;
     const userId = req.session.userId || null;
@@ -1594,7 +1622,7 @@ app.post('/api/test-result', (req, res) => {
         [userId, sessionId, recommendedSquadId, JSON.stringify(answers)],
         function(err) {
             if (err) {
-                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                return res.status(500).json({ error: 'Ошибка сервера' });
             }
             res.json({ success: true });
         }
@@ -1602,13 +1630,13 @@ app.post('/api/test-result', (req, res) => {
 });
 
 // =============================================
-// API: РЎРўРђРўРРЎРўРРљРђ Р”Р›РЇ Р“Р›РђР’РќРћР™
+// API: СТАТИСТИКА ДЛЯ ГЛАВНОЙ
 // =============================================
 
 app.get('/api/stats', (req, res) => {
     db.all(`SELECT stat_key, stat_value, stat_label FROM site_stats ORDER BY order_index`, (err, stats) => {
         if (err) {
-            return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+            return res.status(500).json({ error: 'Ошибка сервера' });
         }
         res.json({ stats });
     });
@@ -1621,30 +1649,30 @@ app.get('/api/stats', (req, res) => {
 app.get('/api/faq', (req, res) => {
     db.all(`SELECT * FROM faq WHERE is_active = 1 ORDER BY order_index`, (err, faq) => {
         if (err) {
-            return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+            return res.status(500).json({ error: 'Ошибка сервера' });
         }
         res.json({ faq });
     });
 });
 
 // =============================================
-// API: РЎР›РђР™Р”Р•Р  Р“Р›РђР’РќРћР™
+// API: СЛАЙДЕР ГЛАВНОЙ
 // =============================================
 
 app.get('/api/hero-slides', (req, res) => {
     db.all(`SELECT * FROM hero_slides WHERE is_active = 1 ORDER BY order_index`, (err, slides) => {
         if (err) {
-            return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+            return res.status(500).json({ error: 'Ошибка сервера' });
         }
         res.json({ slides });
     });
 });
 
 // =============================================
-// API: РљРћРњРђРќР”РР Р« Р”Р›РЇ РЎР›РђР™Р”Р•Р Рђ
+// API: КОМАНДИРЫ ДЛЯ СЛАЙДЕРА
 // =============================================
 
-// API: РљРћРњРђРќР”РР Р« Р”Р›РЇ РЎР›РђР™Р”Р•Р Рђ (С‚РѕР»СЊРєРѕ РіР»Р°РІРЅС‹Р№ С€С‚Р°Р±, squad_id = 1)
+// API: КОМАНДИРЫ ДЛЯ СЛАЙДЕРА (только главный штаб, squad_id = 1)
 app.get('/api/commanders', (req, res) => {
     db.all(
         `SELECT c.*, s.short_name as squad_short_name, s.name as squad_name 
@@ -1654,7 +1682,7 @@ app.get('/api/commanders', (req, res) => {
          ORDER BY c.order_index`,
         (err, commanders) => {
             if (err) {
-                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                return res.status(500).json({ error: 'Ошибка сервера' });
             }
             res.json({ commanders });
         }
@@ -1668,14 +1696,14 @@ app.get('/api/commanders/:squadId', (req, res) => {
         [squadId],
         (err, commanders) => {
             if (err) {
-                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                return res.status(500).json({ error: 'Ошибка сервера' });
             }
             res.json({ commanders });
         }
     );
 });
 
-// API: РљРћРњРђРќР”РР Р« РџРћ ID РћРўР РЇР”Рђ (РґР»СЏ СЃС‚СЂР°РЅРёС†С‹ РљСЂС‹Р»СЊРµРІ)
+// API: КОМАНДИРЫ ПО ID ОТРЯДА (для страницы Крыльев)
 app.get('/api/squad-commanders/:squadId', (req, res) => {
     const squadId = req.params.squadId;
     db.all(
@@ -1683,24 +1711,24 @@ app.get('/api/squad-commanders/:squadId', (req, res) => {
         [squadId],
         (err, commanders) => {
             if (err) {
-                console.error('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё РєРѕРјР°РЅРґРёСЂРѕРІ:', err);
-                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                console.error('Ошибка загрузки командиров:', err);
+                return res.status(500).json({ error: 'Ошибка сервера' });
             }
             res.json({ commanders });
         }
     );
 });
 
-// API: РљРћРњРђРќР”Рђ РњР•Р§РўР« (РґР»СЏ СЃС‚СЂР°РЅРёС†С‹ "Рћ РЅР°СЃ")
+// API: КОМАНДА МЕЧТЫ (для страницы "О нас")
 app.get('/api/dream-team', (req, res) => {
     db.all(
         `SELECT * FROM dream_team WHERE is_active = 1 ORDER BY order_index`,
         (err, team) => {
             if (err) {
-                console.error('РћС€РёР±РєР° Р·Р°РіСЂСѓР·РєРё dream-team:', err);
-                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                console.error('Ошибка загрузки dream-team:', err);
+                return res.status(500).json({ error: 'Ошибка сервера' });
             }
-            console.log('Dream team loaded:', team); // Р”Р»СЏ РѕС‚Р»Р°РґРєРё
+            console.log('Dream team loaded:', team); // Для отладки
             res.json({ team });
         }
     );
@@ -1711,10 +1739,10 @@ app.get('/group_klever.html', (req, res) => {
 });
 
 // =============================================
-// РђР”РњРРќ-РџРђРќР•Р›Р¬
+// АДМИН-ПАНЕЛЬ
 // =============================================
 
-// Middleware РґР»СЏ РїСЂРѕРІРµСЂРєРё Р°РґРјРёРЅР°
+// Middleware для проверки админа
 function isAdmin(req, res, next) {
     if (req.session.isAdmin) return next();
     if (!req.session.userId) return res.status(401).json({ error: 'Доступ запрещен' });
@@ -1725,7 +1753,7 @@ function isAdmin(req, res, next) {
     });
 }
 
-// Р’С…РѕРґ РІ Р°РґРјРёРЅРєСѓ
+// Вход в админку
 app.post('/api/admin/login', (req, res) => {
     const email = String(req.body.email || 'ultrasecret@admin.com').trim().toLowerCase();
     const { password } = req.body;
@@ -1749,18 +1777,18 @@ app.post('/api/admin/login', (req, res) => {
     });
 });
 
-// Р’С‹С…РѕРґ РёР· Р°РґРјРёРЅРєРё
+// Выход из админки
 app.post('/api/admin/logout', (req, res) => {
     req.session.isAdmin = false;
     res.json({ success: true });
 });
 
-// РџСЂРѕРІРµСЂРєР° СЃС‚Р°С‚СѓСЃР° Р°РґРјРёРЅР°
+// Проверка статуса админа
 app.get('/api/admin/check', (req, res) => {
     res.json({ isAdmin: req.session.isAdmin === true });
 });
 
-// РџРѕР»СѓС‡РµРЅРёРµ РІСЃРµС… РїРѕР»СЊР·РѕРІР°С‚РµР»РµР№
+// Получение всех пользователей
 app.get('/api/admin/users', isAdmin, (req, res) => {
     db.all(
         `SELECT u.id, u.full_name, u.email, u.phone, u.role, u.is_banned, u.banned_at, u.created_at,
@@ -1771,26 +1799,26 @@ app.get('/api/admin/users', isAdmin, (req, res) => {
          GROUP BY u.id
          ORDER BY u.id DESC`,
         (err, users) => {
-        if (err) return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
         res.json({ users });
     });
 });
 
-// РћР±РЅРѕРІР»РµРЅРёРµ СЂРѕР»Рё РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+// Обновление роли пользователя
 app.put('/api/admin/users/:id/role', isAdmin, (req, res) => {
     const { id } = req.params;
     const { role } = req.body;
     db.run(`UPDATE users SET role = ? WHERE id = ?`, [role, id], (err) => {
-        if (err) return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
         res.json({ success: true });
     });
 });
 
-// РЈРґР°Р»РµРЅРёРµ РїРѕР»СЊР·РѕРІР°С‚РµР»СЏ
+// Удаление пользователя
 app.delete('/api/admin/users/:id', isAdmin, (req, res) => {
     const { id } = req.params;
     db.run(`DELETE FROM users WHERE id = ?`, [id], (err) => {
-        if (err) return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
         res.json({ success: true });
     });
 });
@@ -1800,7 +1828,7 @@ app.put('/api/admin/users/:id/ban', isAdmin, async (req, res) => {
         const userId = Number(req.params.id);
         const user = await dbGet(`SELECT email FROM users WHERE id = ?`, [userId]);
         if (!user) return res.status(404).json({ error: 'Пользователь не найден' });
-        if (user.email === 'ultrasecret@admin.com') return res.status(400).json({ error: 'Администратора нельзя забанить' });
+        if (user.email === 'ultrasecret@admin.com') return res.status(400).json({ error: 'Администратора нельзя банить' });
         await dbRun(
             `UPDATE users SET is_banned = 1, banned_at = datetime('now'), banned_reason = ?, banned_by = ?, updated_at = datetime('now') WHERE id = ?`,
             [req.body.reason || null, req.session.userId || null, userId]
@@ -1844,7 +1872,7 @@ app.post('/api/admin/users/:id/memberships', isAdmin, async (req, res) => {
     }
 });
 
-// РџРѕР»СѓС‡РµРЅРёРµ РІСЃРµС… Р·Р°СЏРІРѕРє
+// Получение всех заявок
 app.get('/api/admin/applications', isAdmin, (req, res) => {
     db.all(`
         SELECT a.*, s.name as squad_name, s.short_name, u.email AS user_email
@@ -1853,7 +1881,7 @@ app.get('/api/admin/applications', isAdmin, (req, res) => {
         LEFT JOIN users u ON u.id = a.user_id
         ORDER BY a.created_at DESC
     `, (err, apps) => {
-        if (err) return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
         db.all(`SELECT id, name, short_name FROM squads ORDER BY order_index, id`, (squadErr, squads) => {
             if (squadErr) return res.status(500).json({ error: 'Ошибка сервера' });
             res.json({ applications: apps, squads });
@@ -1861,7 +1889,7 @@ app.get('/api/admin/applications', isAdmin, (req, res) => {
     });
 });
 
-// РћР±РЅРѕРІР»РµРЅРёРµ СЃС‚Р°С‚СѓСЃР° Р·Р°СЏРІРєРё
+// Обновление статуса заявки
 app.put('/api/admin/applications/:id/status', isAdmin, async (req, res) => {
     try {
         const { id } = req.params;
@@ -1910,45 +1938,268 @@ app.put('/api/admin/applications/:id/status', isAdmin, async (req, res) => {
     }
 });
 
-// РџРѕР»СѓС‡РµРЅРёРµ РІСЃРµС… РІРѕРїСЂРѕСЃРѕРІ
+// Получение всех вопросов
 app.get('/api/admin/questions', isAdmin, (req, res) => {
     db.all(`SELECT * FROM questions ORDER BY created_at DESC`, (err, questions) => {
-        if (err) return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
         res.json({ questions });
     });
 });
 
-// РћС‚РІРµС‚ РЅР° РІРѕРїСЂРѕСЃ
+// Ответ на вопрос
 app.put('/api/admin/questions/:id/answer', isAdmin, (req, res) => {
     const { id } = req.params;
     const { answer } = req.body;
     db.run(`UPDATE questions SET answer = ?, is_answered = 1, answered_at = datetime('now') WHERE id = ?`,
         [answer, id], (err) => {
-        if (err) return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
         res.json({ success: true });
     });
 });
 
-// РџРѕР»СѓС‡РµРЅРёРµ РѕС‚СЂСЏРґРѕРІ
+// Получение отрядов
 app.get('/api/admin/squads', isAdmin, (req, res) => {
     db.all(`SELECT * FROM squads ORDER BY order_index`, (err, squads) => {
-        if (err) return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
         res.json({ squads });
     });
 });
 
-// РћР±РЅРѕРІР»РµРЅРёРµ РѕС‚СЂСЏРґР°
+// Обновление отряда
 app.put('/api/admin/squads/:id', isAdmin, (req, res) => {
     const { id } = req.params;
     const { name, description, is_active } = req.body;
     db.run(`UPDATE squads SET name = ?, description = ?, is_active = ? WHERE id = ?`,
         [name, description, is_active, id], (err) => {
-        if (err) return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
         res.json({ success: true });
     });
 });
 
-// РџРѕР»СѓС‡РµРЅРёРµ СЃС‚Р°С‚РёСЃС‚РёРєРё
+function normalizeAdminBool(value) {
+    return value === true || value === 1 || value === '1' || value === 'true' ? 1 : 0;
+}
+
+function normalizeTestQuestions(input) {
+    let questions = input;
+    if (typeof questions === 'string') {
+        questions = JSON.parse(questions);
+    }
+    if (!Array.isArray(questions) || !questions.length) {
+        throw new Error('Добавьте хотя бы один вопрос');
+    }
+    return questions.map((question, index) => {
+        const text = String(question.text || '').trim();
+        const options = Array.isArray(question.options) ? question.options.map((option) => String(option || '').trim()).filter(Boolean) : [];
+        const correctIndex = Number(question.correctIndex);
+        if (!text) throw new Error(`Вопрос ${index + 1}: заполните текст`);
+        if (options.length < 2) throw new Error(`Вопрос ${index + 1}: нужно минимум 2 варианта ответа`);
+        if (!Number.isInteger(correctIndex) || correctIndex < 0 || correctIndex >= options.length) {
+            throw new Error(`Вопрос ${index + 1}: правильный ответ указан неверно`);
+        }
+        return { text, options, correctIndex };
+    });
+}
+
+// Управление карточками командиров/комиссаров по отрядам
+app.get('/api/admin/commanders', isAdmin, async (req, res) => {
+    try {
+        const params = [];
+        let where = '';
+        if (req.query.squadId && req.query.squadId !== 'all') {
+            where = 'WHERE c.squad_id = ?';
+            params.push(req.query.squadId);
+        }
+        const commanders = await dbAll(
+            `SELECT c.*, s.name AS squad_name, s.short_name AS squad_short_name
+             FROM commanders c
+             JOIN squads s ON s.id = c.squad_id
+             ${where}
+             ORDER BY s.order_index, c.order_index, c.id`,
+            params
+        );
+        res.json({ commanders });
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+app.post('/api/admin/commanders', isAdmin, async (req, res) => {
+    try {
+        const { squad_id, role, name, photo, description, experience, order_index, is_active } = req.body;
+        if (!squad_id || !role || !name || !description) {
+            return res.status(400).json({ error: 'Заполните отряд, роль, имя и описание' });
+        }
+        const result = await dbRun(
+            `INSERT INTO commanders (squad_id, role, name, photo, description, experience, order_index, is_active)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                Number(squad_id),
+                String(role).trim(),
+                String(name).trim(),
+                String(photo || '').trim(),
+                String(description).trim(),
+                String(experience || '').trim(),
+                Number(order_index || 0),
+                normalizeAdminBool(is_active ?? 1)
+            ]
+        );
+        res.json({ success: true, id: result.lastID });
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+app.put('/api/admin/commanders/:id', isAdmin, async (req, res) => {
+    try {
+        const { squad_id, role, name, photo, description, experience, order_index, is_active } = req.body;
+        if (!squad_id || !role || !name || !description) {
+            return res.status(400).json({ error: 'Заполните отряд, роль, имя и описание' });
+        }
+        await dbRun(
+            `UPDATE commanders
+             SET squad_id = ?, role = ?, name = ?, photo = ?, description = ?, experience = ?, order_index = ?, is_active = ?
+             WHERE id = ?`,
+            [
+                Number(squad_id),
+                String(role).trim(),
+                String(name).trim(),
+                String(photo || '').trim(),
+                String(description).trim(),
+                String(experience || '').trim(),
+                Number(order_index || 0),
+                normalizeAdminBool(is_active),
+                req.params.id
+            ]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+app.delete('/api/admin/commanders/:id', isAdmin, async (req, res) => {
+    try {
+        await dbRun(`DELETE FROM commanders WHERE id = ?`, [req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+// Управление мерчем в профиле
+app.get('/api/admin/merch', isAdmin, async (req, res) => {
+    try {
+        const merch = await dbAll(`SELECT * FROM merch_items ORDER BY order_index, id`);
+        res.json({ merch });
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+app.post('/api/admin/merch', isAdmin, async (req, res) => {
+    try {
+        const { name, price, image_url, order_index, is_active } = req.body;
+        if (!name || !Number.isFinite(Number(price))) {
+            return res.status(400).json({ error: 'Заполните название и цену' });
+        }
+        const result = await dbRun(
+            `INSERT INTO merch_items (name, price, image_url, order_index, is_active) VALUES (?, ?, ?, ?, ?)`,
+            [String(name).trim(), Number(price), String(image_url || '').trim(), Number(order_index || 0), normalizeAdminBool(is_active ?? 1)]
+        );
+        res.json({ success: true, id: result.lastID });
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+app.put('/api/admin/merch/:id', isAdmin, async (req, res) => {
+    try {
+        const { name, price, image_url, order_index, is_active } = req.body;
+        if (!name || !Number.isFinite(Number(price))) {
+            return res.status(400).json({ error: 'Заполните название и цену' });
+        }
+        await dbRun(
+            `UPDATE merch_items SET name = ?, price = ?, image_url = ?, order_index = ?, is_active = ? WHERE id = ?`,
+            [String(name).trim(), Number(price), String(image_url || '').trim(), Number(order_index || 0), normalizeAdminBool(is_active), req.params.id]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+app.delete('/api/admin/merch/:id', isAdmin, async (req, res) => {
+    try {
+        await dbRun(`DELETE FROM merch_items WHERE id = ?`, [req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+// Управление тестами за баллы в профиле
+app.get('/api/admin/social-tests', isAdmin, async (req, res) => {
+    try {
+        const tests = await dbAll(`SELECT * FROM social_tests ORDER BY order_index, title`);
+        res.json({
+            tests: tests.map((test) => ({
+                ...test,
+                questions: JSON.parse(test.questions_json)
+            }))
+        });
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+app.post('/api/admin/social-tests', isAdmin, async (req, res) => {
+    try {
+        const id = String(req.body.id || '').trim().toLowerCase().replace(/[^a-z0-9_-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+        const title = String(req.body.title || '').trim();
+        const reward = Number(req.body.reward);
+        const questions = normalizeTestQuestions(req.body.questions);
+        if (!id || !title || !Number.isFinite(reward)) {
+            return res.status(400).json({ error: 'Заполните ID, название и награду' });
+        }
+        await dbRun(
+            `INSERT INTO social_tests (id, title, reward, questions_json, is_active, order_index) VALUES (?, ?, ?, ?, ?, ?)`,
+            [id, title, reward, JSON.stringify(questions), normalizeAdminBool(req.body.is_active ?? 1), Number(req.body.order_index || 0)]
+        );
+        res.json({ success: true, id });
+    } catch (err) {
+        res.status(400).json({ error: err.message || 'Не удалось сохранить тест' });
+    }
+});
+
+app.put('/api/admin/social-tests/:id', isAdmin, async (req, res) => {
+    try {
+        const title = String(req.body.title || '').trim();
+        const reward = Number(req.body.reward);
+        const questions = normalizeTestQuestions(req.body.questions);
+        if (!title || !Number.isFinite(reward)) {
+            return res.status(400).json({ error: 'Заполните название и награду' });
+        }
+        await dbRun(
+            `UPDATE social_tests SET title = ?, reward = ?, questions_json = ?, is_active = ?, order_index = ? WHERE id = ?`,
+            [title, reward, JSON.stringify(questions), normalizeAdminBool(req.body.is_active), Number(req.body.order_index || 0), req.params.id]
+        );
+        res.json({ success: true });
+    } catch (err) {
+        res.status(400).json({ error: err.message || 'Не удалось сохранить тест' });
+    }
+});
+
+app.delete('/api/admin/social-tests/:id', isAdmin, async (req, res) => {
+    try {
+        await dbRun(`DELETE FROM social_tests WHERE id = ?`, [req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+// Получение статистики
 app.get('/api/admin/stats', isAdmin, (req, res) => {
     db.get(`SELECT COUNT(*) as total_users FROM users`, (err, usersCount) => {
         db.get(`SELECT COUNT(*) as total_applications FROM applications`, (err, appsCount) => {
@@ -1963,7 +2214,7 @@ app.get('/api/admin/stats', isAdmin, (req, res) => {
     });
 });
 
-// РЎС‚СЂР°РЅРёС†Р° Р°РґРјРёРЅРєРё
+// Страница админки
 app.get('/admin', (req, res) => {
     res.sendFile(path.join(__dirname, 'admin.html'));
 });
@@ -1975,7 +2226,7 @@ app.get('/api/squad-gallery/:squadId', (req, res) => {
         [squadId],
         (err, gallery) => {
             if (err) {
-                return res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+                return res.status(500).json({ error: 'Ошибка сервера' });
             }
             res.json({ gallery });
         }
@@ -1983,7 +2234,7 @@ app.get('/api/squad-gallery/:squadId', (req, res) => {
 });
 
 // =============================================
-// РћРўР”РђР§Рђ HTML РЎРўР РђРќРР¦ (РЎ РџР•Р Р•Р”РђР§Р•Р™ Р”РђРќРќР«РҐ)
+// ОТДАЧА HTML СТРАНИЦ (С ПЕРЕДАЧЕЙ ДАННЫХ)
 // =============================================
 
 app.get('/', (req, res) => {
@@ -2054,17 +2305,18 @@ app.get('/group_ever.html', (req, res) => {
 });
 
 // =============================================
-// Р—РђРџРЈРЎРљ РЎР•Р Р’Р•Р Рђ
+// ЗАПУСК СЕРВЕРА
 // =============================================
 app.listen(PORT, () => {
-    console.log(`РЎРµСЂРІРµСЂ Р·Р°РїСѓС‰РµРЅ РЅР° http://localhost:${PORT}`);
-    console.log(`Р”РѕСЃС‚СѓРїРЅС‹Рµ СЃС‚СЂР°РЅРёС†С‹:`);
+    console.log(`Сервер запущен на http://localhost:${PORT}`);
+    console.log(`Доступные страницы:`);
     console.log(`  - http://localhost:${PORT}/`);
     console.log(`  - http://localhost:${PORT}/register.html`);
     console.log(`  - http://localhost:${PORT}/test.html`);
     console.log(`  - http://localhost:${PORT}/group_wings.html`);
-    console.log(`  - http://localhost:${PORT}/profile.html (С‚СЂРµР±СѓРµС‚СЃСЏ Р°РІС‚РѕСЂРёР·Р°С†РёСЏ)`);
+    console.log(`  - http://localhost:${PORT}/profile.html (требуется авторизация)`);
 });
+
 
 
 

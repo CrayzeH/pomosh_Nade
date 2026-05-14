@@ -47,11 +47,10 @@
             top: 0;
             left: 0;
             width: 100%;
-            background: rgba(255, 255, 255, 0.96);
-            backdrop-filter: blur(16px);
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+            background: #ffffff;
+            box-shadow: none;
             z-index: 1000;
-            border-bottom: 1px solid #eee;
+            border-bottom: 1px solid #ececf2;
         }
 
         .header-container {
@@ -72,37 +71,51 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 12px 0;
-            gap: 24px;
+            padding: 8px 0 10px;
+            gap: 14px;
         }
 
         .logo-area {
             display: flex;
             align-items: center;
-            gap: 32px;
+            gap: 12px;
         }
 
         .logo {
             font-weight: 900;
-            font-size: 1.9rem;
-            letter-spacing: -0.5px;
-            color: #1F1A2E;
+            font-size: 2.15rem;
+            letter-spacing: -0.2px;
+            color: #06060a;
             white-space: nowrap;
             cursor: pointer;
+            text-transform: lowercase;
         }
 
         .menu-btn-black {
             background: #1F1A2E;
             border: none;
-            padding: 10px 28px;
+            height: 34px;
+            min-width: 118px;
+            padding: 0 14px;
             border-radius: 40px;
             font-weight: 700;
-            font-size: 0.95rem;
+            font-size: 1.5rem;
             cursor: pointer;
             transition: 0.2s;
             font-family: inherit;
             color: white;
             white-space: nowrap;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            line-height: 1;
+        }
+
+        .menu-btn-black .menu-btn-label {
+            font-size: 1.5rem;
+            font-weight: 700;
+            line-height: 1;
         }
 
         .menu-btn-black:hover {
@@ -112,18 +125,19 @@
 
         .search-wrapper {
             flex: 1;
-            max-width: 360px;
+            max-width: 250px;
             min-width: 200px;
         }
 
         .search-input {
             width: 100%;
-            padding: 10px 20px;
-            border-radius: 60px;
-            border: 1.5px solid #E0D9F0;
+            height: 34px;
+            padding: 0 14px;
+            border-radius: 9px;
+            border: 1px solid #3a3a3a;
             background: white;
             font-family: inherit;
-            font-size: 0.9rem;
+            font-size: 1.3rem;
             outline: none;
             transition: 0.2s;
         }
@@ -136,41 +150,66 @@
         .header-actions {
             display: flex;
             align-items: center;
-            gap: 16px;
+            gap: 10px;
+        }
+
+        .header-search-icon {
+            border: none;
+            background: transparent;
+            width: 28px;
+            height: 28px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: #111;
+            font-size: 1.7rem;
         }
 
         .pick-header-btn {
-            background: #1F1A2E;
-            border: none;
-            padding: 10px 24px;
-            border-radius: 40px;
-            font-weight: 700;
-            font-size: 0.95rem;
+            background: #fff;
+            border: 1px solid #8ea2ff;
+            padding: 0 12px;
+            height: 34px;
+            border-radius: 20px;
+            font-weight: 500;
+            font-size: 1.1rem;
             cursor: pointer;
             font-family: inherit;
-            color: white;
+            color: #1f2f73;
             white-space: nowrap;
         }
 
         .pick-header-btn:hover {
-            background: #3B2E5E;
+            background: #f8f9ff;
         }
 
         .login-header-btn {
             background: transparent;
-            border: 1.5px solid #1F1A2E;
-            padding: 10px 28px;
-            border-radius: 40px;
-            font-weight: 600;
-            font-size: 0.95rem;
+            border: none;
+            padding: 0;
+            border-radius: 0;
+            font-weight: 500;
+            font-size: 0.72rem;
             cursor: pointer;
             font-family: inherit;
-            color: #1F1A2E;
+            color: #272727;
             white-space: nowrap;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+            gap: 2px;
+            text-transform: lowercase;
         }
 
         .login-header-btn:hover {
-            background: #F0EEF5;
+            opacity: 0.85;
+        }
+
+        .login-header-btn i {
+            font-size: 1.25rem;
         }
 
         .user-name {
@@ -186,30 +225,29 @@
 
         /* Нижняя навигация - видна только на десктопе */
         .header-bottom {
-            padding: 10px 0;
-            border-top: 1px solid rgba(139, 92, 246, 0.15);
+            padding: 10px 0 12px;
+            border-top: none;
         }
 
         .bottom-nav {
             display: flex;
             justify-content: space-between;
-            gap: 32px;
-            font-weight: 500;
-            font-size: 0.95rem;
+            gap: 24px;
+            font-weight: 700;
+            font-size: 2rem;
         }
 
         .bottom-nav span {
             cursor: pointer;
             transition: 0.2s;
-            padding: 6px 0;
-            border-bottom: 2px solid transparent;
-            color: #2D2440;
+            padding: 2px 0;
+            border-bottom: none;
+            color: #08080d;
             white-space: nowrap;
         }
 
         .bottom-nav span:hover {
-            border-bottom-color: #A78BFA;
-            color: #6D28D9;
+            color: #1f1f2a;
         }
 
         /* Мобильное меню (выезжающее) */
@@ -3000,7 +3038,7 @@
     height: clamp(255px, 17.5vw, 335px);
     margin: 0 auto clamp(16px, 1.15vw, 22px);
     overflow: hidden;
-    border: 2px solid #00a3ff;
+    border: 0;
     border-radius: 22px;
     background: #ececec;
 }
@@ -3301,14 +3339,199 @@
     }
 }
 
+.question-request-section {
+    width: min(78vw, 1530px);
+    margin: clamp(34px, 3.8vw, 72px) auto clamp(48px, 4.5vw, 86px);
+}
+
+.question-request-card {
+    position: relative;
+    min-height: clamp(250px, 16vw, 318px);
+    display: grid;
+    grid-template-columns: minmax(300px, 1fr) minmax(290px, 420px);
+    align-items: start;
+    gap: clamp(24px, 5vw, 96px);
+    padding: clamp(32px, 2.8vw, 54px) clamp(36px, 3.2vw, 62px);
+    border-radius: 24px;
+    overflow: visible;
+    background:
+        linear-gradient(115deg, rgba(255, 255, 255, 0.2), transparent 34%),
+        url("/images/question-texture.png") center / cover no-repeat,
+        linear-gradient(rgba(132, 77, 245, 0.82), rgba(132, 77, 245, 0.82)),
+        linear-gradient(145deg, #9c62ff 0%, #7f48f3 43%, #8848f3 100%);
+    color: #fff;
+}
+
+.question-request-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(120deg, rgba(255,255,255,0.18), transparent 45%, rgba(0,0,0,0.05));
+    opacity: 0.26;
+    pointer-events: none;
+}
+
+.question-request-title {
+    position: relative;
+    z-index: 1;
+    max-width: 520px;
+    margin: 0;
+    text-align: left;
+    font-size: clamp(46px, 3.45vw, 68px);
+    font-weight: 900;
+    line-height: 1.15;
+    letter-spacing: 0;
+}
+
+.question-request-star {
+    position: absolute;
+    left: 46%;
+    bottom: clamp(-74px, -4.4vw, -48px);
+    z-index: 2;
+    width: clamp(255px, 20vw, 385px);
+    transform: translateX(-50%);
+    filter: drop-shadow(0 14px 10px rgba(31, 26, 46, 0.22));
+    pointer-events: none;
+}
+
+.question-request-form {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 12px;
+    padding-top: 4px;
+}
+
+.question-request-form input[type="text"],
+.question-request-form input[type="tel"],
+.question-request-form textarea {
+    width: 100%;
+    min-height: 58px;
+    border: 0;
+    border-radius: 8px;
+    padding: 0 18px;
+    background: #fff;
+    color: #1f1a2e;
+    font-family: Inter, sans-serif;
+    font-size: 16px;
+    outline: none;
+}
+
+.question-request-form textarea {
+    height: 92px;
+    padding-top: 16px;
+    resize: vertical;
+}
+
+.question-request-form input::placeholder,
+.question-request-form textarea::placeholder {
+    color: #9b9aa3;
+}
+
+.question-request-consent {
+    display: grid;
+    grid-template-columns: 18px 1fr;
+    align-items: start;
+    gap: 8px;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 700;
+    line-height: 1.45;
+}
+
+.question-request-consent input {
+    width: 16px;
+    height: 16px;
+    margin: 2px 0 0;
+    accent-color: #fff;
+}
+
+.question-request-consent a {
+    color: inherit;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.question-request-submit {
+    width: 100%;
+    height: 58px;
+    margin-top: 12px;
+    border: 0;
+    border-radius: 999px;
+    background: #23232b;
+    color: #fff;
+    font-family: Inter, sans-serif;
+    font-size: 16px;
+    font-weight: 900;
+    cursor: pointer;
+}
+
+.question-request-submit:hover {
+    background: #17171d;
+}
+
+.question-request-status {
+    min-height: 18px;
+    margin: 0;
+    color: #fff;
+    font-size: 13px;
+    font-weight: 800;
+}
+
+@media (max-width: 1050px) {
+    .question-request-section {
+        width: min(90vw, 760px);
+    }
+
+    .question-request-card {
+        grid-template-columns: 1fr;
+        padding-bottom: 130px;
+    }
+
+    .question-request-title {
+        max-width: 100%;
+    }
+
+    .question-request-star {
+        left: 50%;
+        bottom: -56px;
+    }
+}
+
+@media (max-width: 560px) {
+    .question-request-section {
+        width: calc(100% - 28px);
+        margin-top: 30px;
+    }
+
+    .question-request-card {
+        min-height: 0;
+        padding: 26px 20px 112px;
+        border-radius: 18px;
+    }
+
+    .question-request-title {
+        font-size: clamp(30px, 10vw, 42px);
+    }
+
+    .question-request-star {
+        left: 50%;
+        width: 210px;
+        bottom: -46px;
+    }
+}
+
 /* Stable responsive hero based on the real 1910x576 banner ratio. */
 .hero {
     width: 100%;
-    height: clamp(420px, 30.15vw, 772px);
+    aspect-ratio: 1910 / 576;
+    height: auto;
+    max-height: 772px;
     min-height: 0;
     background-image: url("/images/banner1.png");
-    background-size: contain;
-    background-position: center center;
+    background-size: 100% auto;
+    background-position: top center;
     background-repeat: no-repeat;
     background-color: #fcfaff;
 }
@@ -4040,23 +4263,54 @@
         /* ===== HERO — ТОЛЬКО ПРОПОРЦИИ, БЕЗ ЛИШНЕГО ===== */
 .hero {
     width: 100%;
-    aspect-ratio: 1990 / 680;
-    background: url("/images/banner1.png") center center / cover no-repeat;
+    height: clamp(360px, calc(100vw / 3.316), 560px);
+    min-height: 0;
+    background: url("/images/banner1.png") center top / 100% auto no-repeat;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
     text-align: center;
 }
 
+.hero::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: -2px;
+    height: 6px;
+    background: #844DF5;
+    pointer-events: none;
+}
+
 .hero-content {
     width: 100%;
     height: 100%;
-    padding: 0 5%;
+    padding: 0 14%;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     gap: 20px;
+}
+
+.hero-content h1 {
+    max-width: 720px;
+    line-height: 1.05;
+    font-size: clamp(32px, 3.4vw, 60px);
+}
+
+.hero-content p {
+    max-width: 680px;
+    font-size: clamp(14px, 1.1vw, 20px);
+}
+
+.hero + .advantages {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
 }
 
 .hero-btn {
@@ -4141,7 +4395,109 @@
     }
 }
     </style>
-    <link rel="stylesheet" href="/css/common-layout.css">
+    <link rel="stylesheet" href="/css/common-layout.css?v=5">
+    <style>
+    /* Final header override (loaded after common-layout.css) */
+    .header {
+        background: #fff !important;
+        border-bottom: 1px solid #ececf2 !important;
+        box-shadow: none !important;
+        backdrop-filter: none !important;
+    }
+    .header .header-container { max-width: 1120px !important; width: calc(100% - 48px) !important; }
+    .header .header-top { padding: 4px 0 8px !important; gap: 23px !important; }
+    .header .logo {
+        font-size: 28px !important;
+        font-weight: 900 !important;
+        color: #06060a !important;
+        text-transform: lowercase !important;
+        line-height: 1 !important;
+    }
+    .header .logo-area { gap: 23px !important; }
+    .header .menu-btn-black {
+        height: 38px !important;
+        min-width: 132px !important;
+        padding: 0 20px !important;
+        border-radius: 40px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 10px !important;
+        font-size: 16px !important;
+    }
+    .header .menu-btn-black img {
+        width: 30px !important;
+        height: 30px !important;
+        object-fit: contain !important;
+    }
+    .header .menu-btn-black .menu-btn-label { font-size: 14px !important; }
+    .header .search-wrapper {
+        flex: 0 0 460px !important;
+        width: 460px !important;
+        max-width: 460px !important;
+        min-width: 460px !important;
+    }
+    .header .search-input {
+        height: 38px !important;
+        border-radius: 9px !important;
+        border: 1px solid #3a3a3a !important;
+        padding: 0 14px !important;
+        font-size: 15px !important;
+    }
+    .header .header-actions { gap: 23px !important; }
+    .header .header-search-icon {
+        border: none !important;
+        background: transparent !important;
+        width: 30px !important;
+        height: 30px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        font-size: 16px !important;
+        color: #111 !important;
+    }
+    .header .header-search-icon img {
+        width: 30px !important;
+        height: 30px !important;
+        object-fit: contain !important;
+    }
+    .header .pick-header-btn {
+        background: #fff !important;
+        color: #1f2f73 !important;
+        border: 1px solid #8ea2ff !important;
+        height: 38px !important;
+        border-radius: 20px !important;
+        padding: 0 34px !important;
+        font-size: 13px !important;
+        font-weight: 500 !important;
+    }
+    .header .login-header-btn {
+        border: none !important;
+        background: transparent !important;
+        padding: 0 !important;
+        font-size: 11px !important;
+        color: #272727 !important;
+        display: inline-flex !important;
+        flex-direction: column !important;
+        align-items: center !important;
+        justify-content: center !important;
+        gap: 2px !important;
+        text-transform: lowercase !important;
+    }
+    .header .login-header-btn i { font-size: 12px !important; }
+    .header .login-header-btn img {
+        width: 30px !important;
+        height: 30px !important;
+        object-fit: contain !important;
+    }
+    .header .header-bottom { border-top: none !important; padding: 8px 0 10px !important; }
+    .header .bottom-nav { justify-content: space-between !important; gap: 24px !important; font-size: 16px !important; font-weight: 700 !important; }
+    .header .bottom-nav span {
+        color: #08080d !important;
+        border-bottom: none !important;
+        padding: 2px 0 !important;
+    }
+    </style>
 </head>
 <body>
     <script src="/js/common-layout.js"></script>
@@ -4151,15 +4507,16 @@
         <div class="header-top">
             <div class="logo-area">
                 <div class="logo" onclick="window.location.href='/'">СОЗВЕЗДИЕ</div>
-                <button class="menu-btn-black" id="menuToggleBtn" onclick="toggleMobileMenu()">Меню</button>
+                <button class="menu-btn-black" id="menuToggleBtn" onclick="toggleMobileMenu()"><img src="/images/icon-menu-crop.png?v=8" alt=""><span class="menu-btn-label">Меню</span></button>
             </div>
             <div class="search-wrapper">
-                <input type="text" class="search-input" id="searchInput" placeholder="Найти отряд по названию">
+                <input type="text" class="search-input" id="searchInput" placeholder="Найти отряд">
             </div>
             <div class="header-actions" id="headerActions">
+                <button class="header-search-icon" type="button" aria-label="Поиск"><img src="/images/icon-search-crop.png?v=8" alt=""></button>
                 <button class="pick-header-btn" id="pickHeaderBtn">Подобрать отряд</button>
                 <div id="authButtons">
-                    <button class="login-header-btn" id="loginHeaderBtn">Войти</button>
+                    <button class="login-header-btn" id="loginHeaderBtn"><img src="/images/icon-login-crop.png?v=8" alt=""><span>войти</span></button>
                 </div>
                 <div id="userMenu" style="display: none;">
                     <span class="user-name" id="userNameDisplay"></span>
@@ -4169,10 +4526,8 @@
         <div class="header-bottom">
             <div class="bottom-nav" id="bottomNav">
                 <span data-page="about" onclick="document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'})">О нас</span>
-                <span data-page="directions">Направления</span>
                 <span data-page="squads" onclick="document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'})">Отряды</span>
                 <span data-page="create">Создавай</span>
-                <span data-page="interactive">Интерактивы</span>
                 <span data-page="contacts">Контакты</span>
             </div>
         </div>
@@ -4182,10 +4537,8 @@
 <!-- Мобильное меню (выезжающее) -->
 <div class="mobile-menu-drop" id="mobileMenuDrop">
     <span data-page="about" onclick="document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'})">О нас</span>
-    <span data-page="directions">Направления</span>
     <span data-page="squads" onclick="document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'}); closeMobileMenu();">Отряды</span>
     <span data-page="create">Создавай</span>
-    <span data-page="interactive">Интерактивы</span>
     <span data-page="contacts">Контакты</span>
 </div>
 
@@ -4279,6 +4632,24 @@
         </div>
     </section>
 
+    <section class="question-request-section animate-on-scroll" aria-labelledby="question-request-title">
+        <div class="question-request-card">
+            <h2 class="question-request-title" id="question-request-title">Ответим на<br>любой вопрос</h2>
+            <img class="question-request-star" src="/images/question-star.png" alt="">
+            <form class="question-request-form" id="questionRequestForm">
+                <input type="text" name="name" placeholder="Имя" autocomplete="name" required>
+                <input type="tel" name="phone" placeholder="Телефон" autocomplete="tel" required>
+                <textarea name="question" placeholder="Ваш вопрос" required></textarea>
+                <label class="question-request-consent">
+                    <input type="checkbox" name="consent" checked required>
+                    <span>Принимаю условия соглашения и даю согласие на обработку своих персональных данных на условиях <a href="/privacy.html">политики конфиденциальности</a></span>
+                </label>
+                <button class="question-request-submit" type="submit">Отправить вопрос</button>
+                <p class="question-request-status" id="questionRequestStatus" aria-live="polite"></p>
+            </form>
+        </div>
+    </section>
+
     <div class="container">
         <div class="faq-section animate-on-scroll" id="faqSection">
             <h2>Часто задаваемые вопросы</h2>
@@ -4317,8 +4688,8 @@
             <div class="footer-social">
                 <h4>Социальные сети</h4>
                 <div class="footer-social-icons">
-                    <a href="#" aria-label="VK"><i class="fab fa-vk"></i></a>
-                    <a href="#" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
+                    <a href="https://vk.com/shtab.sozvezdie" target="_blank" rel="noopener noreferrer" aria-label="VK"><i class="fab fa-vk"></i></a>
+                    <a href="https://t.me/shtab_sozvezdie" target="_blank" rel="noopener noreferrer" aria-label="Telegram"><i class="fab fa-telegram-plane"></i></a>
                 </div>
             </div>
 
@@ -4342,11 +4713,6 @@
         <div class="footer-legal">
             <div>© Созвездие, 2009–2026</div>
             <a href="#">Политика обработки<br>персональных данных</a>
-            <div>Внесена в реестр российских<br>программ: запись №15676 от 25.11.2022<br>года</div>
-            <div class="footer-legal-logos">
-                <img src="/images/footer-bottom-logo-1.png" alt="">
-                <img src="/images/footer-bottom-logo-2.png" alt="">
-            </div>
         </div>
     </div>
 </footer>
@@ -4357,7 +4723,7 @@
             <h4><i class="fas fa-campground"></i> Созвездие</h4>
             <p>Лучшие каникулы твоей жизни. Создаём воспоминания с 2015 года.</p>
             <div class="social-icons">
-                <a href="#"><i class="fab fa-vk"></i></a>
+                <a href="https://vk.com/shtab.sozvezdie" target="_blank" rel="noopener noreferrer"><i class="fab fa-vk"></i></a>
             </div>
         </div>
         <div class="footer-col">
@@ -4608,14 +4974,21 @@
         const track = document.getElementById('carouselTrack');
         if (!track || commandersData.length === 0) return;
 
+        const homeCommanderPhotos = {
+            'КОМАНДИР': '/images/home-commander.png',
+            'КОМИССАР': '/images/home-commissar.png',
+            'МЕТОДИСТ': '/images/home-methodist.png'
+        };
+
         track.classList.remove('slide-out-next', 'slide-out-prev', 'slide-in-next', 'slide-in-prev', 'is-animating');
         track.innerHTML = commandersData.map((commander, index) => {
+            const photo = homeCommanderPhotos[commander.role] || commander.photo || 'https://via.placeholder.com/400x340?text=Photo';
             return `
                 <div class="carousel-card ${getCarouselPosition(index)}" data-index="${index}">
                     <div class="commander-card">
                         <div class="commander-role">${commander.role}</div>
                         <div class="commander-photo-wrap">
-                            <img class="commander-photo" src="${commander.photo || 'https://via.placeholder.com/400x340?text=Photo'}" alt="${commander.name}" loading="lazy">
+                            <img class="commander-photo" src="${photo}" alt="${commander.name}" loading="lazy">
                         </div>
                         <div class="commander-desc">${commander.description}</div>
                     </div>
@@ -4794,6 +5167,36 @@
     document.getElementById('nextBtn')?.addEventListener('click', nextSlide);
     document.getElementById('prevBtn')?.addEventListener('click', prevSlide);
 
+    document.getElementById('questionRequestForm')?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        const form = event.currentTarget;
+        const status = document.getElementById('questionRequestStatus');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+        if (status) status.textContent = 'Отправляем вопрос...';
+        try {
+            const response = await fetch('/api/ask-question', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    name: form.elements.name.value.trim(),
+                    phone: form.elements.phone.value.trim(),
+                    question: form.elements.question.value.trim()
+                })
+            });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) throw new Error(data.error || 'Не удалось отправить вопрос');
+            form.reset();
+            const consent = form.elements.consent;
+            if (consent) consent.checked = true;
+            if (status) status.textContent = 'Вопрос отправлен. Скоро с вами свяжемся.';
+        } catch (err) {
+            if (status) status.textContent = err.message || 'Не удалось отправить вопрос';
+        }
+    });
+
     // Поиск
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
@@ -4816,3 +5219,8 @@
 </script>
 </body>
 </html>
+
+
+
+
+

@@ -2076,10 +2076,11 @@
             return;
         }
 
-        showMessage('registerMessage', 'Регистрация успешна!', false);
+        showMessage('registerMessage', 'Код подтверждения отправлен на почту!', false);
 
         setTimeout(() => {
-            switchTab('login');
+            const params = new URLSearchParams({ email: data.email || email });
+            window.location.href = `/verify.html?${params.toString()}`;
         }, 1000);
 
     } catch (err) {
@@ -2214,3 +2215,4 @@
 </script>
 </body>
 </html>
+

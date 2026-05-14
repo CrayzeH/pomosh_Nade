@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Админ-панель | Созвездие</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Inter, system-ui, sans-serif; background: #f5f7fb; color: #172033; }
+    button, input, select, textarea { font: inherit; }
+    .login { min-height: 100vh; display: grid; place-items: center; padding: 24px; background: #101828; }
+    .login-card { width: min(420px, 100%); display: grid; gap: 14px; padding: 28px; background: #fff; border-radius: 8px; }
+    .login-card h1 { margin: 0 0 8px; font-size: 28px; }
+    .input, select, textarea { width: 100%; min-height: 42px; padding: 10px 12px; border: 1px solid #d0d5dd; border-radius: 8px; background: #fff; }
+    .btn { border: 0; border-radius: 8px; min-height: 40px; padding: 9px 14px; background: #175cd3; color: #fff; font-weight: 700; cursor: pointer; }
+    .btn.secondary { background: #eef4ff; color: #175cd3; }
+    .btn.danger { background: #d92d20; }
+    .btn.ok { background: #039855; }
+    .btn.small { min-height: 34px; padding: 6px 10px; font-size: 13px; }
+    .error { color: #d92d20; min-height: 20px; }
+    .app { display: none; min-height: 100vh; grid-template-columns: 260px 1fr; }
+    .sidebar { padding: 22px; background: #101828; color: #fff; }
+    .brand { margin: 0 0 28px; font-size: 22px; font-weight: 800; }
+    .nav { display: grid; gap: 8px; }
+    .nav button { text-align: left; border: 0; border-radius: 8px; padding: 12px; background: transparent; color: #d0d5dd; cursor: pointer; }
+    .nav button.active, .nav button:hover { background: #1d2939; color: #fff; }
+    .main { padding: 28px; min-width: 0; }
+    .top { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 24px; }
+    .top h1 { margin: 0; font-size: 30px; }
+    .cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+    .card, .panel { background: #fff; border: 1px solid #eaecf0; border-radius: 8px; padding: 18px; }
+    .card strong { display: block; font-size: 34px; margin-bottom: 6px; }
+    .tabs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .table-wrap { overflow-x: auto; background: #fff; border: 1px solid #eaecf0; border-radius: 8px; }
+    table { width: 100%; border-collapse: collapse; min-width: 760px; }
+    th, td { padding: 12px; border-bottom: 1px solid #eaecf0; text-align: left; vertical-align: top; }
+    th { color: #475467; font-size: 13px; background: #f9fafb; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; }
+    .badge { display: inline-flex; padding: 4px 9px; border-radius: 999px; font-size: 12px; font-weight: 800; background: #f2f4f7; }
+    .badge.pending { background: #fffaeb; color: #b54708; }
+    .badge.approved { background: #ecfdf3; color: #027a48; }
+    .badge.rejected, .badge.banned { background: #fef3f2; color: #b42318; }
+    @media (max-width: 800px) { .app { grid-template-columns: 1fr; } .sidebar { position: static; } .cards { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <section class="login" id="login">
+    <form class="login-card" id="loginForm">
+      <h1>Админ-панель</h1>
+      <input class="input" id="email" type="email" value="ultrasecret@admin.com" autocomplete="username">
+      <input class="input" id="password" type="password" placeholder="Пароль" autocomplete="current-password">
+      <button class="btn" type="submit">Войти</button>
+      <p class="error" id="loginError"></p>
+    </form>
+  </section>
+
+  <section class="app" id="app">
+    <aside class="sidebar">
+      <p class="brand">Созвездие</p>
+      <nav class="nav">
+        <button class="active" data-page="dashboard">Дашборд</button>
+        <button data-page="applications">Заявки</button>
+        <button data-page="users">Пользователи</button>
+        <button data-page="questions">Вопросы</button>
+        <button data-page="squads">Отряды</button>
+      </nav>
+    </aside>
+    <main class="main">
+      <div class="top">
+        <h1 id="title">Дашборд</h1>
+        <button class="btn secondary" id="logout" type="button">Выйти</button>
+      </div>
+      <div id="content"></div>
+    </main>
+  </section>
+
+  <script>
+    let activePage = 'dashboard';
+    let squads = [];
+
+    const api = async (url, options = {}) => {
+      const res = await fetch(url, { headers: { 'Content-Type': 'application/json' }, ...options });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || 'Ошибка сервера');
+      return data;
+    };
+    const esc = (v) => String(v ?? '').replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;').replaceAll('"', '&quot;');
+    const statusText = (s) => s === 'approved' ? 'принята' : s === 'rejected' ? 'отклонена' : 'на рассмотрении';
+
+    async function showApp() {
+      login.style.display = 'none';
+      app.style.display = 'grid';
+      await load(activePage);
+    }
+
+    async function check() {
+      const data = await api('/api/admin/check');
+      if (data.isAdmin) await showApp();
+    }
+
+    loginForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      loginError.textContent = '';
+      try {
+        await api('/api/admin/login', {
+          method: 'POST',
+          body: JSON.stringify({ email: email.value.trim(), password: password.value })
+        });
+        await showApp();
+      } catch (err) {
+        loginError.textContent = err.message;
+      }
+    });
+
+    logout.addEventListener('click', async () => {
+      await fetch('/api/admin/logout', { method: 'POST' });
+      location.reload();
+    });
+
+    document.querySelectorAll('[data-page]').forEach((button) => {
+      button.addEventListener('click', async () => {
+        document.querySelectorAll('[data-page]').forEach((item) => item.classList.remove('active'));
+        button.classList.add('active');
+        activePage = button.dataset.page;
+        title.textContent = button.textContent;
+        await load(activePage);
+      });
+    });
+
+    async function load(page) {
+      if (page === 'dashboard') return loadDashboard();
+      if (page === 'applications') return loadApplications();
+      if (page === 'users') return loadUsers();
+      if (page === 'questions') return loadQuestions();
+      if (page === 'squads') return loadSquads();
+    }
+
+    async function loadDashboard() {
+      const data = await api('/api/admin/stats');
+      content.innerHTML = `<div class="cards">
+        <div class="card"><strong>${data.users || 0}</strong><span>Пользователей</span></div>
+        <div class="card"><strong>${data.applications || 0}</strong><span>Заявок</span></div>
+        <div class="card"><strong>${data.pendingQuestions || 0}</strong><span>Новых вопросов</span></div>
+      </div>`;
+    }
+
+    async function loadApplications(filter = 'all') {
+      const data = await api('/api/admin/applications');
+      squads = data.squads || squads;
+      const apps = filter === 'all' ? data.applications : data.applications.filter((item) => String(item.squad_id) === String(filter));
+      content.innerHTML = `<div class="tabs">
+        <button class="btn small ${filter === 'all' ? '' : 'secondary'}" onclick="loadApplications('all')">Все отряды</button>
+        ${squads.map((s) => `<button class="btn small ${String(filter) === String(s.id) ? '' : 'secondary'}" onclick="loadApplications('${s.id}')">${esc(s.name)}</button>`).join('')}
+      </div>${table(['Отряд', 'ФИО', 'Контакт', 'Класс', 'Статус', 'Действия'], apps.map((item) => [
+        esc(item.squad_name),
+        esc(item.full_name),
+        `${esc(item.phone)}<br>${esc(item.user_email || '')}`,
+        esc(item.class),
+        `<span class="badge ${item.status}">${statusText(item.status)}</span>`,
+        `<div class="actions"><button class="btn ok small" onclick="setAppStatus(${item.id}, 'approved')">Принять</button><button class="btn danger small" onclick="setAppStatus(${item.id}, 'rejected')">Отклонить</button></div>`
+      ]))}`;
+    }
+
+    async function loadUsers() {
+      const [usersData, squadsData] = await Promise.all([api('/api/admin/users'), api('/api/admin/squads')]);
+      squads = squadsData.squads || [];
+      content.innerHTML = table(['ID', 'Пользователь', 'Отряды', 'Статус', 'Назначить', 'Действия'], usersData.users.map((user) => [
+        user.id,
+        `${esc(user.full_name)}<br>${esc(user.email)}<br>${esc(user.phone || '')}`,
+        esc(user.squads || 'нет'),
+        user.is_banned ? '<span class="badge banned">забанен</span>' : '<span class="badge approved">активен</span>',
+        `<select id="squad-${user.id}">${squads.map((s) => `<option value="${s.id}">${esc(s.name)}</option>`).join('')}</select><button class="btn secondary small" onclick="assignSquad(${user.id})">Назначить</button>`,
+        `<div class="actions">${user.is_banned ? `<button class="btn ok small" onclick="unbanUser(${user.id})">Разбанить</button>` : `<button class="btn danger small" onclick="banUser(${user.id})">Бан</button>`}</div>`
+      ]));
+    }
+
+    async function loadQuestions() {
+      const data = await api('/api/admin/questions');
+      content.innerHTML = table(['Имя', 'Телефон', 'Вопрос', 'Статус'], data.questions.map((q) => [
+        esc(q.name), esc(q.phone), esc(q.question), q.is_answered ? 'отвечен' : 'ожидает'
+      ]));
+    }
+
+    async function loadSquads() {
+      const data = await api('/api/admin/squads');
+      content.innerHTML = table(['ID', 'Отряд', 'Описание', 'Активен'], data.squads.map((s) => [
+        s.id, esc(s.name), esc(s.description), s.is_active ? 'да' : 'нет'
+      ]));
+    }
+
+    function table(headers, rows) {
+      return `<div class="table-wrap"><table><thead><tr>${headers.map((h) => `<th>${h}</th>`).join('')}</tr></thead><tbody>${rows.length ? rows.map((row) => `<tr>${row.map((cell) => `<td>${cell}</td>`).join('')}</tr>`).join('') : `<tr><td colspan="${headers.length}">Нет данных</td></tr>`}</tbody></table></div>`;
+    }
+
+    async function setAppStatus(id, status) {
+      await api(`/api/admin/applications/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) });
+      await loadApplications();
+    }
+    async function banUser(id) {
+      if (!confirm('Забанить пользователя?')) return;
+      await api(`/api/admin/users/${id}/ban`, { method: 'PUT', body: JSON.stringify({}) });
+      await loadUsers();
+    }
+    async function unbanUser(id) {
+      await api(`/api/admin/users/${id}/unban`, { method: 'PUT', body: JSON.stringify({}) });
+      await loadUsers();
+    }
+    async function assignSquad(id) {
+      const squadId = document.getElementById(`squad-${id}`).value;
+      await api(`/api/admin/users/${id}/memberships`, { method: 'POST', body: JSON.stringify({ squadId }) });
+      await loadUsers();
+    }
+
+    Object.assign(window, { loadApplications, setAppStatus, banUser, unbanUser, assignSquad });
+    check().catch(() => {});
+  </script>
+</body>
+</html>
