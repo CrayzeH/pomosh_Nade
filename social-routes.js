@@ -447,10 +447,11 @@ module.exports = function registerSocialRoutes(ctx) {
         try {
             const user = await requireUser(req, res);
             if (!user) return;
-            const [tests, results, merch, freshUser] = await Promise.all([
+            const [tests, results, merch, squads, freshUser] = await Promise.all([
                 dbAll(`SELECT * FROM social_tests WHERE is_active = 1 ORDER BY order_index`),
                 dbAll(`SELECT test_id, score, max_score, points_awarded FROM user_test_results WHERE user_id = ?`, [user.id]),
                 dbAll(`SELECT * FROM merch_items WHERE is_active = 1 ORDER BY order_index, id`),
+                dbAll(`SELECT id, name, short_name FROM squads WHERE is_active = 1 ORDER BY order_index, id`),
                 getCurrentUser(req)
             ]);
 
@@ -468,6 +469,11 @@ module.exports = function registerSocialRoutes(ctx) {
                     name: item.name,
                     price: item.price,
                     image: item.image_url
+                })),
+                squads: squads.map((squad) => ({
+                    id: squad.id,
+                    name: squad.name,
+                    shortName: squad.short_name
                 }))
             });
         } catch {

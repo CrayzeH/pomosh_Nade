@@ -148,6 +148,61 @@
     modal.classList.add('is-open');
   }
 
+  function openImageGalleryViewer(src, images = [src]) {
+    if (!src) return;
+    let modal = $('#global-image-viewer');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'global-image-viewer';
+      modal.className = 'global-image-viewer';
+      modal.innerHTML = '<button class="global-image-backdrop" type="button" aria-label="Закрыть"></button><div class="global-image-frame"><button class="global-image-close" type="button" aria-label="Закрыть">×</button><button class="global-image-nav global-image-nav--prev" type="button" data-viewer-step="-1" aria-label="Предыдущее фото"></button><img class="global-image-full" alt=""><button class="global-image-nav global-image-nav--next" type="button" data-viewer-step="1" aria-label="Следующее фото"></button></div>';
+      document.body.appendChild(modal);
+      modal.addEventListener('click', (event) => {
+        if (event.target.closest('.global-image-backdrop, .global-image-close')) modal.classList.remove('is-open');
+        const button = event.target.closest('[data-viewer-step]');
+        if (!button) return;
+        const list = JSON.parse(modal.dataset.images || '[]');
+        if (list.length < 2) return;
+        const current = Number(modal.dataset.index || 0);
+        const next = (current + Number(button.dataset.viewerStep || 0) + list.length) % list.length;
+        modal.dataset.index = String(next);
+        $('.global-image-full', modal).src = list[next];
+      });
+    } else if (!$('.global-image-nav', modal)) {
+      $('.global-image-frame', modal)?.insertAdjacentHTML('beforeend', '<button class="global-image-nav global-image-nav--prev" type="button" data-viewer-step="-1" aria-label="Предыдущее фото"></button><button class="global-image-nav global-image-nav--next" type="button" data-viewer-step="1" aria-label="Следующее фото"></button>');
+    }
+    const list = images.filter(Boolean).length ? images.filter(Boolean) : [src];
+    const index = Math.max(0, list.indexOf(src));
+    modal.dataset.images = JSON.stringify(list);
+    modal.dataset.index = String(index);
+    $('.global-image-full', modal).src = list[index] || src;
+    $$('.global-image-nav', modal).forEach((button) => {
+      button.hidden = list.length < 2;
+    });
+    modal.classList.add('is-open');
+  }
+
+  function updateLikeButton(button, result) {
+    if (!button || !result) return;
+    button.classList.toggle('is-liked', Boolean(result.liked));
+    const iconSrc = result.liked ? '/images/лайк при нажатии.png' : '/images/лайк.png';
+    const stat = $('.stat', button);
+    if (stat) stat.innerHTML = `<img class="stat-icon" src="${iconSrc}" alt="" />${Number(result.likes || 0)}`;
+  }
+
+  function bindAutoGrowTextarea(textarea) {
+    if (!textarea) return;
+    const resize = () => {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 92)}px`;
+    };
+    if (!textarea.dataset.autogrowBound) {
+      textarea.addEventListener('input', resize);
+      textarea.dataset.autogrowBound = '1';
+    }
+    resize();
+  }
+
   document.addEventListener('click', (event) => {
     const galleryButton = event.target.closest('[data-gallery-step]');
     if (galleryButton) {
@@ -156,7 +211,11 @@
       return;
     }
     const image = event.target.closest('[data-view-image]');
-    if (image) openImageViewer(image.currentSrc || image.src);
+    if (image) {
+      const scope = image.closest('.post-gallery, .composer-preview, .chat-dialog-preview, .chat-bubble');
+      const images = scope ? $$('img[data-view-image]', scope).map((item) => item.currentSrc || item.src) : [image.currentSrc || image.src];
+      openImageGalleryViewer(image.currentSrc || image.src, images);
+    }
   });
 
   function renderPost(post) {
@@ -186,7 +245,7 @@
           <button class="like-btn ${post.liked ? 'is-liked' : ''}" type="button" data-like-id="${post.id}">
             <span class="stat"><img class="stat-icon" src="${post.liked ? '/images/лайк при нажатии.png' : '/images/лайк.png'}" alt="" />${post.likes}</span>
           </button>
-          <span class="stat"><img class="stat-icon" src="/images/просмотры.png" alt="" />${post.views || 1}</span>
+          <span class="stat stat--views"><img class="stat-icon" src="/images/просмотры.png" alt="" />${post.views || 1}</span>
         </div>
       </article>
     `;
@@ -218,7 +277,7 @@
           <button class="like-btn ${message.liked ? 'is-liked' : ''}" type="button" data-like-message-id="${message.id}">
             <span class="stat"><img class="stat-icon" src="${message.liked ? '/images/лайк при нажатии.png' : '/images/лайк.png'}" alt="" />${message.likes || 0}</span>
           </button>
-          <span class="stat"><img class="stat-icon" src="/images/просмотры.png" alt="" />${message.views || 1}</span>
+          <span class="stat stat--views"><img class="stat-icon" src="/images/просмотры.png" alt="" />${message.views || 1}</span>
         </div>
       </article>
     `;
@@ -253,9 +312,58 @@
     if (path === 'login_new.html') {
       const form = $('#login-form');
       const error = $('#login-error');
-      $('.eye')?.addEventListener('click', () => {
+      const resetRequestForm = $('#reset-request-form');
+      const resetConfirmForm = $('#reset-confirm-form');
+      const resetRequestError = $('#reset-request-error');
+      const resetConfirmError = $('#reset-confirm-error');
+      const loginLine = $('.login-line');
+      let resetEmail = '';
+
+      const showLogin = () => {
+        if (form) form.hidden = false;
+        if (resetRequestForm) resetRequestForm.hidden = true;
+        if (resetConfirmForm) resetConfirmForm.hidden = true;
+        if (loginLine) loginLine.hidden = false;
+        if (error) error.textContent = '';
+      };
+
+      const showResetRequest = () => {
+        if (form) form.hidden = true;
+        if (resetRequestForm) resetRequestForm.hidden = false;
+        if (resetConfirmForm) resetConfirmForm.hidden = true;
+        if (loginLine) loginLine.hidden = true;
+        if (resetRequestError) resetRequestError.textContent = '';
+        if (resetConfirmError) resetConfirmError.textContent = '';
+        const loginEmail = $('#login-email')?.value.trim() || resetEmail;
+        const resetEmailInput = $('#reset-email');
+        if (resetEmailInput && loginEmail) resetEmailInput.value = loginEmail;
+      };
+
+      const showResetConfirm = () => {
+        if (form) form.hidden = true;
+        if (resetRequestForm) resetRequestForm.hidden = true;
+        if (resetConfirmForm) resetConfirmForm.hidden = false;
+        if (loginLine) loginLine.hidden = true;
+        const label = $('#reset-email-label');
+        if (label) label.textContent = resetEmail;
+        if (resetConfirmError) resetConfirmError.textContent = '';
+        $('#reset-code')?.focus();
+      };
+
+      $('.eye:not(.reset-eye)')?.addEventListener('click', () => {
         const input = $('#login-password');
         input.type = input.type === 'password' ? 'text' : 'password';
+      });
+      $('.reset-eye')?.addEventListener('click', () => {
+        const input = $('#reset-new-password');
+        if (input) input.type = input.type === 'password' ? 'text' : 'password';
+      });
+      $('#forgot-password-btn')?.addEventListener('click', showResetRequest);
+      $('#reset-back-login')?.addEventListener('click', showLogin);
+      $('#reset-change-email')?.addEventListener('click', showResetRequest);
+      $('#reset-code')?.addEventListener('input', () => {
+        const input = $('#reset-code');
+        input.value = input.value.replace(/\D/g, '').slice(0, 6);
       });
       form?.addEventListener('submit', async (event) => {
         event.preventDefault();
@@ -266,6 +374,43 @@
           window.location.href = '/feed.html';
         } catch (err) {
           if (error) error.textContent = err.message;
+        }
+      });
+      resetRequestForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          if (resetRequestError) resetRequestError.textContent = '';
+          resetEmail = $('#reset-email').value.trim().toLowerCase();
+          const result = await api('/api/password-reset/request', {
+            method: 'POST',
+            body: JSON.stringify({ email: resetEmail })
+          });
+          resetEmail = result.email || resetEmail;
+          showResetConfirm();
+        } catch (err) {
+          if (resetRequestError) resetRequestError.textContent = err.message;
+        }
+      });
+      resetConfirmForm?.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        try {
+          if (resetConfirmError) resetConfirmError.textContent = '';
+          await api('/api/password-reset/confirm', {
+            method: 'POST',
+            body: JSON.stringify({
+              email: resetEmail,
+              code: $('#reset-code').value.trim(),
+              newPassword: $('#reset-new-password').value
+            })
+          });
+          alert('Пароль изменен. Войдите с новым паролем.');
+          $('#login-email').value = resetEmail;
+          $('#login-password').value = '';
+          $('#reset-code').value = '';
+          $('#reset-new-password').value = '';
+          showLogin();
+        } catch (err) {
+          if (resetConfirmError) resetConfirmError.textContent = err.message;
         }
       });
     }
@@ -447,6 +592,7 @@
     const input = $('#attach-input');
     let pendingImages = [];
     if (avatar) avatar.src = me.avatar;
+    bindAutoGrowTextarea(text);
 
     async function loadFeed() {
       const data = await api('/api/social/feed');
@@ -457,6 +603,7 @@
     input?.addEventListener('change', async () => {
       pendingImages = await readImages(Array.from(input.files || []).slice(0, 4));
       $('#composer-preview').innerHTML = renderImages(pendingImages);
+      $('.composer')?.classList.toggle('has-preview', pendingImages.length > 0);
     });
     $('#publish-btn')?.addEventListener('click', async () => {
       await api('/api/social/feed', {
@@ -464,15 +611,17 @@
         body: JSON.stringify({ text: text.value, images: pendingImages })
       });
       text.value = '';
+      bindAutoGrowTextarea(text);
       pendingImages = [];
       $('#composer-preview').innerHTML = '';
+      $('.composer')?.classList.remove('has-preview');
       await loadFeed();
     });
     list?.addEventListener('click', async (event) => {
       const likeMessage = event.target.closest('[data-like-message-id]');
       if (likeMessage) {
-        await api(`/api/social/messages/${likeMessage.dataset.likeMessageId}/like`, { method: 'POST', body: JSON.stringify({}) });
-        await loadFeed();
+        const result = await api(`/api/social/messages/${likeMessage.dataset.likeMessageId}/like`, { method: 'POST', body: JSON.stringify({}) });
+        updateLikeButton(likeMessage, result);
         return;
       }
       await handleAdminAction(event, loadFeed);
@@ -493,6 +642,7 @@
     const text = isOwn ? $('#profile-new-post-text') : $('#other-post-text');
     const attachInput = isOwn ? $('#profile-attach-input') : $('#other-attach-input');
     let pendingImages = [];
+    bindAutoGrowTextarea(text);
 
     $('.profile-name').textContent = viewed.name;
     $('.profile-handle').textContent = `@${viewed.handle}`;
@@ -537,6 +687,7 @@
     attachInput?.addEventListener('change', async () => {
       pendingImages = await readImages(Array.from(attachInput.files || []).slice(0, 4));
       preview.innerHTML = renderImages(pendingImages);
+      preview.closest('.composer')?.classList.toggle('has-preview', pendingImages.length > 0);
     });
 
     const publishButton = isOwn ? $('#profile-publish-btn') : $('#other-publish-btn');
@@ -546,8 +697,10 @@
         body: JSON.stringify({ text: text.value, images: pendingImages, wallOwnerId: viewed.id })
       });
       text.value = '';
+      bindAutoGrowTextarea(text);
       pendingImages = [];
       preview.innerHTML = '';
+      preview.closest('.composer')?.classList.remove('has-preview');
       if (isOwn) await loadWall();
       else alert('Пост отправлен владельцу профиля на подтверждение.');
     });
@@ -556,8 +709,8 @@
       if (await handleAdminAction(event, loadWall)) return;
       const like = event.target.closest('[data-like-id]');
       if (!like) return;
-      await api(`/api/social/posts/${like.dataset.likeId}/like`, { method: 'POST', body: '{}' });
-      await loadWall();
+      const result = await api(`/api/social/posts/${like.dataset.likeId}/like`, { method: 'POST', body: '{}' });
+      updateLikeButton(like, result);
     });
 
     if (isOwn) {
@@ -773,7 +926,7 @@
     }
 
     function renderMerchOrder(item) {
-      const membershipOptions = (me.memberships || []).map((squad) => `<option value="${escapeHtml(squad.name)}">${escapeHtml(squad.name)}</option>`).join('');
+      const squadOptions = (data.squads || []).map((squad) => `<option value="${escapeHtml(squad.name)}">${escapeHtml(squad.name)}</option>`).join('');
       shell.innerHTML = `<form class="merch-order-form" id="merch-order-form" data-merch-order-id="${item.id}">
         <button class="quiz-nav" id="merch-order-back" type="button">Назад</button>
         <div class="merch-order-head">
@@ -783,16 +936,13 @@
         <input class="merch-order-input" id="merch-order-name" type="text" value="${escapeHtml(me.name || '')}" placeholder="Имя" required>
         <select class="merch-order-input" id="merch-order-squad" required>
           <option value="">Отряд</option>
-          ${membershipOptions || '<option value="Без отряда">Без отряда</option>'}
+          ${squadOptions}
         </select>
         <select class="merch-order-input" id="merch-order-role" required>
           <option value="">Должность</option>
-          <option value="Командир">Командир</option>
-          <option value="Комиссар">Комиссар</option>
-          <option value="Мастер">Мастер</option>
-          <option value="Вожатый">Вожатый</option>
-          <option value="Участник">Участник</option>
-          <option value="Другое">Другое</option>
+          <option value="Командирский состав">Командирский состав</option>
+          <option value="кандидат">кандидат</option>
+          <option value="новичок">новичок</option>
         </select>
         <button class="merch-order-submit" type="submit">Купить</button>
       </form>`;
@@ -907,6 +1057,7 @@
     const messagesNode = $('#chat-dialog-messages');
     const attachInput = $('#chat-dialog-attach-input');
     const previewNode = $('#chat-dialog-preview');
+    bindAutoGrowTextarea($('#chat-dialog-input'));
     let activeChatId = Number(new URLSearchParams(location.search).get('chat')) || null;
     let pendingChatImages = [];
 
@@ -981,6 +1132,7 @@
       if (!activeChatId || (!input.value.trim() && !pendingChatImages.length)) return;
       await api(`/api/social/chats/${activeChatId}/messages`, { method: 'POST', body: JSON.stringify({ text: input.value, images: pendingChatImages }) });
       input.value = '';
+      bindAutoGrowTextarea(input);
       pendingChatImages = [];
       if (attachInput) attachInput.value = '';
       if (previewNode) {

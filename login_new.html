@@ -41,7 +41,38 @@
         </div>
 
         <button class="btn btn--primary" type="submit">Войти</button>
+        <button class="forgot-link" id="forgot-password-btn" type="button">Забыли пароль?</button>
         <p class="form-error" id="login-error" aria-live="polite"></p>
+      </form>
+
+      <form class="form reset-form" id="reset-request-form" hidden>
+        <p class="reset-title">Восстановление пароля</p>
+        <p class="reset-text">Введите email аккаунта. Мы отправим шестизначный код для смены пароля.</p>
+        <label class="label" for="reset-email">E-Mail</label>
+        <input class="input input--filled" type="email" id="reset-email" autocomplete="email" />
+        <button class="btn btn--primary" type="submit">Получить код</button>
+        <button class="forgot-link" id="reset-back-login" type="button">Вернуться ко входу</button>
+        <p class="form-error" id="reset-request-error" aria-live="polite"></p>
+      </form>
+
+      <form class="form reset-form" id="reset-confirm-form" hidden>
+        <p class="reset-title">Введите код и новый пароль</p>
+        <p class="reset-text">Код отправлен на <span id="reset-email-label"></span>.</p>
+        <label class="label" for="reset-code">Код из письма</label>
+        <input class="input input--filled" type="text" id="reset-code" inputmode="numeric" maxlength="6" autocomplete="one-time-code" />
+        <label class="label" for="reset-new-password">Новый пароль</label>
+        <div class="password-wrap">
+          <input class="input input--outline" type="password" id="reset-new-password" autocomplete="new-password" />
+          <button class="eye reset-eye" type="button" aria-label="Показать пароль">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M1.5 12s3.9-6.5 10.5-6.5S22.5 12 22.5 12s-3.9 6.5-10.5 6.5S1.5 12 1.5 12Z" stroke="currentColor" stroke-width="1.4"/>
+              <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.4"/>
+            </svg>
+          </button>
+        </div>
+        <button class="btn btn--primary" type="submit">Сменить пароль</button>
+        <button class="forgot-link" id="reset-change-email" type="button">Изменить email</button>
+        <p class="form-error" id="reset-confirm-error" aria-live="polite"></p>
       </form>
 
       <p class="login-line">

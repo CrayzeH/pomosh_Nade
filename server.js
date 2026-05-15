@@ -309,7 +309,7 @@ async function initSocialSchema() {
     await addColumnIfMissing('users', 'username', 'TEXT');
     await addColumnIfMissing('users', 'bio', 'TEXT');
     await addColumnIfMissing('users', 'cover', 'TEXT');
-    await addColumnIfMissing('users', 'points', 'INTEGER DEFAULT 1000');
+    await addColumnIfMissing('users', 'points', 'INTEGER DEFAULT 0');
     await addColumnIfMissing('users', 'is_profile_complete', 'INTEGER DEFAULT 0');
     await addColumnIfMissing('users', 'is_banned', 'INTEGER DEFAULT 0');
     await addColumnIfMissing('users', 'banned_at', 'TEXT');
@@ -1104,7 +1104,7 @@ app.post('/api/verify-registration', async (req, res) => {
         const username = slugify(payload.fullName, email.split('@')[0] || 'user');
         const created = await dbRun(
             `INSERT INTO users (full_name, email, phone, password_hash, role, username, points, created_at, updated_at)
-             VALUES (?, ?, ?, ?, 'user', ?, 1000, datetime('now'), datetime('now'))`,
+             VALUES (?, ?, ?, ?, 'user', ?, 0, datetime('now'), datetime('now'))`,
             [payload.fullName, email, payload.phone, hashedPassword, username]
         );
         req.session.userId = created.lastID;
@@ -1123,7 +1123,7 @@ app.post('/api/verify-registration', async (req, res) => {
             phone: payload.phone,
             role: 'user',
             username,
-            points: 1000
+            points: 0
             }) });
         });
     } catch (err) {
@@ -1157,6 +1157,57 @@ app.post('/api/resend-registration-code', async (req, res) => {
 });
 
 // Вход
+app.post('/api/password-reset/request', async (req, res) => {
+    const email = String(req.body.email || '').trim().toLowerCase();
+    if (!email) {
+        return res.status(400).json({ error: 'Введите email аккаунта' });
+    }
+
+    try {
+        const user = await dbGet(`SELECT id, email FROM users WHERE email = ?`, [email]);
+        if (!user) {
+            return res.status(404).json({ error: 'Пользователь с таким email не найден' });
+        }
+
+        const result = await createEmailCode({
+            email,
+            purpose: 'reset_password',
+            userId: user.id,
+            payload: { userId: user.id }
+        });
+        res.json({ success: true, email, expiresAt: result.expiresAt });
+    } catch (err) {
+        res.status(500).json({ error: err.message || 'Не удалось отправить код восстановления' });
+    }
+});
+
+app.post('/api/password-reset/confirm', async (req, res) => {
+    const email = String(req.body.email || req.session.pendingPasswordResetEmail || '').trim().toLowerCase();
+    const code = String(req.body.code || '').trim();
+    const newPassword = String(req.body.newPassword || '');
+
+    if (!email || !code || !newPassword) {
+        return res.status(400).json({ error: 'Введите email, код и новый пароль' });
+    }
+    if (newPassword.length < 4) {
+        return res.status(400).json({ error: 'Пароль должен быть не менее 4 символов' });
+    }
+
+    try {
+        const user = await dbGet(`SELECT id FROM users WHERE email = ?`, [email]);
+        if (!user) {
+            return res.status(404).json({ error: 'Пользователь с таким email не найден' });
+        }
+
+        await verifyEmailCode({ email, purpose: 'reset_password', code, userId: user.id });
+        const passwordHash = await bcrypt.hash(newPassword, 10);
+        await dbRun(`UPDATE users SET password_hash = ?, updated_at = datetime('now') WHERE id = ?`, [passwordHash, user.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(400).json({ error: err.message || 'Не удалось изменить пароль' });
+    }
+});
+
 app.post('/api/login', (req, res) => {
     const { emailOrPhone, password } = req.body;
 

@@ -87,7 +87,7 @@
                 <span data-page="about">О нас</span>
                 <span data-page="squads">Отряды</span>
                 <span data-page="create">Создавай</span>
-                <span onclick="window.location.href='/about.html#contacts'">Контакты</span>
+                <span data-page="contacts">Контакты</span>
             </div>
         </div>
     </div>
@@ -97,7 +97,7 @@
     <span data-page="about">О нас</span>
     <span data-page="squads">Отряды</span>
     <span data-page="create">Создавай</span>
-    <span onclick="window.location.href='/about.html#contacts'">Контакты</span>
+    <span data-page="contacts">Контакты</span>
 </div>`;
     const footerHtml = `
 <footer class="site-footer">
@@ -106,8 +106,8 @@
         <div class="footer-main">
             <div class="footer-brand">
                 <h4>СОЗВЕЗДИЕ</h4>
-                <a href="/about.html">О нас</a>
-                <a href="/about.html#contacts">Контакты</a>
+                <a href="#footer" data-page="about">О нас</a>
+                <a href="#footer" data-page="contacts">Контакты</a>
             </div>
             <div class="footer-squads">
                 <h4>Отряды</h4>
@@ -329,15 +329,23 @@
         });
 
         // Навигация
+        const scrollToFooter = () => {
+            const footer = document.querySelector('.site-footer') || document.querySelector('footer');
+            if (footer) footer.scrollIntoView({ behavior: 'smooth' });
+        };
         const pageRoutes = {
-            about: '/about.html',
             squads: '/#squadsGrid',
             create: '/create.html'
         };
         document.querySelectorAll('[data-page]').forEach((item) => {
-            item.addEventListener('click', () => {
+            item.addEventListener('click', (event) => {
                 document.getElementById('mobileMenuDrop')?.classList.remove('open');
                 document.body.classList.remove('menu-open');
+                if (item.dataset.page === 'about' || item.dataset.page === 'contacts') {
+                    event.preventDefault();
+                    scrollToFooter();
+                    return;
+                }
                 const route = pageRoutes[item.dataset.page];
                 if (route) window.location.href = route;
             });

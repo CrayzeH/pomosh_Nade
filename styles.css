@@ -65,6 +65,11 @@ h1 {
   gap: 10px;
 }
 
+.form[hidden],
+.login-line[hidden] {
+  display: none !important;
+}
+
 .form-error {
   min-height: 22px;
   margin: 0;
@@ -72,6 +77,47 @@ h1 {
   font-size: clamp(13px, 0.9vw, 16px);
   font-weight: 700;
   text-align: center;
+}
+
+.forgot-link {
+  justify-self: center;
+  border: 0;
+  background: transparent;
+  color: #e7ebf5;
+  font: inherit;
+  font-size: clamp(14px, 0.95vw, 17px);
+  font-weight: 800;
+  text-decoration: underline;
+  cursor: pointer;
+  padding: 2px 0;
+}
+
+.forgot-link:hover,
+.forgot-link:focus-visible {
+  color: #fff;
+}
+
+.reset-form {
+  margin-top: 18px;
+}
+
+.reset-form[hidden] {
+  display: none !important;
+}
+
+.reset-title {
+  margin: 0;
+  font-size: clamp(22px, 1.6vw, 28px);
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.reset-text {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: clamp(14px, 0.95vw, 17px);
+  line-height: 1.35;
+  font-weight: 600;
 }
 
 .label {
@@ -768,6 +814,10 @@ h1 {
   position: relative;
 }
 
+.composer.has-preview {
+  min-height: 230px;
+}
+
 @media (min-width: 1400px) {
   .feed-page {
     padding: 0;
@@ -822,6 +872,10 @@ h1 {
     height: 209px;
   }
 
+  .composer.has-preview {
+    height: 230px;
+  }
+
   .post-list {
     width: 750px;
   }
@@ -859,6 +913,7 @@ h1 {
   width: calc(100% - 172px);
   min-height: 20px;
   height: 20px;
+  max-height: 92px;
   background: transparent;
   border: none;
   border-radius: 0;
@@ -917,13 +972,18 @@ h1 {
 }
 
 .composer-preview {
-  margin-top: 14px;
-  width: min(320px, calc(100% - 116px));
-  margin-left: 58px;
-  margin-right: 58px;
+  position: absolute;
+  left: 114px;
+  top: 96px;
+  width: clamp(120px, calc(100% - 360px), 240px);
+  margin: 0;
   border-radius: 14px;
   overflow: hidden;
   display: none;
+}
+
+.composer.has-preview .composer-input {
+  max-height: 44px;
 }
 
 .composer-preview:not(:empty) {
@@ -932,7 +992,7 @@ h1 {
 
 .composer-preview img {
   width: 100%;
-  max-height: 150px;
+  max-height: 96px;
   object-fit: cover;
   display: block;
   cursor: zoom-in;
@@ -945,7 +1005,7 @@ h1 {
 }
 
 .composer-preview .post-image {
-  height: 150px;
+  height: 96px;
 }
 
 .composer-preview-slider {
@@ -1191,13 +1251,17 @@ h1 {
 .post-stats {
   margin-top: 12px;
   display: flex;
-  justify-content: flex-start;
+  justify-content: space-between;
   align-items: center;
   gap: 10px;
   padding: 0 58px 2px;
   color: #172033;
   font-size: 15px;
   font-weight: 800;
+}
+
+.stat--views {
+  margin-left: auto;
 }
 
 .stat {
@@ -2230,6 +2294,44 @@ h1 {
   cursor: pointer;
 }
 
+.global-image-nav {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(15, 26, 47, 0.78);
+  color: #fff;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.global-image-nav[hidden] {
+  display: none !important;
+}
+
+.global-image-nav--prev {
+  left: 10px;
+}
+
+.global-image-nav--next {
+  right: 10px;
+}
+
+.global-image-nav--prev::before {
+  content: "‹";
+  font-size: 34px;
+  line-height: 1;
+}
+
+.global-image-nav--next::before {
+  content: "›";
+  font-size: 34px;
+  line-height: 1;
+}
+
 .media-nav {
   position: absolute;
   top: 50%;
@@ -3025,6 +3127,7 @@ h1 {
   align-items: flex-start;
   width: fit-content;
   max-width: 62%;
+  min-width: 0;
   border-radius: 12px;
   background: #4c5059;
   color: #edf1fb;
@@ -3033,8 +3136,8 @@ h1 {
   line-height: 1.2;
   padding: 6px 10px;
   white-space: pre-wrap;
-  overflow-wrap: break-word;
-  word-break: normal;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .chat-bubble--text {
@@ -3063,6 +3166,9 @@ h1 {
 
 .chat-message-text {
   display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .chat-message-time {
@@ -3158,7 +3264,7 @@ h1 {
 
 .chat-dialog-composer {
   margin: 0 14px 14px;
-  height: 46px;
+  min-height: 46px;
   border-radius: 999px;
   background: #4c5059;
   display: flex;
@@ -3169,6 +3275,8 @@ h1 {
 
 .chat-dialog-input {
   flex: 1;
+  min-height: 24px;
+  max-height: 92px;
   border: none;
   background: transparent;
   color: #eef2fb;
@@ -3177,6 +3285,12 @@ h1 {
   line-height: 1.2;
   font-weight: 700;
   outline: none;
+  resize: none;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  padding: 0;
 }
 
 .chat-dialog-input::placeholder {
@@ -3354,12 +3468,14 @@ h1 {
   }
 
   .composer-preview {
-    width: min(260px, 100%);
-    margin: 12px 0 0 52px;
+    left: 52px;
+    top: 98px;
+    width: min(180px, calc(100% - 160px));
+    margin: 0;
   }
 
   .composer-preview .post-image {
-    height: 128px;
+    height: 86px;
   }
 
   .post-gallery {

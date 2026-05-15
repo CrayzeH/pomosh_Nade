@@ -2569,7 +2569,7 @@
         document.querySelector('main').innerHTML = `<section class="section page-shell"><h1>${escapeHtml(error.message)}</h1></section>`;
     });
 
-    document.querySelectorAll('[data-page="squads"]').forEach((item) => {
+    document.querySelectorAll('[data-page="about"], [data-page="contacts"], [data-page="squads"]').forEach((item) => {
         item.addEventListener('click', () => {
             document.querySelector('footer')?.scrollIntoView({ behavior: 'smooth' });
         });

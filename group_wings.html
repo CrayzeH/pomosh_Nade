@@ -2139,7 +2139,7 @@
                 const page = item.getAttribute('data-page');
                 switch (page) {
                     case 'about':
-                        window.location.href = '/about.html';
+                        document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'});
                         break;
                     case 'directions':
                         alert('Раздел "Направления" в разработке');
