@@ -263,7 +263,7 @@ module.exports = function registerSocialRoutes(ctx) {
             if (!user) return;
             const chat = await getFeedChat();
             const text = String(req.body.text || '').trim().slice(0, 2000);
-            const images = Array.isArray(req.body.images) ? req.body.images.slice(0, 4) : [];
+            const images = Array.isArray(req.body.images) ? req.body.images.slice(0, 12) : [];
             if (!text && !images.length) return res.status(400).json({ error: 'Сообщение пустое' });
 
             const result = await dbRun(`INSERT INTO chat_messages (chat_id, user_id, text) VALUES (?, ?, ?)`, [chat.id, user.id, text]);
@@ -282,7 +282,7 @@ module.exports = function registerSocialRoutes(ctx) {
             const user = await requireUser(req, res);
             if (!user) return;
             const text = String(req.body.text || '').trim().slice(0, 2000);
-            const images = Array.isArray(req.body.images) ? req.body.images.slice(0, 4) : [];
+            const images = Array.isArray(req.body.images) ? req.body.images.slice(0, 12) : [];
             const wallOwnerId = Number(req.body.wallOwnerId || user.id);
             if (!text && !images.length) return res.status(400).json({ error: 'Пост пустой' });
 
@@ -714,7 +714,7 @@ module.exports = function registerSocialRoutes(ctx) {
             }
 
             const text = String(req.body.text || '').trim().slice(0, 2000);
-            const images = Array.isArray(req.body.images) ? req.body.images.slice(0, 4) : [];
+            const images = Array.isArray(req.body.images) ? req.body.images.slice(0, 12) : [];
             if (!text && !images.length) return res.status(400).json({ error: 'Сообщение пустое' });
 
             const result = await dbRun(`INSERT INTO chat_messages (chat_id, user_id, text) VALUES (?, ?, ?)`, [chat.id, user.id, text]);

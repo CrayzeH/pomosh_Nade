@@ -973,9 +973,10 @@ h1 {
 
 .composer-preview {
   position: absolute;
-  left: 114px;
-  top: 86px;
-  width: min(246px, calc(100% - 372px));
+  left: 150px;
+  top: 98px;
+  right: 260px;
+  width: auto;
   margin: 0;
   border-radius: 12px;
   overflow: visible;
@@ -998,32 +999,49 @@ h1 {
 }
 
 .composer-attachments {
-  display: grid;
+  display: flex;
   gap: 4px;
-  width: min(246px, 100%);
+  max-width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding: 2px 4px 6px 0;
+  scrollbar-width: thin;
 }
 
-.composer-attachments--1 {
-  width: 118px;
-  grid-template-columns: 118px;
-}
-
-.composer-attachments--2,
-.composer-attachments--3,
-.composer-attachments--4 {
-  grid-template-columns: repeat(2, 118px);
-}
-
-.composer-attachments--3 .composer-attachment-image:first-child {
-  grid-row: span 2;
+.composer-attachment-item {
+  position: relative;
+  flex: 0 0 68px;
+  width: 68px;
+  height: 68px;
+  display: block;
 }
 
 .composer-attachment-image {
+  width: 100%;
   aspect-ratio: 1 / 1;
   height: auto;
   border-radius: 10px;
   background: #d8dee8;
   box-shadow: 2px 2px 4px rgba(31, 35, 43, 0.24);
+}
+
+.attachment-remove-btn {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(15, 26, 47, 0.88);
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  font-weight: 900;
+  line-height: 18px;
+  padding: 0;
+  cursor: pointer;
+  z-index: 2;
 }
 
 .composer-preview .post-gallery {
@@ -2707,10 +2725,10 @@ h1 {
 .notification-row {
   min-height: 66px;
   display: grid;
-  grid-template-columns: 48px minmax(0, 1fr) 8px auto;
+  grid-template-columns: 48px minmax(0, 1fr) auto;
   align-items: center;
   gap: 10px;
-  padding: 7px 18px 7px 24px;
+  padding: 7px 32px 7px 24px;
 }
 
 .notification-row:hover {
@@ -2757,7 +2775,8 @@ h1 {
   font-size: 15px;
   font-weight: 600;
   white-space: nowrap;
-  margin-right: 18px;
+  margin-right: 0;
+  padding-left: 18px;
 }
 
 .notification-empty {
@@ -3348,23 +3367,24 @@ h1 {
 
 .chat-dialog-preview {
   display: none;
-  gap: 8px;
-  padding: 0 26px 10px;
-  flex-wrap: wrap;
+  padding: 0 66px 10px 26px;
+  overflow-x: auto;
+  overflow-y: visible;
 }
 
 .chat-dialog-preview.is-visible {
-  display: flex;
+  display: block;
 }
 
-.chat-dialog-preview img {
-  width: 78px;
-  height: 78px;
-  object-fit: cover;
-  border-radius: 10px;
-  background: #d8dee8;
-  cursor: zoom-in;
-  box-shadow: 2px 2px 4px rgba(31, 35, 43, 0.32);
+.chat-dialog-preview .composer-attachments {
+  width: max-content;
+  max-width: none;
+}
+
+.chat-dialog-preview .composer-attachment-item {
+  flex-basis: 64px;
+  width: 64px;
+  height: 64px;
 }
 
 .chat-dialog-send {
@@ -3498,21 +3518,17 @@ h1 {
   }
 
   .composer-preview {
-    left: 52px;
-    top: 98px;
-    width: min(180px, calc(100% - 160px));
+    left: 92px;
+    right: 12px;
+    top: 96px;
+    width: auto;
     margin: 0;
   }
 
-  .composer-attachments--1 {
-    width: 88px;
-    grid-template-columns: 88px;
-  }
-
-  .composer-attachments--2,
-  .composer-attachments--3,
-  .composer-attachments--4 {
-    grid-template-columns: repeat(2, 88px);
+  .composer-attachment-item {
+    flex-basis: 58px;
+    width: 58px;
+    height: 58px;
   }
 
   .composer-preview .post-image {

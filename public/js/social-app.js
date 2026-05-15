@@ -129,11 +129,11 @@
     )).join('')}</div>`;
   }
 
-  function renderComposerPreview(images) {
+  function renderComposerPreview(images, removeAttr = 'data-remove-composer-image') {
     const galleryImages = (images || []).filter(Boolean);
     if (!galleryImages.length) return '';
-    return `<div class="composer-attachments composer-attachments--${Math.min(galleryImages.length, 4)}">${galleryImages.map((image) => (
-      `<img class="composer-attachment-image" src="${image}" alt="Фото" data-view-image="1" />`
+    return `<div class="composer-attachments composer-attachments--${Math.min(galleryImages.length, 4)}">${galleryImages.map((image, index) => (
+      `<span class="composer-attachment-item"><img class="composer-attachment-image" src="${image}" alt="Фото" data-view-image="1" /><button class="attachment-remove-btn" type="button" ${removeAttr}="${index}" aria-label="Удалить фото">×</button></span>`
     )).join('')}</div>`;
   }
 
@@ -617,9 +617,10 @@
 
     $('#attach-btn')?.addEventListener('click', () => input?.click());
     input?.addEventListener('change', async () => {
-      pendingImages = await readImages(Array.from(input.files || []).slice(0, 4));
+      pendingImages = pendingImages.concat(await readImages(Array.from(input.files || []).slice(0, 12))).slice(0, 12);
       $('#composer-preview').innerHTML = renderComposerPreview(pendingImages);
       $('.composer')?.classList.toggle('has-preview', pendingImages.length > 0);
+      input.value = '';
     });
     $('#publish-btn')?.addEventListener('click', async () => {
       await api('/api/social/feed', {
@@ -641,6 +642,15 @@
         return;
       }
       await handleAdminAction(event, loadFeed);
+    });
+    $('#composer-preview')?.addEventListener('click', (event) => {
+      const remove = event.target.closest('[data-remove-composer-image]');
+      if (!remove) return;
+      event.preventDefault();
+      event.stopPropagation();
+      pendingImages.splice(Number(remove.dataset.removeComposerImage), 1);
+      $('#composer-preview').innerHTML = renderComposerPreview(pendingImages);
+      $('.composer')?.classList.toggle('has-preview', pendingImages.length > 0);
     });
     await loadFeed();
   }
@@ -701,7 +711,17 @@
     const preview = isOwn ? $('#profile-composer-preview') : $('#other-composer-preview');
     attachButton?.addEventListener('click', () => attachInput?.click());
     attachInput?.addEventListener('change', async () => {
-      pendingImages = await readImages(Array.from(attachInput.files || []).slice(0, 4));
+      pendingImages = pendingImages.concat(await readImages(Array.from(attachInput.files || []).slice(0, 12))).slice(0, 12);
+      preview.innerHTML = renderComposerPreview(pendingImages);
+      preview.closest('.composer')?.classList.toggle('has-preview', pendingImages.length > 0);
+      attachInput.value = '';
+    });
+    preview?.addEventListener('click', (event) => {
+      const remove = event.target.closest('[data-remove-composer-image]');
+      if (!remove) return;
+      event.preventDefault();
+      event.stopPropagation();
+      pendingImages.splice(Number(remove.dataset.removeComposerImage), 1);
       preview.innerHTML = renderComposerPreview(pendingImages);
       preview.closest('.composer')?.classList.toggle('has-preview', pendingImages.length > 0);
     });
@@ -1141,11 +1161,21 @@
     });
     $('#chat-dialog-attach-btn')?.addEventListener('click', () => attachInput?.click());
     attachInput?.addEventListener('change', async () => {
-      pendingChatImages = await readImages(Array.from(attachInput.files || []).slice(0, 4));
+      pendingChatImages = pendingChatImages.concat(await readImages(Array.from(attachInput.files || []).slice(0, 12))).slice(0, 12);
       if (previewNode) {
-        previewNode.innerHTML = pendingChatImages.map((image) => `<img src="${image}" alt="Фото" data-view-image="1" />`).join('');
+        previewNode.innerHTML = renderComposerPreview(pendingChatImages, 'data-remove-chat-image');
         previewNode.classList.toggle('is-visible', pendingChatImages.length > 0);
       }
+      attachInput.value = '';
+    });
+    previewNode?.addEventListener('click', (event) => {
+      const remove = event.target.closest('[data-remove-chat-image]');
+      if (!remove) return;
+      event.preventDefault();
+      event.stopPropagation();
+      pendingChatImages.splice(Number(remove.dataset.removeChatImage), 1);
+      previewNode.innerHTML = renderComposerPreview(pendingChatImages, 'data-remove-chat-image');
+      previewNode.classList.toggle('is-visible', pendingChatImages.length > 0);
     });
     $('#chat-dialog-form')?.addEventListener('submit', async (event) => {
       event.preventDefault();
