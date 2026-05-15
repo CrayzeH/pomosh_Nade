@@ -334,14 +334,13 @@
             if (footer) footer.scrollIntoView({ behavior: 'smooth' });
         };
         const pageRoutes = {
-            squads: '/#squadsGrid',
             create: '/create.html'
         };
         document.querySelectorAll('[data-page]').forEach((item) => {
             item.addEventListener('click', (event) => {
                 document.getElementById('mobileMenuDrop')?.classList.remove('open');
                 document.body.classList.remove('menu-open');
-                if (item.dataset.page === 'about' || item.dataset.page === 'contacts') {
+                if (item.dataset.page === 'about' || item.dataset.page === 'contacts' || item.dataset.page === 'squads') {
                     event.preventDefault();
                     scrollToFooter();
                     return;

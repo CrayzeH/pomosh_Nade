@@ -121,6 +121,14 @@
     )).join('')}</div>${controls}</div>`;
   }
 
+  function renderChatImages(images) {
+    const galleryImages = (images || []).filter(Boolean);
+    if (!galleryImages.length) return '';
+    return `<div class="chat-attachments chat-attachments--${Math.min(galleryImages.length, 4)}">${galleryImages.map((image) => (
+      `<img class="chat-bubble-image" src="${image}" alt="Фото" data-view-image="1" />`
+    )).join('')}</div>`;
+  }
+
   function moveGallery(gallery, step) {
     const track = $('.post-gallery-track', gallery);
     const count = $$('.post-gallery-track > img', gallery).length;
@@ -865,9 +873,13 @@
         list.innerHTML = '<div class="notification-empty"><p>Пока уведомлений нет</p></div>';
         return;
       }
-      list.innerHTML = data.notifications.map((item) => `
+      list.innerHTML = data.notifications.map((item) => {
+        const isSystemNotification = !item.actor?.id || item.actor?.name === 'Созвездие';
+        const avatarSrc = isSystemNotification ? '/images/звезда.png' : (item.actor.avatar || '/images/профиль.png');
+        const fallbackSrc = isSystemNotification ? '/images/звезда.png' : '/images/профиль.png';
+        return `
         <article class="notification-row">
-          <img class="notification-avatar" src="${item.actor.avatar || '/images/профиль.png'}" alt="" onerror="this.onerror=null;this.src='/images/профиль.png';" />
+          <img class="notification-avatar" src="${avatarSrc}" alt="" onerror="this.onerror=null;this.src='${fallbackSrc}';" />
           <div class="notification-copy">
             <p class="notification-text"><span class="notification-name">${escapeHtml(item.actor.name)}</span> ${escapeHtml(item.body)}</p>
             ${item.type === 'squad_application' ? `<p class="notification-status">Статус: ${item.actionState === 'approved' ? 'принята' : item.actionState === 'rejected' ? 'отклонена' : 'на рассмотрении'}</p>` : ''}
@@ -881,7 +893,8 @@
           </div>
           <span class="notification-time">${timeLabel(item.createdAt)}</span>
         </article>
-      `).join('');
+      `;
+      }).join('');
     }
 
     list?.addEventListener('click', async (event) => {
@@ -1086,7 +1099,7 @@
           <div class="chat-bubble chat-bubble--text">
             ${!message.isMine ? `<a class="chat-message-author" href="${authorUrl}">${escapeHtml(message.author.name)}</a>` : ''}
             ${message.text ? `<span class="chat-message-text">${escapeHtml(message.text)}</span>` : ''}
-            ${renderImages(message.images, 'chat-bubble-image')}
+            ${renderChatImages(message.images)}
             <span class="chat-message-time">${messageTimeLabel(message.createdAt)}</span>
             ${adminTools}
           </div>
