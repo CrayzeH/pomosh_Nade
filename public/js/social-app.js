@@ -714,7 +714,7 @@
       }
       list.innerHTML = data.notifications.map((item) => `
         <article class="notification-row">
-          <img class="notification-avatar" src="${item.actor.avatar}" alt="" />
+          <img class="notification-avatar" src="${item.actor.avatar || '/images/профиль.png'}" alt="" onerror="this.onerror=null;this.src='/images/профиль.png';" />
           <div class="notification-copy">
             <p class="notification-text"><span class="notification-name">${escapeHtml(item.actor.name)}</span> ${escapeHtml(item.body)}</p>
             ${item.type === 'squad_application' ? `<p class="notification-status">Статус: ${item.actionState === 'approved' ? 'принята' : item.actionState === 'rejected' ? 'отклонена' : 'на рассмотрении'}</p>` : ''}
@@ -879,8 +879,16 @@
         alert(err.message);
       }
     });
-    $('#tab-tasks')?.addEventListener('click', renderTests);
-    $('#tab-merch')?.addEventListener('click', renderMerch);
+    $('#tab-tasks')?.addEventListener('click', () => {
+      $('#tab-tasks')?.classList.add('is-active');
+      $('#tab-merch')?.classList.remove('is-active');
+      renderTests();
+    });
+    $('#tab-merch')?.addEventListener('click', () => {
+      $('#tab-merch')?.classList.add('is-active');
+      $('#tab-tasks')?.classList.remove('is-active');
+      renderMerch();
+    });
     renderTests();
   }
 
@@ -947,6 +955,7 @@
       messagesNode.scrollTop = messagesNode.scrollHeight;
       listView.hidden = true;
       dialog.hidden = false;
+      $('.chats-shell')?.classList.add('is-dialog-open');
     }
 
     list?.addEventListener('click', (event) => {
@@ -956,6 +965,7 @@
     $('#chat-back-btn')?.addEventListener('click', () => {
       dialog.hidden = true;
       listView.hidden = false;
+      $('.chats-shell')?.classList.remove('is-dialog-open');
     });
     $('#chat-dialog-attach-btn')?.addEventListener('click', () => attachInput?.click());
     attachInput?.addEventListener('change', async () => {

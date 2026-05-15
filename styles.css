@@ -1087,7 +1087,7 @@ h1 {
 .profile-ban-state,
 .notification-status {
   margin-top: 4px;
-  color: #667085;
+  color: #f4f6fb;
   font-size: 14px;
   font-weight: 700;
 }
@@ -2390,6 +2390,15 @@ h1 {
   padding-bottom: 88px;
 }
 
+.settings-pane {
+  display: grid;
+  gap: 18px;
+}
+
+.settings-pane[hidden] {
+  display: none !important;
+}
+
 .settings-pane-title {
   margin: 0 0 16px;
   color: #eef2fb;
@@ -2402,6 +2411,7 @@ h1 {
   grid-template-columns: 1fr 206px;
   align-items: center;
   gap: 18px;
+  padding: 4px 0;
 }
 
 .settings-field-label {
@@ -2414,7 +2424,7 @@ h1 {
 
 .settings-field-hint {
   margin: 4px 0 0;
-  color: #d0d8e6;
+  color: #f4f6fb;
   font-size: 16px;
   font-weight: 700;
   line-height: 1.1;
@@ -2441,11 +2451,12 @@ h1 {
 .settings-separator {
   height: 1px;
   background: rgba(235, 242, 252, 0.8);
-  margin: 10px 0 12px;
+  margin: 4px 0;
 }
 
 .settings-field-stack {
-  display: block;
+  display: grid;
+  gap: 8px;
 }
 
 .settings-textarea {
@@ -2475,7 +2486,7 @@ h1 {
   grid-template-columns: 1fr auto;
   align-items: center;
   gap: 18px;
-  margin-top: 4px;
+  margin-top: 8px;
 }
 
 .settings-security-btn {
@@ -2561,7 +2572,7 @@ h1 {
 
 .notifications-section-title {
   margin: 0 24px 12px;
-  color: #8e949c;
+  color: #f4f6fb;
   font-size: 14px;
   font-weight: 800;
   letter-spacing: 0.02em;
@@ -2590,7 +2601,9 @@ h1 {
   height: 48px;
   border-radius: 999px;
   object-fit: cover;
-  background: #7d8aa1;
+  background: #252f3f;
+  display: block;
+  border: 2px solid rgba(255, 255, 255, 0.28);
 }
 
 .notification-copy {
@@ -2619,7 +2632,7 @@ h1 {
 }
 
 .notification-time {
-  color: #9ba1aa;
+  color: #f4f6fb;
   font-size: 15px;
   font-weight: 600;
   white-space: nowrap;
@@ -2653,8 +2666,8 @@ h1 {
   margin: 8px 0 0;
   padding: 10px 12px;
   border-radius: 12px;
-  background: rgba(255, 255, 255, 0.55);
-  color: #3c4350;
+  background: rgba(37, 47, 63, 0.62);
+  color: #f4f6fb;
   font-size: 14px;
   font-weight: 700;
   line-height: 1.35;
@@ -2705,6 +2718,10 @@ h1 {
 
 .chats-shell.is-dialog-open {
   padding: 0;
+}
+
+.chats-shell.is-dialog-open .chat-dialog-header {
+  margin: 0;
 }
 
 .chats-title-bar {
@@ -2864,6 +2881,7 @@ h1 {
   min-height: 0;
   display: grid;
   grid-template-rows: auto 1fr auto;
+  overflow: hidden;
 }
 
 .chat-dialog-view[hidden] {
@@ -2872,13 +2890,14 @@ h1 {
 
 .chat-dialog-header {
   height: 62px;
-  border-radius: 32px 32px 12px 12px;
+  border-radius: 32px 32px 0 0;
   background: #4c5059;
   box-shadow: 0 3px 4px rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 0 14px;
+  margin: -28px -28px 0;
 }
 
 .chat-back-btn {
@@ -2936,7 +2955,7 @@ h1 {
 
 .chat-dialog-status {
   margin: 4px 0 0;
-  color: #b4bdce;
+  color: #f4f6fb;
   font-size: 16px;
   font-weight: 700;
   line-height: 1;
