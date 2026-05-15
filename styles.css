@@ -917,8 +917,8 @@ h1 {
 }
 
 .composer-preview {
-  margin-top: 142px;
-  width: calc(100% - 116px);
+  margin-top: 14px;
+  width: min(320px, calc(100% - 116px));
   margin-left: 58px;
   margin-right: 58px;
   border-radius: 14px;
@@ -932,10 +932,20 @@ h1 {
 
 .composer-preview img {
   width: 100%;
-  max-height: 220px;
+  max-height: 150px;
   object-fit: cover;
   display: block;
   cursor: zoom-in;
+}
+
+.composer-preview .post-gallery {
+  width: 100%;
+  margin: 0;
+  border-radius: 14px;
+}
+
+.composer-preview .post-image {
+  height: 150px;
 }
 
 .composer-preview-slider {
@@ -1143,6 +1153,7 @@ h1 {
   object-fit: cover;
   background: #c8c8c9;
   display: block;
+  cursor: zoom-in;
 }
 
 .slider-nav {
@@ -1169,25 +1180,40 @@ h1 {
   right: 10px;
 }
 
+.slider-nav.prev::before {
+  content: "‹";
+}
+
+.slider-nav.next::before {
+  content: "›";
+}
+
 .post-stats {
-  margin-top: 8px;
+  margin-top: 12px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
-  padding: 0 58px;
-  color: #eceff6;
-  font-size: 14px;
+  gap: 10px;
+  padding: 0 58px 2px;
+  color: #172033;
+  font-size: 15px;
+  font-weight: 800;
 }
 
 .stat {
   display: inline-flex;
   align-items: center;
-  gap: 4px;
+  gap: 6px;
+  min-height: 30px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: 1px 1px 3px rgba(31, 35, 43, 0.18);
 }
 
 .stat-icon {
-  width: 14px;
-  height: 14px;
+  width: 16px;
+  height: 16px;
   object-fit: contain;
   display: block;
 }
@@ -1202,6 +1228,10 @@ h1 {
 
 .like-btn.is-liked {
   color: #ff95b3;
+}
+
+.like-btn.is-liked .stat {
+  background: rgba(255, 235, 242, 0.94);
 }
 
 .create-main {
@@ -1257,6 +1287,9 @@ h1 {
 
 .profile-cover {
   background: #7d8aa1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
   border-radius: 32px;
   height: 242px;
   position: relative;
@@ -3299,6 +3332,29 @@ h1 {
   .post-time,
   .post-stats {
     font-size: 15px;
+  }
+
+  .composer-preview {
+    width: min(260px, 100%);
+    margin: 12px 0 0 52px;
+  }
+
+  .composer-preview .post-image {
+    height: 128px;
+  }
+
+  .post-gallery {
+    width: 100%;
+    margin: 0;
+  }
+
+  .post-image {
+    height: 240px;
+  }
+
+  .post-stats {
+    padding: 0;
+    gap: 8px;
   }
 
   .create-panel {

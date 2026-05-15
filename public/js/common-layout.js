@@ -93,6 +93,7 @@
     </div>
 </header>
 <div class="mobile-menu-drop" id="mobileMenuDrop">
+    <span data-mobile-pick>Подобрать отряд</span>
     <span data-page="about">О нас</span>
     <span data-page="squads">Отряды</span>
     <span data-page="create">Создавай</span>
@@ -297,6 +298,11 @@
         document.getElementById('footerPickBtn')?.addEventListener('click', () => {
             window.location.href = '/test.html';
         });
+        document.querySelectorAll('[data-mobile-pick]').forEach((item) => {
+            item.addEventListener('click', () => {
+                window.location.href = '/test.html';
+            });
+        });
         document.getElementById('loginHeaderBtn')?.addEventListener('click', () => {
             window.location.href = '/register.html';
         });
@@ -323,11 +329,17 @@
         });
 
         // Навигация
-        document.querySelectorAll('[data-page="squads"], [data-page="about"]').forEach((item) => {
+        const pageRoutes = {
+            about: '/about.html',
+            squads: '/#squadsGrid',
+            create: '/create.html'
+        };
+        document.querySelectorAll('[data-page]').forEach((item) => {
             item.addEventListener('click', () => {
-                document.querySelector('footer')?.scrollIntoView({ behavior: 'smooth' });
                 document.getElementById('mobileMenuDrop')?.classList.remove('open');
                 document.body.classList.remove('menu-open');
+                const route = pageRoutes[item.dataset.page];
+                if (route) window.location.href = route;
             });
         });
     }

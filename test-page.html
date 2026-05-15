@@ -883,7 +883,7 @@
         .structure-list {
             display: grid;
             gap: clamp(42px, 3.8vw, 72px);
-            width: 70vw;
+            width: min(70vw, 1180px);
             margin: 0 auto;
         }
 
@@ -904,6 +904,7 @@
             transform: rotate(-3deg);
             overflow: hidden;
             will-change: transform;
+            border-radius: clamp(24px, 2vw, 38px);
         }
 
         .structure-card:nth-child(2) {
@@ -971,6 +972,7 @@
             place-items: center;
             z-index: 0;
             pointer-events: none;
+            overflow: hidden;
         }
 
         .structure-card:first-child .structure-art {
@@ -979,10 +981,10 @@
 
         .structure-art img {
             display: block;
-            width: auto;
-            height: 112%;
-            max-width: none;
-            object-fit: cover;
+            width: 100%;
+            height: 100%;
+            max-width: 100%;
+            object-fit: contain;
         }
 
         .structure-card:nth-child(2)::after,
@@ -1464,6 +1466,9 @@
 
             .structure-card {
                 transform: none !important;
+                display: grid;
+                gap: 18px;
+                padding: clamp(24px, 5vw, 38px);
             }
 
             .structure-list {
@@ -1486,6 +1491,15 @@
                 position: relative;
                 inset: auto;
                 margin-top: 18px;
+                width: min(100%, 380px);
+                height: clamp(150px, 42vw, 240px);
+                justify-self: center;
+            }
+
+            .structure-art img {
+                width: 100%;
+                height: 100%;
+                object-fit: contain;
             }
 
             .team-head h2 {
@@ -1621,6 +1635,7 @@
 
             .structure-list {
                 width: calc(100% - 24px);
+                gap: 20px;
             }
 
             .path-title,
@@ -1630,6 +1645,18 @@
 
             .team-grid {
                 grid-template-columns: 1fr;
+            }
+
+            .structure-card h3,
+            .structure-card h3.structure-title-kraski-register,
+            .structure-card h3.structure-title-apelsin-online {
+                font-size: clamp(25px, 7.4vw, 34px);
+                line-height: 1.08;
+            }
+
+            .structure-card p {
+                font-size: clamp(15px, 4.4vw, 20px);
+                line-height: 1.22;
             }
 
             .team-card {

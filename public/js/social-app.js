@@ -111,10 +111,24 @@
   }
 
   function renderImages(images, className = 'post-image') {
-    if (!images?.length) return '';
-    return `<div class="post-gallery"><div class="post-gallery-track">${images.map((image) => (
+    const galleryImages = (images || []).filter(Boolean);
+    if (!galleryImages.length) return '';
+    const controls = galleryImages.length > 1
+      ? '<button class="slider-nav prev" type="button" data-gallery-step="-1" aria-label="Предыдущее фото"></button><button class="slider-nav next" type="button" data-gallery-step="1" aria-label="Следующее фото"></button>'
+      : '';
+    return `<div class="post-gallery" data-gallery-index="0"><div class="post-gallery-track">${galleryImages.map((image) => (
       `<img class="${className}" src="${image}" alt="Фото" data-view-image="1" />`
-    )).join('')}</div></div>`;
+    )).join('')}</div>${controls}</div>`;
+  }
+
+  function moveGallery(gallery, step) {
+    const track = $('.post-gallery-track', gallery);
+    const count = $$('.post-gallery-track > img', gallery).length;
+    if (!track || count < 2) return;
+    const current = Number(gallery.dataset.galleryIndex || 0);
+    const next = (current + step + count) % count;
+    gallery.dataset.galleryIndex = String(next);
+    track.style.transform = `translateX(-${next * 100}%)`;
   }
 
   function openImageViewer(src) {
@@ -135,6 +149,12 @@
   }
 
   document.addEventListener('click', (event) => {
+    const galleryButton = event.target.closest('[data-gallery-step]');
+    if (galleryButton) {
+      const gallery = galleryButton.closest('.post-gallery');
+      if (gallery) moveGallery(gallery, Number(galleryButton.dataset.galleryStep || 0));
+      return;
+    }
     const image = event.target.closest('[data-view-image]');
     if (image) openImageViewer(image.currentSrc || image.src);
   });
@@ -196,9 +216,9 @@
         ${renderImages(message.images)}
         <div class="post-stats">
           <button class="like-btn ${message.liked ? 'is-liked' : ''}" type="button" data-like-message-id="${message.id}">
-            <span class="stat"><img class="stat-icon" src="${message.liked ? '/images/Р»Р°Р№Рє РїСЂРё РЅР°Р¶Р°С‚РёРё.png' : '/images/Р»Р°Р№Рє.png'}" alt="" />${message.likes || 0}</span>
+            <span class="stat"><img class="stat-icon" src="${message.liked ? '/images/лайк при нажатии.png' : '/images/лайк.png'}" alt="" />${message.likes || 0}</span>
           </button>
-          <span class="stat"><img class="stat-icon" src="/images/РїСЂРѕСЃРјРѕС‚СЂС‹.png" alt="" />${message.views || 1}</span>
+          <span class="stat"><img class="stat-icon" src="/images/просмотры.png" alt="" />${message.views || 1}</span>
         </div>
       </article>
     `;
