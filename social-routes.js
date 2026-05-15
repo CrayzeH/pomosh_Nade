@@ -107,11 +107,13 @@ module.exports = function registerSocialRoutes(ctx) {
 
     async function listChatMessages(chatId, viewerId, viewerIsAdmin = false) {
         const rows = await dbAll(
-            `SELECT m.*, u.full_name, u.email, u.role, u.is_banned, u.banned_at, u.username, u.avatar, u.points
+            `SELECT m.*, u.full_name, u.email, u.role, u.is_banned, u.banned_at, u.username, u.avatar, u.points,
+                    (SELECT COUNT(*) FROM chat_message_likes cml WHERE cml.message_id = m.id) AS likes_count,
+                    (SELECT id FROM chat_message_likes cml WHERE cml.message_id = m.id AND cml.user_id = ?) AS viewer_like_id
              FROM chat_messages m JOIN users u ON u.id = m.user_id
              WHERE m.chat_id = ?
              ORDER BY datetime(m.created_at), m.id`,
-            [chatId]
+            [viewerId || 0, chatId]
         );
         const messages = [];
         for (const row of rows) {
@@ -144,6 +146,9 @@ module.exports = function registerSocialRoutes(ctx) {
                     points: row.points
                 })?.avatar,
                 images: images.map((item) => item.image_url),
+                likes: Number(row.likes_count || 0),
+                liked: Boolean(row.viewer_like_id),
+                views: Number(row.views || 1),
                 canModerate: viewerIsAdmin
             });
         }
@@ -245,6 +250,7 @@ module.exports = function registerSocialRoutes(ctx) {
             const user = await requireUser(req, res);
             if (!user) return;
             const chat = await getFeedChat();
+            await dbRun(`UPDATE chat_messages SET views = COALESCE(views, 0) + 1 WHERE chat_id = ? AND user_id != ?`, [chat.id, user.id]);
             res.json({ chat: await formatChat(chat, user.id), messages: await listChatMessages(chat.id, user.id, isAdmin(user)) });
         } catch {
             res.status(500).json({ error: 'Ошибка сервера' });
@@ -342,6 +348,37 @@ module.exports = function registerSocialRoutes(ctx) {
             res.json({ success: true, liked: !existing, likes: Number(likes.count || 0) });
         } catch {
             res.status(500).json({ error: 'Ошибка сервера' });
+        }
+    });
+
+    app.post('/api/social/messages/:id/like', async (req, res) => {
+        try {
+            const user = await requireUser(req, res);
+            if (!user) return;
+            const messageId = Number(req.params.id);
+            const message = await dbGet(
+                `SELECT m.id, c.id AS chat_id, c.type, c.slug
+                 FROM chat_messages m
+                 JOIN chats c ON c.id = m.chat_id
+                 WHERE m.id = ?`,
+                [messageId]
+            );
+            if (!message) return res.status(404).json({ error: 'РЎРѕРѕР±С‰РµРЅРёРµ РЅРµ РЅР°Р№РґРµРЅРѕ' });
+            if (!(await canAccessChat({ id: message.chat_id, type: message.type, slug: message.slug }, user))) {
+                return res.status(403).json({ error: 'РќРµС‚ РґРѕСЃС‚СѓРїР°' });
+            }
+
+            const existing = await dbGet(`SELECT id FROM chat_message_likes WHERE message_id = ? AND user_id = ?`, [messageId, user.id]);
+            if (existing) {
+                await dbRun(`DELETE FROM chat_message_likes WHERE id = ?`, [existing.id]);
+            } else {
+                await dbRun(`INSERT INTO chat_message_likes (message_id, user_id) VALUES (?, ?)`, [messageId, user.id]);
+            }
+
+            const likes = await dbGet(`SELECT COUNT(*) AS count FROM chat_message_likes WHERE message_id = ?`, [messageId]);
+            res.json({ success: true, liked: !existing, likes: Number(likes.count || 0) });
+        } catch {
+            res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
         }
     });
 

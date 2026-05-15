@@ -52,6 +52,7 @@
 
   const iconTrash = () => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5"/><path d="M14 11v5"/></svg>';
   const iconBan = () => '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M6.5 6.5l11 11"/></svg>';
+  const isImageSrc = (value) => /^(https?:\/\/|\/|data:image\/)/.test(String(value || ''));
 
   const readImages = (files) => Promise.all(files.map((file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -112,9 +113,31 @@
   function renderImages(images, className = 'post-image') {
     if (!images?.length) return '';
     return `<div class="post-gallery"><div class="post-gallery-track">${images.map((image) => (
-      `<img class="${className}" src="${image}" alt="Фото" />`
+      `<img class="${className}" src="${image}" alt="Фото" data-view-image="1" />`
     )).join('')}</div></div>`;
   }
+
+  function openImageViewer(src) {
+    if (!src) return;
+    let modal = $('#global-image-viewer');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'global-image-viewer';
+      modal.className = 'global-image-viewer';
+      modal.innerHTML = '<button class="global-image-backdrop" type="button" aria-label="Закрыть"></button><div class="global-image-frame"><button class="global-image-close" type="button" aria-label="Закрыть">×</button><img class="global-image-full" alt=""></div>';
+      document.body.appendChild(modal);
+      modal.addEventListener('click', (event) => {
+        if (event.target.closest('.global-image-backdrop, .global-image-close')) modal.classList.remove('is-open');
+      });
+    }
+    $('.global-image-full', modal).src = src;
+    modal.classList.add('is-open');
+  }
+
+  document.addEventListener('click', (event) => {
+    const image = event.target.closest('[data-view-image]');
+    if (image) openImageViewer(image.currentSrc || image.src);
+  });
 
   function renderPost(post) {
     const author = post.author || {};
@@ -171,6 +194,12 @@
         </div>
         ${message.text ? `<p class="post-text">${escapeHtml(message.text)}</p>` : ''}
         ${renderImages(message.images)}
+        <div class="post-stats">
+          <button class="like-btn ${message.liked ? 'is-liked' : ''}" type="button" data-like-message-id="${message.id}">
+            <span class="stat"><img class="stat-icon" src="${message.liked ? '/images/Р»Р°Р№Рє РїСЂРё РЅР°Р¶Р°С‚РёРё.png' : '/images/Р»Р°Р№Рє.png'}" alt="" />${message.likes || 0}</span>
+          </button>
+          <span class="stat"><img class="stat-icon" src="/images/РїСЂРѕСЃРјРѕС‚СЂС‹.png" alt="" />${message.views || 1}</span>
+        </div>
       </article>
     `;
   }
@@ -420,6 +449,12 @@
       await loadFeed();
     });
     list?.addEventListener('click', async (event) => {
+      const likeMessage = event.target.closest('[data-like-message-id]');
+      if (likeMessage) {
+        await api(`/api/social/messages/${likeMessage.dataset.likeMessageId}/like`, { method: 'POST', body: JSON.stringify({}) });
+        await loadFeed();
+        return;
+      }
       await handleAdminAction(event, loadFeed);
     });
     await loadFeed();
@@ -717,6 +752,32 @@
         </article>`).join('')}</div>`;
     }
 
+    function renderMerchOrder(item) {
+      const membershipOptions = (me.memberships || []).map((squad) => `<option value="${escapeHtml(squad.name)}">${escapeHtml(squad.name)}</option>`).join('');
+      shell.innerHTML = `<form class="merch-order-form" id="merch-order-form" data-merch-order-id="${item.id}">
+        <button class="quiz-nav" id="merch-order-back" type="button">Назад</button>
+        <div class="merch-order-head">
+          <img class="merch-order-image" src="${item.image}" alt="${escapeHtml(item.name)}">
+          <div><h3>${escapeHtml(item.name)}</h3><p>${item.price}<img class="reward-star-icon" src="/images/звезда.png" alt="" /></p></div>
+        </div>
+        <input class="merch-order-input" id="merch-order-name" type="text" value="${escapeHtml(me.name || '')}" placeholder="Имя" required>
+        <select class="merch-order-input" id="merch-order-squad" required>
+          <option value="">Отряд</option>
+          ${membershipOptions || '<option value="Без отряда">Без отряда</option>'}
+        </select>
+        <select class="merch-order-input" id="merch-order-role" required>
+          <option value="">Должность</option>
+          <option value="Командир">Командир</option>
+          <option value="Комиссар">Комиссар</option>
+          <option value="Мастер">Мастер</option>
+          <option value="Вожатый">Вожатый</option>
+          <option value="Участник">Участник</option>
+          <option value="Другое">Другое</option>
+        </select>
+        <button class="merch-order-submit" type="submit">Купить</button>
+      </form>`;
+    }
+
     function renderQuestion() {
       const question = activeTest.questions[current];
       shell.innerHTML = `<div class="quiz-flow"><div class="quiz-topline"><span>${escapeHtml(activeTest.title)}</span><span>${current + 1} / ${activeTest.questions.length}</span></div>
@@ -770,13 +831,32 @@
       if (event.target.closest('#quiz-again')) renderTests();
       const merchButton = event.target.closest('[data-merch-id]');
       if (merchButton) {
-        try {
-          const result = await api(`/api/social/merch/${merchButton.dataset.merchId}/buy`, { method: 'POST', body: JSON.stringify({}) });
-          alert(`Покупка оформлена. Осталось баллов: ${result.points}`);
-          data = await api('/api/social/create-data');
-        } catch (err) {
-          alert(err.message);
-        }
+        const item = data.merch.find((entry) => String(entry.id) === String(merchButton.dataset.merchId));
+        if (item) renderMerchOrder(item);
+        return;
+      }
+      if (event.target.closest('#merch-order-back')) {
+        renderMerch();
+      }
+    });
+    shell.addEventListener('submit', async (event) => {
+      const form = event.target.closest('#merch-order-form');
+      if (!form) return;
+      event.preventDefault();
+      try {
+        const result = await api(`/api/social/merch/${form.dataset.merchOrderId}/buy`, {
+          method: 'POST',
+          body: JSON.stringify({
+            name: $('#merch-order-name')?.value,
+            squad: $('#merch-order-squad')?.value,
+            role: $('#merch-order-role')?.value
+          })
+        });
+        alert(`Покупка оформлена. Осталось баллов: ${result.points}`);
+        data = await api('/api/social/create-data');
+        renderMerch();
+      } catch (err) {
+        alert(err.message);
       }
     });
     $('#tab-tasks')?.addEventListener('click', renderTests);
@@ -797,13 +877,16 @@
     const dialog = $('#chat-dialog-view');
     const listView = $('#chats-list-view');
     const messagesNode = $('#chat-dialog-messages');
+    const attachInput = $('#chat-dialog-attach-input');
+    const previewNode = $('#chat-dialog-preview');
     let activeChatId = Number(new URLSearchParams(location.search).get('chat')) || null;
+    let pendingChatImages = [];
 
     async function loadChats() {
       const data = await api('/api/social/chats');
       list.innerHTML = data.chats.map((chat) => `
         <article class="chat-row" data-chat-id="${chat.id}">
-          <div class="chat-avatar">${chat.avatar?.startsWith('http') || chat.avatar?.startsWith('/') ? `<img class="chat-avatar-image" src="${chat.avatar}" alt="" />` : `<span class="chat-avatar-emoji">${escapeHtml(chat.avatar || '★')}</span>`}</div>
+          <div class="chat-avatar">${isImageSrc(chat.avatar) ? `<img class="chat-avatar-image" src="${chat.avatar}" alt="" />` : `<span class="chat-avatar-emoji">${escapeHtml(chat.avatar || '★')}</span>`}</div>
           <div class="chat-copy"><p class="chat-name">${escapeHtml(chat.title)}${chat.isBlocked ? ' <span class="chat-blocked-badge">заблокирован</span>' : ''}</p><p class="chat-preview">${escapeHtml(chat.type === 'group' ? 'Группа' : 'Личный чат')} · ${escapeHtml(chat.preview)}</p></div>
         </article>`).join('');
     }
@@ -837,7 +920,7 @@
       const data = await api(`/api/social/chats/${activeChatId}/messages`);
       $('#chat-dialog-name').textContent = data.chat.title;
       $('#chat-dialog-status').textContent = data.chat.isBlocked ? 'личный чат · пользователь заблокирован' : (data.chat.type === 'group' ? 'групповой чат' : 'личный чат');
-      $('#chat-dialog-avatar').innerHTML = data.chat.avatar?.startsWith('http') || data.chat.avatar?.startsWith('/')
+      $('#chat-dialog-avatar').innerHTML = isImageSrc(data.chat.avatar)
         ? `${data.chat.type === 'direct' && data.chat.otherUser ? `<a href="${profileUrl(data.chat.otherUser)}"><img class="chat-avatar-image" src="${data.chat.avatar}" alt="" /></a>` : `<img class="chat-avatar-image" src="${data.chat.avatar}" alt="" />`}`
         : `<span class="chat-avatar-emoji">${escapeHtml(data.chat.avatar || '★')}</span>`;
       messagesNode.innerHTML = renderDialogMessages(data.messages);
@@ -854,12 +937,26 @@
       dialog.hidden = true;
       listView.hidden = false;
     });
+    $('#chat-dialog-attach-btn')?.addEventListener('click', () => attachInput?.click());
+    attachInput?.addEventListener('change', async () => {
+      pendingChatImages = await readImages(Array.from(attachInput.files || []).slice(0, 4));
+      if (previewNode) {
+        previewNode.innerHTML = pendingChatImages.map((image) => `<img src="${image}" alt="Фото" data-view-image="1" />`).join('');
+        previewNode.classList.toggle('is-visible', pendingChatImages.length > 0);
+      }
+    });
     $('#chat-dialog-form')?.addEventListener('submit', async (event) => {
       event.preventDefault();
       const input = $('#chat-dialog-input');
-      if (!activeChatId || !input.value.trim()) return;
-      await api(`/api/social/chats/${activeChatId}/messages`, { method: 'POST', body: JSON.stringify({ text: input.value }) });
+      if (!activeChatId || (!input.value.trim() && !pendingChatImages.length)) return;
+      await api(`/api/social/chats/${activeChatId}/messages`, { method: 'POST', body: JSON.stringify({ text: input.value, images: pendingChatImages }) });
       input.value = '';
+      pendingChatImages = [];
+      if (attachInput) attachInput.value = '';
+      if (previewNode) {
+        previewNode.innerHTML = '';
+        previewNode.classList.remove('is-visible');
+      }
       await openChat(activeChatId);
       await loadChats();
     });

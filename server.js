@@ -447,6 +447,7 @@ async function initSocialSchema() {
         chat_id INTEGER NOT NULL,
         user_id INTEGER NOT NULL,
         text TEXT,
+        views INTEGER DEFAULT 1,
         created_at TEXT DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (chat_id) REFERENCES chats(id) ON DELETE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
@@ -457,6 +458,16 @@ async function initSocialSchema() {
         image_url TEXT NOT NULL,
         order_index INTEGER DEFAULT 0,
         FOREIGN KEY (message_id) REFERENCES chat_messages(id) ON DELETE CASCADE
+    )`);
+    await addColumnIfMissing('chat_messages', 'views', 'INTEGER DEFAULT 1');
+    await dbRun(`CREATE TABLE IF NOT EXISTS chat_message_likes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        message_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(message_id, user_id),
+        FOREIGN KEY (message_id) REFERENCES chat_messages(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )`);
     await dbRun(`CREATE TABLE IF NOT EXISTS email_verification_codes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -2199,6 +2210,32 @@ app.delete('/api/admin/merch/:id', isAdmin, async (req, res) => {
 });
 
 // Управление тестами за баллы в профиле
+app.get('/api/admin/merch-orders', isAdmin, async (req, res) => {
+    try {
+        const orders = await dbAll(
+            `SELECT mo.*, mi.name AS merch_name, mi.image_url,
+                    u.full_name AS user_name, u.email AS user_email, u.phone AS user_phone
+             FROM merch_orders mo
+             JOIN merch_items mi ON mi.id = mo.merch_item_id
+             JOIN users u ON u.id = mo.user_id
+             ORDER BY datetime(mo.created_at) DESC, mo.id DESC`
+        );
+        res.json({ orders });
+    } catch (err) {
+        res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+    }
+});
+
+app.put('/api/admin/merch-orders/:id/status', isAdmin, async (req, res) => {
+    try {
+        const status = ['created', 'processing', 'done', 'cancelled'].includes(req.body.status) ? req.body.status : 'created';
+        await dbRun(`UPDATE merch_orders SET status = ? WHERE id = ?`, [status, req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'РћС€РёР±РєР° СЃРµСЂРІРµСЂР°' });
+    }
+});
+
 app.get('/api/admin/social-tests', isAdmin, async (req, res) => {
     try {
         const tests = await dbAll(`SELECT * FROM social_tests ORDER BY order_index, title`);

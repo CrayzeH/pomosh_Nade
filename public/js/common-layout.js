@@ -16,7 +16,15 @@
                 if (userMenu) userMenu.style.display = 'block';
                 if (userNameDisplay) {
                     const name = userData.full_name?.split(' ')[0] || userData.name || 'Профиль';
-                    userNameDisplay.textContent = name;
+                    const avatar = userData.avatar || '/images/профиль.png';
+                    userNameDisplay.textContent = '';
+                    userNameDisplay.title = name;
+                    userNameDisplay.classList.add('has-avatar');
+                    const image = document.createElement('img');
+                    image.className = 'header-user-avatar';
+                    image.src = avatar;
+                    image.alt = name;
+                    userNameDisplay.appendChild(image);
                 }
             } catch(e) {
                 console.error('Ошибка:', e);
@@ -26,6 +34,11 @@
         } else {
             if (authButtons) authButtons.style.display = 'flex';
             if (userMenu) userMenu.style.display = 'none';
+            if (userNameDisplay) {
+                userNameDisplay.textContent = '';
+                userNameDisplay.removeAttribute('title');
+                userNameDisplay.classList.remove('has-avatar');
+            }
         }
     }
 

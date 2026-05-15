@@ -926,11 +926,16 @@ h1 {
   display: none;
 }
 
+.composer-preview:not(:empty) {
+  display: block;
+}
+
 .composer-preview img {
   width: 100%;
   max-height: 220px;
   object-fit: cover;
   display: block;
+  cursor: zoom-in;
 }
 
 .composer-preview-slider {
@@ -1823,6 +1828,72 @@ h1 {
   font-size: 20px;
 }
 
+.merch-order-form {
+  width: min(520px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+  border-radius: 18px;
+  background: rgba(124, 137, 159, 0.92);
+  box-shadow: 3px 4px 8px rgba(42, 46, 54, 0.35);
+}
+
+.merch-order-head {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 14px;
+  align-items: center;
+  color: #eef2fb;
+}
+
+.merch-order-head h3,
+.merch-order-head p {
+  margin: 0;
+}
+
+.merch-order-image {
+  width: 96px;
+  height: 96px;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #d8dee8;
+}
+
+.merch-order-input {
+  width: 100%;
+  min-height: 46px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #fff;
+  padding: 10px 13px;
+  font-family: inherit;
+  font-size: 16px;
+  outline: none;
+}
+
+.merch-order-input::placeholder {
+  color: #fff;
+}
+
+.merch-order-input option {
+  color: #172033;
+}
+
+.merch-order-submit {
+  width: min(180px, 100%);
+  min-height: 36px;
+  margin: 2px auto 0;
+  border: 0;
+  border-radius: 999px;
+  background: #f4f1e8;
+  color: #172033;
+  font-family: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
 .purchase-modal {
   position: fixed;
   inset: 0;
@@ -2076,6 +2147,54 @@ h1 {
   background: #10285a;
   transform-origin: center center;
   transition: transform 0.12s ease;
+}
+
+.global-image-viewer {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: none;
+}
+
+.global-image-viewer.is-open {
+  display: block;
+}
+
+.global-image-backdrop {
+  position: absolute;
+  inset: 0;
+  border: 0;
+  background: rgba(3, 10, 30, 0.78);
+  cursor: zoom-out;
+}
+
+.global-image-frame {
+  position: absolute;
+  inset: 32px;
+  display: grid;
+  place-items: center;
+}
+
+.global-image-full {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.42);
+}
+
+.global-image-close {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(15, 26, 47, 0.78);
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
 }
 
 .media-nav {
@@ -2471,6 +2590,7 @@ h1 {
   font-size: 15px;
   font-weight: 600;
   white-space: nowrap;
+  margin-right: 18px;
 }
 
 .notification-empty {
@@ -2932,6 +3052,13 @@ h1 {
   border-radius: 8px;
   display: block;
   margin-bottom: 6px;
+  cursor: zoom-in;
+}
+
+.chat-bubble .post-gallery {
+  width: 100%;
+  margin: 0 0 6px;
+  border-radius: 8px;
 }
 
 .chat-gallery {
@@ -3021,6 +3148,27 @@ h1 {
   width: 22px;
   height: 22px;
   object-fit: contain;
+}
+
+.chat-dialog-preview {
+  display: none;
+  gap: 8px;
+  padding: 0 26px 10px;
+  flex-wrap: wrap;
+}
+
+.chat-dialog-preview.is-visible {
+  display: flex;
+}
+
+.chat-dialog-preview img {
+  width: 78px;
+  height: 78px;
+  object-fit: cover;
+  border-radius: 10px;
+  background: #d8dee8;
+  cursor: zoom-in;
+  box-shadow: 2px 2px 4px rgba(31, 35, 43, 0.32);
 }
 
 .chat-dialog-send {

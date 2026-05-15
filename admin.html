@@ -77,12 +77,14 @@
       <p class="brand">Созвездие</p>
       <nav class="nav">
         <button class="active" data-page="dashboard">Дашборд</button>
-        <button data-page="applications">Заявки</button>
+        <button data-page="applications">Все заявки</button>
+        <button data-page="analytics">Аналитика</button>
         <button data-page="questions">Вопросы с главной</button>
         <button data-page="users">Пользователи</button>
         <button data-page="squads">Отряды</button>
         <button data-page="commanders">Люди в отрядах</button>
         <button data-page="merch">Мерч</button>
+        <button data-page="merchOrders">Заказы мерча</button>
         <button data-page="tests">Тесты за баллы</button>
       </nav>
     </aside>
@@ -158,11 +160,13 @@
     async function load(page) {
       if (page === 'dashboard') return loadDashboard();
       if (page === 'applications') return loadApplications();
+      if (page === 'analytics') return loadApplicationAnalytics();
       if (page === 'questions') return loadQuestions();
       if (page === 'users') return loadUsers();
       if (page === 'squads') return loadSquads();
       if (page === 'commanders') return loadCommanders();
       if (page === 'merch') return loadMerch();
+      if (page === 'merchOrders') return loadMerchOrders();
       if (page === 'tests') return loadTests();
     }
 
@@ -199,6 +203,37 @@
         esc(item.class),
         `<span class="badge ${item.status}">${statusText(item.status)}</span>`,
         `<div class="actions"><button class="btn ok small" onclick="setAppStatus(${item.id}, 'approved')">Принять</button><button class="btn danger small" onclick="setAppStatus(${item.id}, 'rejected')">Отклонить</button></div>`
+      ]))}`;
+    }
+
+    async function loadApplicationAnalytics() {
+      const data = await api('/api/admin/application-analytics');
+      const rows = data.analytics || [];
+      const totals = rows.reduce((acc, row) => {
+        acc.total += Number(row.total_applications || 0);
+        acc.pending += Number(row.pending_applications || 0);
+        acc.approved += Number(row.approved_applications || 0);
+        acc.rejected += Number(row.rejected_applications || 0);
+        return acc;
+      }, { total: 0, pending: 0, approved: 0, rejected: 0 });
+      setExportData('applicationAnalytics', 'analitika-zayavok', ['Отряд', 'Всего заявок', 'На рассмотрении', 'Принято', 'Отклонено'], rows.map((row) => [
+        row.squad_name,
+        row.total_applications,
+        row.pending_applications,
+        row.approved_applications,
+        row.rejected_applications
+      ]));
+      content.innerHTML = `<div class="cards">
+        <div class="card"><strong>${totals.total}</strong><span>Всего заявок</span></div>
+        <div class="card"><strong>${totals.pending}</strong><span>На рассмотрении</span></div>
+        <div class="card"><strong>${totals.approved}</strong><span>Принято</span></div>
+      </div>
+      ${exportButton('applicationAnalytics')}${table(['Отряд', 'Всего заявок', 'На рассмотрении', 'Принято', 'Отклонено'], rows.map((row) => [
+        esc(row.squad_name),
+        Number(row.total_applications || 0),
+        Number(row.pending_applications || 0),
+        Number(row.approved_applications || 0),
+        Number(row.rejected_applications || 0)
       ]))}`;
     }
 
@@ -368,6 +403,34 @@
         });
         await loadMerch();
       });
+    }
+
+    async function loadMerchOrders() {
+      const data = await api('/api/admin/merch-orders');
+      const orders = data.orders || [];
+      setExportData('merchOrders', 'zakazy-mercha', ['ID', 'Дата', 'Товар', 'Пользователь', 'Email', 'Телефон', 'Имя', 'Отряд', 'Должность', 'Цена', 'Статус'], orders.map((order) => [
+        order.id,
+        dateText(order.created_at),
+        order.merch_name,
+        order.user_name,
+        order.user_email,
+        order.user_phone || '',
+        order.buyer_name || '',
+        order.squad || '',
+        order.role || '',
+        order.price,
+        order.status
+      ]));
+      const statusOptions = (value) => ['created', 'processing', 'done', 'cancelled'].map((status) => `<option value="${status}" ${status === value ? 'selected' : ''}>${status}</option>`).join('');
+      content.innerHTML = `${exportButton('merchOrders')}${table(['Дата', 'Товар', 'Покупатель', 'Форма', 'Цена', 'Статус', 'Действия'], orders.map((order) => [
+        dateText(order.created_at),
+        `${order.image_url ? `<img class="admin-thumb" src="${esc(order.image_url)}" alt="">` : ''}${esc(order.merch_name)}`,
+        `${esc(order.user_name)}<br>${esc(order.user_email)}<br>${esc(order.user_phone || '')}`,
+        `Имя: ${esc(order.buyer_name || '')}<br>Отряд: ${esc(order.squad || '')}<br>Должность: ${esc(order.role || '')}`,
+        order.price,
+        `<select id="merch-order-status-${order.id}">${statusOptions(order.status)}</select>`,
+        `<button class="btn ok small" onclick="saveMerchOrderStatus(${order.id})">Сохранить</button>`
+      ]))}`;
     }
 
     function renderTestQuestionEditor(prefix, questions) {
@@ -592,6 +655,14 @@
       await loadMerch();
     }
 
+    async function saveMerchOrderStatus(id) {
+      await api(`/api/admin/merch-orders/${id}/status`, {
+        method: 'PUT',
+        body: JSON.stringify({ status: fieldValue(`merch-order-status-${id}`) })
+      });
+      await loadMerchOrders();
+    }
+
     async function saveTest(id) {
       try {
         await api(`/api/admin/social-tests/${encodeURIComponent(id)}`, {
@@ -618,7 +689,9 @@
 
     Object.assign(window, {
       loadApplications,
+      loadApplicationAnalytics,
       loadCommanders,
+      loadMerchOrders,
       downloadExcel,
       setAppStatus,
       answerQuestion,
@@ -629,6 +702,7 @@
       deleteCommander,
       saveMerch,
       deleteMerch,
+      saveMerchOrderStatus,
       saveTest,
       deleteTest,
       addTestQuestion,
