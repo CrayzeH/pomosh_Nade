@@ -129,6 +129,14 @@
     )).join('')}</div>`;
   }
 
+  function renderComposerPreview(images) {
+    const galleryImages = (images || []).filter(Boolean);
+    if (!galleryImages.length) return '';
+    return `<div class="composer-attachments composer-attachments--${Math.min(galleryImages.length, 4)}">${galleryImages.map((image) => (
+      `<img class="composer-attachment-image" src="${image}" alt="Фото" data-view-image="1" />`
+    )).join('')}</div>`;
+  }
+
   function moveGallery(gallery, step) {
     const track = $('.post-gallery-track', gallery);
     const count = $$('.post-gallery-track > img', gallery).length;
@@ -610,7 +618,7 @@
     $('#attach-btn')?.addEventListener('click', () => input?.click());
     input?.addEventListener('change', async () => {
       pendingImages = await readImages(Array.from(input.files || []).slice(0, 4));
-      $('#composer-preview').innerHTML = renderImages(pendingImages);
+      $('#composer-preview').innerHTML = renderComposerPreview(pendingImages);
       $('.composer')?.classList.toggle('has-preview', pendingImages.length > 0);
     });
     $('#publish-btn')?.addEventListener('click', async () => {
@@ -694,7 +702,7 @@
     attachButton?.addEventListener('click', () => attachInput?.click());
     attachInput?.addEventListener('change', async () => {
       pendingImages = await readImages(Array.from(attachInput.files || []).slice(0, 4));
-      preview.innerHTML = renderImages(pendingImages);
+      preview.innerHTML = renderComposerPreview(pendingImages);
       preview.closest('.composer')?.classList.toggle('has-preview', pendingImages.length > 0);
     });
 

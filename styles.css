@@ -974,11 +974,11 @@ h1 {
 .composer-preview {
   position: absolute;
   left: 114px;
-  top: 96px;
-  width: clamp(120px, calc(100% - 360px), 240px);
+  top: 86px;
+  width: min(246px, calc(100% - 372px));
   margin: 0;
-  border-radius: 14px;
-  overflow: hidden;
+  border-radius: 12px;
+  overflow: visible;
   display: none;
 }
 
@@ -992,10 +992,38 @@ h1 {
 
 .composer-preview img {
   width: 100%;
-  max-height: 96px;
   object-fit: cover;
   display: block;
   cursor: zoom-in;
+}
+
+.composer-attachments {
+  display: grid;
+  gap: 4px;
+  width: min(246px, 100%);
+}
+
+.composer-attachments--1 {
+  width: 118px;
+  grid-template-columns: 118px;
+}
+
+.composer-attachments--2,
+.composer-attachments--3,
+.composer-attachments--4 {
+  grid-template-columns: repeat(2, 118px);
+}
+
+.composer-attachments--3 .composer-attachment-image:first-child {
+  grid-row: span 2;
+}
+
+.composer-attachment-image {
+  aspect-ratio: 1 / 1;
+  height: auto;
+  border-radius: 10px;
+  background: #d8dee8;
+  box-shadow: 2px 2px 4px rgba(31, 35, 43, 0.24);
 }
 
 .composer-preview .post-gallery {
@@ -1269,10 +1297,11 @@ h1 {
   align-items: center;
   gap: 6px;
   min-height: 30px;
-  padding: 5px 10px;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.78);
-  box-shadow: 1px 1px 3px rgba(31, 35, 43, 0.18);
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+  color: #f4f6fb;
 }
 
 .stat-icon {
@@ -1295,7 +1324,7 @@ h1 {
 }
 
 .like-btn.is-liked .stat {
-  background: rgba(255, 235, 242, 0.94);
+  background: transparent;
 }
 
 .create-main {
@@ -3473,6 +3502,17 @@ h1 {
     top: 98px;
     width: min(180px, calc(100% - 160px));
     margin: 0;
+  }
+
+  .composer-attachments--1 {
+    width: 88px;
+    grid-template-columns: 88px;
+  }
+
+  .composer-attachments--2,
+  .composer-attachments--3,
+  .composer-attachments--4 {
+    grid-template-columns: repeat(2, 88px);
   }
 
   .composer-preview .post-image {
