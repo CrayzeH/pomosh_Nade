@@ -14,6 +14,11 @@ module.exports = function registerSocialRoutes(ctx) {
         return Boolean(user && (user.role === 'admin' || user.email === 'ultrasecret@admin.com' || user.isAdmin));
     }
 
+    function directChatSlug(userId, otherUserId) {
+        const ids = [Number(userId), Number(otherUserId)].sort((a, b) => a - b);
+        return `direct-${ids[0]}-${ids[1]}`;
+    }
+
     async function getPostWithDetails(post, viewerId, viewerIsAdmin = false) {
         const [images, likeRow, likesRow] = await Promise.all([
             dbAll(`SELECT image_url FROM post_images WHERE post_id = ? ORDER BY order_index, id`, [post.id]),
@@ -548,15 +553,27 @@ module.exports = function registerSocialRoutes(ctx) {
     });
 
     async function getDirectChat(userId, otherUserId) {
-        return dbGet(
+        const slug = directChatSlug(userId, otherUserId);
+        const existingBySlug = await dbGet(`SELECT * FROM chats WHERE type = 'direct' AND slug = ? LIMIT 1`, [slug]);
+        if (existingBySlug) {
+            await dbRun(`INSERT OR IGNORE INTO chat_members (chat_id, user_id) VALUES (?, ?), (?, ?)`, [existingBySlug.id, userId, existingBySlug.id, otherUserId]);
+            return existingBySlug;
+        }
+
+        const existingByMembers = await dbGet(
             `SELECT c.*
              FROM chats c
              JOIN chat_members a ON a.chat_id = c.id AND a.user_id = ?
              JOIN chat_members b ON b.chat_id = c.id AND b.user_id = ?
              WHERE c.type = 'direct'
+             ORDER BY c.id
              LIMIT 1`,
             [userId, otherUserId]
         );
+        if (existingByMembers) {
+            await dbRun(`UPDATE chats SET slug = ? WHERE id = ?`, [slug, existingByMembers.id]);
+        }
+        return existingByMembers;
     }
 
     async function formatChat(chat, userId) {
@@ -622,7 +639,15 @@ module.exports = function registerSocialRoutes(ctx) {
             const user = await requireUser(req, res);
             if (!user) return;
             const chats = isAdmin(user)
-                ? await dbAll(`SELECT * FROM chats WHERE type = 'direct' OR COALESCE(slug, '') != 'global-feed' ORDER BY datetime(updated_at) DESC, id DESC`)
+                ? await dbAll(
+                    `SELECT DISTINCT c.*
+                     FROM chats c
+                     LEFT JOIN chat_members cm ON cm.chat_id = c.id AND cm.user_id = ?
+                     WHERE (c.type = 'direct' AND cm.user_id = ?)
+                        OR (c.type != 'direct' AND COALESCE(c.slug, '') != 'global-feed')
+                     ORDER BY datetime(c.updated_at) DESC, c.id DESC`,
+                    [user.id, user.id]
+                )
                 : await dbAll(
                     `SELECT DISTINCT c.*
                      FROM chats c
@@ -671,14 +696,21 @@ module.exports = function registerSocialRoutes(ctx) {
             const other = await dbGet(`SELECT id FROM users WHERE id = ?`, [otherUserId]);
             if (!other) return res.status(404).json({ error: 'Пользователь не найден' });
 
+            const slug = directChatSlug(user.id, otherUserId);
             let chat = await getDirectChat(user.id, otherUserId);
             if (!chat) {
-                const result = await dbRun(`INSERT INTO chats (type, title) VALUES ('direct', 'Личный чат')`);
-                await dbRun(`INSERT INTO chat_members (chat_id, user_id) VALUES (?, ?), (?, ?)`, [result.lastID, user.id, result.lastID, otherUserId]);
-                chat = await dbGet(`SELECT * FROM chats WHERE id = ?`, [result.lastID]);
+                try {
+                    const result = await dbRun(`INSERT INTO chats (type, title, slug) VALUES ('direct', 'Личный чат', ?)`, [slug]);
+                    await dbRun(`INSERT INTO chat_members (chat_id, user_id) VALUES (?, ?), (?, ?)`, [result.lastID, user.id, result.lastID, otherUserId]);
+                    chat = await dbGet(`SELECT * FROM chats WHERE id = ?`, [result.lastID]);
+                } catch (err) {
+                    if (err && err.code !== 'SQLITE_CONSTRAINT') throw err;
+                    chat = await getDirectChat(user.id, otherUserId);
+                }
             }
             res.json({ chat: await formatChat(chat, user.id) });
-        } catch {
+        } catch (err) {
+            console.error('Direct chat create error:', err);
             res.status(500).json({ error: 'Ошибка сервера' });
         }
     });

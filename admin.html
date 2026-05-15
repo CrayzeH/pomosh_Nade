@@ -41,6 +41,7 @@
     th { color: #475467; font-size: 13px; background: #f9fafb; }
     .actions { display: flex; flex-wrap: wrap; gap: 8px; }
     .toolbar { display: flex; justify-content: flex-end; gap: 10px; margin: 0 0 12px; }
+    .admin-summary { margin: 0 0 12px; padding: 12px 14px; background: #fff; border: 1px solid #eaecf0; border-radius: 8px; color: #344054; font-weight: 700; }
     .admin-form { display: grid; gap: 12px; padding: 16px; margin: 0 0 16px; background: #fff; border: 1px solid #eaecf0; border-radius: 8px; }
     .admin-form h2 { margin: 0; font-size: 18px; }
     .form-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
@@ -261,8 +262,10 @@
 
     async function loadUsers() {
       const [usersData, squadsData] = await Promise.all([api('/api/admin/users'), api('/api/admin/squads')]);
+      const users = usersData.users || [];
+      const totalUsers = Number(usersData.total ?? users.length);
       squads = squadsData.squads || [];
-      setExportData('users', 'polzovateli', ['ID', 'ФИО', 'Email', 'Телефон', 'Отряды', 'Статус', 'Дата регистрации'], usersData.users.map((user) => [
+      setExportData('users', 'polzovateli', ['ID', 'ФИО', 'Email', 'Телефон', 'Отряды', 'Статус', 'Дата регистрации'], users.map((user) => [
         user.id,
         user.full_name,
         user.email,
@@ -271,7 +274,7 @@
         user.is_banned ? 'забанен' : 'активен',
         dateText(user.created_at)
       ]));
-      content.innerHTML = `${exportButton('users')}${table(['ID', 'Пользователь', 'Отряды', 'Статус', 'Назначить', 'Действия'], usersData.users.map((user) => [
+      content.innerHTML = `<div class="admin-summary">Показано пользователей: ${users.length} из ${totalUsers}</div>${exportButton('users')}${table(['ID', 'Пользователь', 'Отряды', 'Статус', 'Назначить', 'Действия'], users.map((user) => [
         user.id,
         `${esc(user.full_name)}<br>${esc(user.email)}<br>${esc(user.phone || '')}`,
         esc(user.squads || 'нет'),

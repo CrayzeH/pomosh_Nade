@@ -469,6 +469,45 @@ async function initSocialSchema() {
         FOREIGN KEY (message_id) REFERENCES chat_messages(id) ON DELETE CASCADE,
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
     )`);
+    const directChatSlug = (firstUserId, secondUserId) => {
+        const ids = [Number(firstUserId), Number(secondUserId)].sort((a, b) => a - b);
+        return `direct-${ids[0]}-${ids[1]}`;
+    };
+    const directChats = await dbAll(
+        `SELECT c.id,
+                MIN(cm.user_id) AS first_user_id,
+                MAX(cm.user_id) AS second_user_id,
+                COUNT(DISTINCT cm.user_id) AS members_count
+         FROM chats c
+         JOIN chat_members cm ON cm.chat_id = c.id
+         WHERE c.type = 'direct'
+         GROUP BY c.id
+         HAVING members_count = 2
+         ORDER BY first_user_id, second_user_id, c.id`
+    );
+    const directGroups = new Map();
+    for (const chat of directChats) {
+        const slug = directChatSlug(chat.first_user_id, chat.second_user_id);
+        if (!directGroups.has(slug)) directGroups.set(slug, []);
+        directGroups.get(slug).push(chat);
+    }
+    for (const [slug, chatsInPair] of directGroups.entries()) {
+        const [canonical, ...duplicates] = chatsInPair;
+        await dbRun(`UPDATE chats SET slug = ?, title = COALESCE(title, 'Личный чат') WHERE id = ?`, [slug, canonical.id]);
+        for (const duplicate of duplicates) {
+            await dbRun(`UPDATE chat_messages SET chat_id = ? WHERE chat_id = ?`, [canonical.id, duplicate.id]);
+            await dbRun(`UPDATE notifications SET entity_id = ? WHERE entity_type = 'chat' AND entity_id = ?`, [canonical.id, duplicate.id]);
+            await dbRun(`DELETE FROM chat_members WHERE chat_id = ?`, [duplicate.id]);
+            await dbRun(`DELETE FROM chats WHERE id = ?`, [duplicate.id]);
+        }
+        await dbRun(
+            `UPDATE chats
+             SET updated_at = COALESCE((SELECT MAX(created_at) FROM chat_messages WHERE chat_id = ?), updated_at)
+             WHERE id = ?`,
+            [canonical.id, canonical.id]
+        );
+    }
+    await dbRun(`CREATE UNIQUE INDEX IF NOT EXISTS idx_chats_direct_slug ON chats(slug) WHERE type = 'direct' AND slug IS NOT NULL`);
     await dbRun(`CREATE TABLE IF NOT EXISTS email_verification_codes (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         user_id INTEGER,
@@ -1891,19 +1930,29 @@ app.get('/api/admin/check', (req, res) => {
 });
 
 // Получение всех пользователей
-app.get('/api/admin/users', isAdmin, (req, res) => {
-    db.all(
-        `SELECT u.id, u.full_name, u.email, u.phone, u.role, u.is_banned, u.banned_at, u.created_at,
-                GROUP_CONCAT(s.name, ', ') AS squads
-         FROM users u
-         LEFT JOIN user_squad_memberships usm ON usm.user_id = u.id
-         LEFT JOIN squads s ON s.id = usm.squad_id
-         GROUP BY u.id
-         ORDER BY u.id DESC`,
-        (err, users) => {
-        if (err) return res.status(500).json({ error: 'Ошибка сервера' });
-        res.json({ users });
-    });
+app.get('/api/admin/users', isAdmin, async (req, res) => {
+    try {
+        const [users, totalRow] = await Promise.all([
+            dbAll(
+                `SELECT u.id, u.full_name, u.email, u.phone, u.role, u.is_banned, u.banned_at, u.created_at,
+                        COALESCE(m.squads, '') AS squads
+                 FROM users u
+                 LEFT JOIN (
+                    SELECT usm.user_id, GROUP_CONCAT(s.name, ', ') AS squads
+                    FROM user_squad_memberships usm
+                    JOIN squads s ON s.id = usm.squad_id
+                    GROUP BY usm.user_id
+                 ) m ON m.user_id = u.id
+                 ORDER BY u.id DESC`
+            ),
+            dbGet(`SELECT COUNT(*) AS total FROM users`)
+        ]);
+
+        res.json({ users, total: Number(totalRow?.total || users.length) });
+    } catch (err) {
+        console.error('Admin users load error:', err);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
 });
 
 // Обновление роли пользователя
