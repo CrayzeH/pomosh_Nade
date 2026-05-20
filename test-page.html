@@ -2017,6 +2017,66 @@
         border-bottom: none !important;
         padding: 2px 0 !important;
     }
+    @media (max-width: 900px) {
+        body { padding-top: 66px !important; }
+        .header .header-container {
+            width: 100% !important;
+            max-width: none !important;
+            padding: 0 14px !important;
+        }
+        .header .header-top {
+            min-height: 64px !important;
+            padding: 8px 0 !important;
+            gap: 8px !important;
+            flex-wrap: nowrap !important;
+            justify-content: space-between !important;
+        }
+        .header .logo-area { display: contents !important; }
+        .header .logo {
+            flex: 1 1 auto !important;
+            min-width: 0 !important;
+            font-size: clamp(20px, 5.7vw, 28px) !important;
+            line-height: 1 !important;
+        }
+        .header .search-wrapper,
+        .header .pick-header-btn,
+        .header .header-bottom { display: none !important; }
+        .header .header-actions {
+            order: 2 !important;
+            gap: 7px !important;
+            flex-shrink: 0 !important;
+        }
+        .header .header-search-icon {
+            display: inline-flex !important;
+            width: 36px !important;
+            height: 36px !important;
+        }
+        .header .menu-btn-black {
+            order: 3 !important;
+            width: 52px !important;
+            height: 40px !important;
+            min-width: 52px !important;
+            min-height: 40px !important;
+            padding: 0 !important;
+            border-radius: 999px !important;
+            gap: 0 !important;
+        }
+        .header .menu-btn-black img {
+            width: 26px !important;
+            height: 26px !important;
+        }
+        .header .menu-btn-label { display: none !important; }
+        .mobile-menu-drop { top: 66px !important; }
+    }
+    @media (max-width: 420px) {
+        .header .header-container { padding: 0 10px !important; }
+        .header .logo { font-size: clamp(18px, 5.8vw, 24px) !important; }
+        .header .header-actions { gap: 5px !important; }
+        .header .menu-btn-black {
+            width: 48px !important;
+            min-width: 48px !important;
+        }
+    }
     </style>
 </head>
 <body>

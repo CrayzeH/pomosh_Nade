@@ -2842,6 +2842,164 @@ h1 {
   background: #cfd4de;
 }
 
+@media (max-width: 760px) {
+  .settings-dialog {
+    left: 10px;
+    right: 10px;
+    top: 10px;
+    bottom: 10px;
+    transform: none;
+    width: auto;
+    height: calc(100vh - 20px);
+    height: calc(100dvh - 20px);
+    min-height: 0;
+    max-height: calc(100vh - 20px);
+    max-height: calc(100dvh - 20px);
+    border-radius: 22px;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .settings-layout {
+    min-height: 0;
+    height: auto;
+    max-height: none;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .settings-sidebar {
+    flex: 0 0 auto;
+    padding: 18px 16px 12px;
+  }
+
+  .settings-title {
+    margin: 0 38px 12px 0;
+    font-size: 22px;
+  }
+
+  .settings-nav-item {
+    height: 48px;
+    border-radius: 14px;
+    padding: 0 14px;
+    font-size: 16px;
+  }
+
+  .settings-nav-item + .settings-nav-item {
+    margin-top: 8px;
+  }
+
+  .settings-nav-icon,
+  .settings-shield {
+    width: 22px;
+    height: 22px;
+    font-size: 22px;
+  }
+
+  .settings-divider {
+    flex: 0 0 auto;
+    height: 1px;
+    width: 100%;
+  }
+
+  .settings-content {
+    flex: 0 0 auto;
+    min-height: 0;
+    overflow: visible;
+    padding: 16px;
+    padding-bottom: 16px;
+  }
+
+  .settings-pane {
+    gap: 14px;
+  }
+
+  .settings-pane-title {
+    margin-bottom: 4px;
+    font-size: 18px;
+  }
+
+  .settings-field-row {
+    display: grid;
+    grid-template-columns: 1fr;
+    align-items: start;
+    gap: 8px;
+    padding: 0;
+  }
+
+  .settings-field-label {
+    font-size: 17px;
+  }
+
+  .settings-field-hint {
+    font-size: 13px;
+    line-height: 1.25;
+  }
+
+  .settings-input {
+    height: 42px;
+    border-radius: 14px;
+    font-size: 15px;
+  }
+
+  .settings-textarea {
+    min-height: 96px;
+    border-radius: 14px;
+    font-size: 15px;
+  }
+
+  .settings-actions {
+    position: static;
+    left: auto;
+    right: auto;
+    bottom: auto;
+    margin-top: 18px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    z-index: auto;
+  }
+
+  .settings-apply-btn,
+  .settings-save-btn,
+  .settings-security-btn {
+    width: 100%;
+    min-width: 0;
+    height: 42px;
+    font-size: 14px;
+    padding: 0 10px;
+  }
+}
+
+@media (max-width: 420px) {
+  .settings-dialog {
+    left: 6px;
+    right: 6px;
+    top: 6px;
+    bottom: 6px;
+    height: calc(100vh - 12px);
+    height: calc(100dvh - 12px);
+    max-height: calc(100vh - 12px);
+    max-height: calc(100dvh - 12px);
+    border-radius: 18px;
+  }
+
+  .settings-content {
+    padding: 14px 12px 16px;
+  }
+
+  .settings-actions {
+    left: auto;
+    right: auto;
+  }
+
+  .settings-apply-btn,
+  .settings-save-btn {
+    font-size: 13px;
+  }
+}
+
 .chats-main {
   min-width: 0;
 }
@@ -2862,6 +3020,7 @@ h1 {
 
 .chats-shell.is-dialog-open .chat-dialog-header {
   margin: 0;
+  border-radius: 32px 32px 0 0;
 }
 
 .chats-title-bar {
@@ -3030,14 +3189,14 @@ h1 {
 
 .chat-dialog-header {
   height: 62px;
-  border-radius: 32px 32px 0 0;
+  border-radius: 30px 30px 0 0;
   background: #4c5059;
   box-shadow: 0 3px 4px rgba(0, 0, 0, 0.3);
   display: flex;
   align-items: center;
   gap: 12px;
   padding: 0 14px;
-  margin: -28px -28px 0;
+  margin: 0;
 }
 
 .chat-back-btn {
@@ -3460,19 +3619,33 @@ h1 {
   .composer {
     min-height: 160px;
     border-radius: 20px;
+    display: grid;
+    grid-template-rows: auto auto auto;
+    gap: 12px;
+    overflow: hidden;
+  }
+
+  .composer.has-preview {
+    min-height: 220px;
   }
 
   .composer-top {
     min-height: auto;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
   }
 
   .composer-input {
     position: static;
+    flex: 1;
     width: auto;
     height: auto;
-    min-height: 20px;
+    min-height: 48px;
+    max-height: 100px;
     font-size: 16px;
     padding-top: 2px;
+    overflow-y: auto;
   }
 
   .composer-top .avatar {
@@ -3499,9 +3672,10 @@ h1 {
     right: auto;
     bottom: auto;
     width: auto;
-    min-width: 160px;
+    min-width: 142px;
     height: 50px;
-    font-size: 18px;
+    font-size: 16px;
+    padding: 0 18px;
   }
 
   .post-text {
@@ -3518,15 +3692,34 @@ h1 {
   }
 
   .composer-preview {
-    left: 92px;
-    right: 12px;
-    top: 96px;
-    width: auto;
+    position: static;
+    left: auto;
+    right: auto;
+    top: auto;
+    width: 100%;
     margin: 0;
+    max-width: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+  }
+
+  .composer-bottom {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    margin: 0;
+    min-width: 0;
+  }
+
+  .composer-attachments {
+    width: 100%;
+    max-width: 100%;
+    padding: 2px 8px 8px 0;
   }
 
   .composer-attachment-item {
-    flex-basis: 58px;
+    flex: 0 0 58px;
     width: 58px;
     height: 58px;
   }
@@ -3576,15 +3769,50 @@ h1 {
     font-size: 30px;
   }
 
+  .profile-name-row {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 4px;
+    align-items: start;
+  }
+
+  .profile-memberships,
+  .profile-ban-state,
+  .profile-handle {
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    line-height: 1.2;
+  }
+
   .profile-edit,
   .profile-publish {
-    min-width: 190px;
+    min-width: 0;
     height: 48px;
-    font-size: 18px;
+    font-size: 16px;
+  }
+
+  .profile-edit {
+    width: auto;
+    min-width: 150px;
+    max-width: 100%;
+    margin: 2px 0 0;
+    transform: none;
+    align-self: flex-start;
+    padding: 0 18px;
+  }
+
+  .profile-main .post-btn {
+    width: auto;
+    min-width: 142px;
+    height: 50px;
+    right: auto;
+    bottom: auto;
+    font-size: 16px;
   }
 
   .profile-composer-bottom {
-    margin-top: 20px;
+    margin-top: 0;
   }
 
   .quiz-shell {

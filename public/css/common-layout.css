@@ -445,17 +445,21 @@ body.common-layout-ready {
 
 @media (max-width: 900px) {
     body {
-        padding-top: 68px;
+        padding-top: 66px;
     }
 
     .header-container {
-        width: 94%;
-        padding: 0;
+        width: 100%;
+        max-width: none;
+        padding: 0 16px;
     }
 
     .header-top {
-        gap: 10px;
-        min-height: 58px;
+        gap: 8px;
+        min-height: 64px;
+        padding: 8px 0;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto auto;
     }
 
     .header-bottom {
@@ -464,18 +468,21 @@ body.common-layout-ready {
 
     .header-search-icon {
         display: inline-flex;
+        width: 36px;
+        height: 36px;
         flex-shrink: 0;
     }
 
     .menu-btn-black {
         display: inline-flex;
-        min-height: 36px;
-        width: 38px;
-        height: 38px;
+        min-height: 40px;
+        width: 52px;
+        height: 40px;
         padding: 0;
         justify-content: center;
         flex-shrink: 0;
         order: 3;
+        border-radius: 999px;
     }
 
     .menu-btn-label {
@@ -483,8 +490,8 @@ body.common-layout-ready {
     }
 
     .menu-btn-black img {
-        width: 24px;
-        height: 24px;
+        width: 26px;
+        height: 26px;
     }
 
     .logo-area {
@@ -494,11 +501,13 @@ body.common-layout-ready {
     .logo {
         order: 1;
         flex: 1 1 auto;
-        font-size: clamp(0.92rem, 4vw, 1.3rem);
+        font-size: clamp(1.05rem, 5.2vw, 1.65rem);
         min-width: 0;
-        overflow: visible;
+        overflow: hidden;
         text-overflow: clip;
         white-space: nowrap;
+        line-height: 1;
+        padding-left: 0;
     }
 
     .pick-header-btn,
@@ -510,13 +519,14 @@ body.common-layout-ready {
 
     .header-actions,
     #authButtons {
-        gap: 8px;
+        gap: 7px;
         flex-shrink: 0;
         order: 2;
+        min-width: 0;
     }
 
     .mobile-menu-drop {
-        top: 68px;
+        top: 66px;
     }
 
     .footer-inner {
@@ -537,16 +547,16 @@ body.common-layout-ready {
 
 @media (max-width: 520px) {
     body {
-        padding-top: 62px;
+        padding-top: 64px;
     }
 
     .header-top {
         padding: 8px 0;
-        min-height: 54px;
+        min-height: 64px;
     }
 
     .logo {
-        font-size: clamp(0.82rem, 4.1vw, 1.05rem);
+        font-size: clamp(0.98rem, 5.6vw, 1.35rem);
     }
 
     .logo-area {
@@ -554,16 +564,16 @@ body.common-layout-ready {
     }
 
     .menu-btn-black {
-        width: 36px;
-        height: 36px;
-        min-height: 36px;
+        width: 50px;
+        height: 40px;
+        min-height: 40px;
         padding: 0;
         justify-content: center;
     }
 
     .menu-btn-black img {
-        width: 23px;
-        height: 23px;
+        width: 26px;
+        height: 26px;
     }
 
     .pick-header-btn {
@@ -580,8 +590,8 @@ body.common-layout-ready {
 
     .login-header-btn img,
     .header-search-icon img {
-        width: 24px;
-        height: 24px;
+        width: 23px;
+        height: 23px;
     }
 
     .user-name {
@@ -590,14 +600,45 @@ body.common-layout-ready {
     }
 
     .user-name.has-avatar {
-        width: 36px;
-        height: 36px;
+        width: 38px;
+        height: 38px;
         padding: 0;
     }
 
     .mobile-menu-drop {
-        top: 62px;
+        top: 64px;
         padding: 14px 18px 18px;
+    }
+
+    .header-container {
+        padding: 0 12px;
+    }
+}
+
+@media (max-width: 380px) {
+    .header-container {
+        padding: 0 10px;
+    }
+
+    .logo {
+        font-size: clamp(0.9rem, 5.2vw, 1.15rem);
+    }
+
+    .header-actions,
+    #authButtons {
+        gap: 4px;
+    }
+
+    .header-search-icon {
+        width: 30px;
+        height: 30px;
+    }
+
+    .menu-btn-black {
+        width: 42px;
+        min-width: 42px;
+        height: 36px;
+        min-height: 36px;
     }
 
     .site-footer {
