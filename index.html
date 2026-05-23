@@ -4498,158 +4498,63 @@
         padding: 2px 0 !important;
     }
     @media (max-width: 900px) {
-        .header .header-container {
-            width: calc(100% - 24px) !important;
-        }
-        .header .header-top {
-            min-height: 58px !important;
-            padding: 8px 0 !important;
-            gap: 10px !important;
-        }
-        .header .logo-area {
-            display: contents !important;
-        }
-        .header .logo {
-            flex: 1 1 auto !important;
-            min-width: 0 !important;
-            overflow: visible !important;
-            text-overflow: clip !important;
-            white-space: nowrap !important;
-            font-size: clamp(13px, 4vw, 20px) !important;
-            line-height: 1 !important;
-        }
-        .header .menu-btn-black {
-            width: 38px !important;
-            height: 38px !important;
-            min-width: 38px !important;
-            min-height: 38px !important;
-            padding: 0 !important;
-            border-radius: 999px !important;
-            order: 3 !important;
-            gap: 0 !important;
-        }
-        .header .menu-btn-black img {
-            width: 24px !important;
-            height: 24px !important;
-        }
-        .header .menu-btn-label {
-            display: none !important;
-        }
-        .header .header-actions {
-            order: 2 !important;
-            gap: 8px !important;
-            flex-shrink: 0 !important;
-        }
-        .header .header-search-icon {
-            display: inline-flex !important;
-            width: 34px !important;
-            height: 34px !important;
-            flex-shrink: 0 !important;
-        }
-        .header .header-search-icon img {
-            width: 24px !important;
-            height: 24px !important;
-        }
-        .header .pick-header-btn,
-        .header .header-bottom {
-            display: none !important;
-        }
-    }
-    @media (max-width: 520px) {
-        .header .header-container {
-            width: 100% !important;
-            padding: 0 14px !important;
-        }
-        .header .logo {
-            font-size: clamp(18px, 6.2vw, 26px) !important;
-        }
-        .header .login-header-btn span {
-            display: none !important;
-        }
-        .header .login-header-btn img {
-            width: 24px !important;
-            height: 24px !important;
-        }
-    }
-    @media (max-width: 900px) {
-        body {
-            padding-top: 66px !important;
-        }
+        body { padding-top: 66px !important; }
         .header .header-container {
             width: 100% !important;
             max-width: none !important;
-            padding: 0 16px !important;
+            padding: 0 14px !important;
         }
         .header .header-top {
             min-height: 64px !important;
             padding: 8px 0 !important;
             gap: 8px !important;
-            display: grid !important;
-            grid-template-columns: minmax(0, 1fr) auto auto !important;
+            flex-wrap: nowrap !important;
+            justify-content: space-between !important;
         }
+        .header .logo-area { display: contents !important; }
         .header .logo {
             flex: 1 1 auto !important;
             min-width: 0 !important;
-            overflow: hidden !important;
-            font-size: clamp(17px, 5.2vw, 26px) !important;
+            font-size: clamp(20px, 5.7vw, 28px) !important;
             line-height: 1 !important;
         }
+        .header .search-wrapper,
+        .header .pick-header-btn,
+        .header .header-bottom { display: none !important; }
         .header .header-actions {
+            order: 2 !important;
             gap: 7px !important;
+            flex-shrink: 0 !important;
         }
         .header .header-search-icon {
+            display: inline-flex !important;
             width: 36px !important;
             height: 36px !important;
         }
         .header .menu-btn-black {
+            order: 3 !important;
             width: 52px !important;
             height: 40px !important;
             min-width: 52px !important;
             min-height: 40px !important;
+            padding: 0 !important;
             border-radius: 999px !important;
+            gap: 0 !important;
         }
         .header .menu-btn-black img {
             width: 26px !important;
             height: 26px !important;
         }
-        .mobile-menu-drop {
-            top: 66px !important;
-        }
+        .header .menu-btn-label { display: none !important; }
+        .mobile-menu-drop { top: 66px !important; }
     }
     @media (max-width: 420px) {
-        .header .header-container {
-            padding: 0 12px !important;
-        }
-        .header .logo {
-            font-size: clamp(15px, 5.3vw, 21px) !important;
-        }
-        .header .header-actions {
-            gap: 5px !important;
-        }
+        .header .header-container { padding: 0 10px !important; }
+        .header .logo { font-size: clamp(18px, 5.8vw, 24px) !important; }
+        .header .header-actions { gap: 5px !important; }
         .header .menu-btn-black {
             width: 48px !important;
             min-width: 48px !important;
-        }
-    }
-    @media (max-width: 380px) {
-        .header .header-container {
-            padding: 0 10px !important;
-        }
-        .header .logo {
-            font-size: clamp(14px, 5vw, 18px) !important;
-        }
-        .header .header-actions {
-            gap: 4px !important;
-        }
-        .header .header-search-icon {
-            width: 30px !important;
-            height: 30px !important;
-        }
-        .header .menu-btn-black {
-            width: 42px !important;
-            min-width: 42px !important;
-            height: 36px !important;
-            min-height: 36px !important;
         }
     }
     @media (max-width: 768px) {
