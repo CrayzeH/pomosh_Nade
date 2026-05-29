@@ -1513,9 +1513,11 @@ h1 {
 }
 
 .profile-name-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   align-items: baseline;
-  gap: 10px;
+  column-gap: 10px;
+  row-gap: 4px;
   margin: 8px 0 0;
 }
 
@@ -1545,6 +1547,41 @@ h1 {
   font-size: 14px;
   font-weight: 700;
   cursor: pointer;
+}
+
+.profile-head-actions {
+  margin-left: auto;
+  transform: translateY(-54px);
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 14px;
+  min-width: 0;
+  max-width: min(760px, 68%);
+}
+
+.profile-head-actions .profile-edit {
+  margin-bottom: 0;
+  transform: none;
+  flex: 0 0 auto;
+}
+
+.profile-bio {
+  margin: 0;
+  min-width: 0;
+  color: #f4f6fb;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.25;
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
+.profile-name-row .profile-memberships,
+.profile-name-row .profile-ban-state {
+  grid-column: 1 / -1;
+  margin-top: 0;
+  max-width: min(720px, 100%);
 }
 
 .profile-tabs {
@@ -3023,8 +3060,20 @@ h1 {
   border-radius: 32px 32px 0 0;
 }
 
+#chats-list-view {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+#chats-list-view[hidden] {
+  display: none !important;
+}
+
 .chats-title-bar {
   height: 50px;
+  flex: 0 0 auto;
   border-radius: 999px;
   background: #4c5059;
   color: #edf1fb;
@@ -3039,6 +3088,7 @@ h1 {
 
 .chats-search {
   height: 52px;
+  flex: 0 0 auto;
   border-radius: 12px;
   background: #bfc5d1;
   display: flex;
@@ -3071,9 +3121,12 @@ h1 {
 }
 
 .chats-list {
-  height: calc(100% - 130px);
+  flex: 1 1 auto;
+  height: auto;
   min-height: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding-right: 8px;
 }
 
@@ -3802,6 +3855,31 @@ h1 {
     padding: 0 18px;
   }
 
+  .profile-head-actions {
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    transform: none;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .profile-head-actions .profile-edit {
+    width: auto;
+    min-width: 132px;
+    margin: 0;
+    align-self: center;
+  }
+
+  .profile-bio {
+    max-width: 100%;
+    font-size: 14px;
+    line-height: 1.22;
+    text-align: left;
+  }
+
   .profile-main .post-btn {
     width: auto;
     min-width: 142px;
@@ -3909,7 +3987,7 @@ h1 {
 
   .chats-list {
     min-height: 0;
-    height: calc(100% - 108px);
+    height: auto;
   }
 
   .chat-row {

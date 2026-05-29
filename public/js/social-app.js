@@ -53,6 +53,7 @@
   const iconTrash = () => '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v5"/><path d="M14 11v5"/></svg>';
   const iconBan = () => '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M6.5 6.5l11 11"/></svg>';
   const isImageSrc = (value) => /^(https?:\/\/|\/|data:image\/)/.test(String(value || ''));
+  const AUTO_REFRESH_MS = 5000;
 
   const readImages = (files) => Promise.all(files.map((file) => new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -119,6 +120,27 @@
     return `<div class="post-gallery" data-gallery-index="0"><div class="post-gallery-track">${galleryImages.map((image) => (
       `<img class="${className}" src="${image}" alt="Фото" data-view-image="1" />`
     )).join('')}</div>${controls}</div>`;
+  }
+
+  function startAutoRefresh(callback, interval = AUTO_REFRESH_MS) {
+    let isRunning = false;
+    const tick = async () => {
+      if (document.hidden || isRunning) return;
+      isRunning = true;
+      try {
+        await callback();
+      } catch (err) {
+        console.warn('Auto refresh failed:', err);
+      } finally {
+        isRunning = false;
+      }
+    };
+    const timer = window.setInterval(tick, interval);
+    window.addEventListener('beforeunload', () => window.clearInterval(timer), { once: true });
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) tick();
+    });
+    return timer;
   }
 
   function renderChatImages(images) {
@@ -609,9 +631,13 @@
     let pendingImages = [];
     if (avatar) avatar.src = me.avatar;
     bindAutoGrowTextarea(text);
+    let feedSignature = '';
 
     async function loadFeed() {
       const data = await api('/api/social/feed');
+      const nextSignature = JSON.stringify((data.messages || []).map((message) => [message.id, message.likes, message.liked, message.views, message.createdAt]));
+      if (nextSignature === feedSignature) return;
+      feedSignature = nextSignature;
       list.innerHTML = data.messages.map(renderFeedMessage).reverse().join('') || '<p class="empty-state">В ленте пока нет сообщений</p>';
     }
 
@@ -653,6 +679,7 @@
       $('.composer')?.classList.toggle('has-preview', pendingImages.length > 0);
     });
     await loadFeed();
+    startAutoRefresh(loadFeed);
   }
 
   async function initProfile() {
@@ -668,11 +695,18 @@
     const text = isOwn ? $('#profile-new-post-text') : $('#other-post-text');
     const attachInput = isOwn ? $('#profile-attach-input') : $('#other-attach-input');
     let pendingImages = [];
+    let wallSignature = '';
     bindAutoGrowTextarea(text);
 
     $('.profile-name').textContent = viewed.name;
     $('.profile-handle').textContent = `@${viewed.handle}`;
     $('.profile-avatar').src = viewed.avatar;
+    const bioNode = $('#profile-bio');
+    const profileBio = String(viewed.bio || '').trim().slice(0, 80);
+    if (bioNode && profileBio) {
+      bioNode.textContent = profileBio;
+      bioNode.hidden = false;
+    }
     const composerAvatar = isOwn ? $('#profile-composer-avatar') : $('#other-composer .avatar');
     if (composerAvatar) composerAvatar.src = me.avatar;
     document.body.classList.remove('profile-loading');
@@ -704,6 +738,9 @@
 
     async function loadWall() {
       const data = await api(`/api/social/posts?wallOwnerId=${viewed.id}`);
+      const nextSignature = JSON.stringify((data.posts || []).map((post) => [post.id, post.likes, post.liked, post.views, post.createdAt]));
+      if (nextSignature === wallSignature) return;
+      wallSignature = nextSignature;
       list.innerHTML = data.posts.map(renderPost).join('') || '<p class="empty-state">Постов пока нет</p>';
     }
 
@@ -795,7 +832,7 @@
     $('#profile-edit-btn')?.addEventListener('click', () => {
       $('#settings-name-input').value = me.name;
       $('#settings-username-input').value = me.handle;
-      $('#settings-about-input').value = me.bio || '';
+      $('#settings-about-input').value = String(me.bio || '').slice(0, 80);
       $('#profile-settings-modal').classList.add('is-open');
     });
     $('#profile-settings-close')?.addEventListener('click', () => $('#profile-settings-modal').classList.remove('is-open'));
@@ -817,7 +854,7 @@
         body: JSON.stringify({
           name: $('#settings-name-input').value,
           username: $('#settings-username-input').value,
-          bio: $('#settings-about-input').value,
+          bio: $('#settings-about-input').value.slice(0, 80),
           avatar: $('.profile-avatar').src,
           cover: me.cover
         })
@@ -884,6 +921,7 @@
     });
 
     await loadWall();
+    startAutoRefresh(loadWall);
   }
 
   async function initNotifications() {
@@ -1101,9 +1139,15 @@
     bindAutoGrowTextarea($('#chat-dialog-input'));
     let activeChatId = Number(new URLSearchParams(location.search).get('chat')) || null;
     let pendingChatImages = [];
+    let chatsSignature = '';
+    let messagesSignature = '';
 
     async function loadChats() {
+      if (search?.value.trim()) return;
       const data = await api('/api/social/chats');
+      const nextSignature = JSON.stringify((data.chats || []).map((chat) => [chat.id, chat.preview, chat.updatedAt, chat.isBlocked]));
+      if (nextSignature === chatsSignature) return;
+      chatsSignature = nextSignature;
       list.innerHTML = data.chats.map((chat) => `
         <article class="chat-row" data-chat-id="${chat.id}">
           <div class="chat-avatar">${isImageSrc(chat.avatar) ? `<img class="chat-avatar-image" src="${chat.avatar}" alt="" />` : `<span class="chat-avatar-emoji">${escapeHtml(chat.avatar || '★')}</span>`}</div>
@@ -1135,16 +1179,27 @@
       }).join('');
     }
 
-    async function openChat(chatId) {
-      activeChatId = Number(chatId);
+    async function openChat(chatId, options = {}) {
+      const nextChatId = Number(chatId);
+      if (activeChatId !== nextChatId) messagesSignature = '';
+      activeChatId = nextChatId;
       const data = await api(`/api/social/chats/${activeChatId}/messages`);
+      const nextSignature = JSON.stringify((data.messages || []).map((message) => [
+        message.id,
+        message.text,
+        (message.images || []).join('|'),
+        message.createdAt
+      ]));
+      if (options.refreshOnly && nextSignature === messagesSignature) return;
+      const wasNearBottom = messagesNode.scrollHeight - messagesNode.scrollTop - messagesNode.clientHeight < 80;
+      messagesSignature = nextSignature;
       $('#chat-dialog-name').textContent = data.chat.title;
       $('#chat-dialog-status').textContent = data.chat.isBlocked ? 'личный чат · пользователь заблокирован' : (data.chat.type === 'group' ? 'групповой чат' : 'личный чат');
       $('#chat-dialog-avatar').innerHTML = isImageSrc(data.chat.avatar)
         ? `${data.chat.type === 'direct' && data.chat.otherUser ? `<a href="${profileUrl(data.chat.otherUser)}"><img class="chat-avatar-image" src="${data.chat.avatar}" alt="" /></a>` : `<img class="chat-avatar-image" src="${data.chat.avatar}" alt="" />`}`
         : `<span class="chat-avatar-emoji">${escapeHtml(data.chat.avatar || '★')}</span>`;
       messagesNode.innerHTML = renderDialogMessages(data.messages);
-      messagesNode.scrollTop = messagesNode.scrollHeight;
+      if (!options.refreshOnly || wasNearBottom) messagesNode.scrollTop = messagesNode.scrollHeight;
       listView.hidden = true;
       dialog.hidden = false;
       $('.chats-shell')?.classList.add('is-dialog-open');
@@ -1157,6 +1212,7 @@
     $('#chat-back-btn')?.addEventListener('click', () => {
       dialog.hidden = true;
       listView.hidden = false;
+      messagesSignature = '';
       $('.chats-shell')?.classList.remove('is-dialog-open');
     });
     $('#chat-dialog-attach-btn')?.addEventListener('click', () => attachInput?.click());
@@ -1218,6 +1274,10 @@
 
     await loadChats();
     if (activeChatId) await openChat(activeChatId);
+    startAutoRefresh(async () => {
+      await loadChats();
+      if (activeChatId && !dialog.hidden) await openChat(activeChatId, { refreshOnly: true });
+    });
   }
 
   document.addEventListener('DOMContentLoaded', async () => {

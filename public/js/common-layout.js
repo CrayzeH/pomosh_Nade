@@ -203,6 +203,95 @@
         document.head.appendChild(styles);
     }
 
+    function addHeaderStyles() {
+        if (document.getElementById('commonHeaderFinalStyles')) return;
+
+        const styles = document.createElement('style');
+        styles.id = 'commonHeaderFinalStyles';
+        styles.textContent = `
+            @media (max-width: 900px) {
+                body { padding-top: 66px !important; }
+                .header .header-container {
+                    width: 100% !important;
+                    max-width: none !important;
+                    padding: 0 14px !important;
+                    box-sizing: border-box !important;
+                }
+                .header .header-top {
+                    min-height: 64px !important;
+                    padding: 8px 0 !important;
+                    gap: 8px !important;
+                    display: flex !important;
+                    flex-wrap: nowrap !important;
+                    align-items: center !important;
+                    justify-content: space-between !important;
+                }
+                .header .logo-area { display: contents !important; }
+                .header .logo {
+                    order: 1 !important;
+                    flex: 1 1 auto !important;
+                    min-width: 0 !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    transform: none !important;
+                    font-size: clamp(20px, 5.7vw, 28px) !important;
+                    line-height: 1 !important;
+                    white-space: nowrap !important;
+                    overflow: visible !important;
+                    text-overflow: clip !important;
+                }
+                .header .search-wrapper,
+                .header .pick-header-btn,
+                .header .header-bottom { display: none !important; }
+                .header .header-actions {
+                    order: 2 !important;
+                    gap: 7px !important;
+                    flex: 0 0 auto !important;
+                    min-width: 0 !important;
+                }
+                .header .header-search-icon {
+                    display: inline-flex !important;
+                    width: 36px !important;
+                    height: 36px !important;
+                    flex: 0 0 36px !important;
+                }
+                .header .header-search-icon img {
+                    width: 26px !important;
+                    height: 26px !important;
+                }
+                .header .menu-btn-black {
+                    order: 3 !important;
+                    width: 52px !important;
+                    height: 40px !important;
+                    min-width: 52px !important;
+                    min-height: 40px !important;
+                    padding: 0 !important;
+                    border-radius: 999px !important;
+                    gap: 0 !important;
+                    flex: 0 0 52px !important;
+                }
+                .header .menu-btn-black img {
+                    width: 26px !important;
+                    height: 26px !important;
+                }
+                .header .menu-btn-label,
+                .header .login-header-btn span { display: none !important; }
+                .mobile-menu-drop { top: 66px !important; }
+            }
+            @media (max-width: 420px) {
+                .header .header-container { padding: 0 10px !important; }
+                .header .logo { font-size: clamp(18px, 5.8vw, 24px) !important; }
+                .header .header-actions { gap: 5px !important; }
+                .header .menu-btn-black {
+                    width: 48px !important;
+                    min-width: 48px !important;
+                    flex-basis: 48px !important;
+                }
+            }
+        `;
+        document.head.appendChild(styles);
+    }
+
     function initSearch() {
         const searchInput = document.getElementById('globalSearchInput');
         const dropdown = document.getElementById('searchResultsDropdown');
@@ -263,6 +352,7 @@
         document.body.dataset.commonLayoutApplied = 'true';
 
         addSearchStyles();
+        addHeaderStyles();
 
         // Удаляем старый хедер и футер
         const oldMobileMenu = document.getElementById('mobileMenuDrop');
@@ -329,6 +419,14 @@
         });
 
         // Навигация
+        const scrollToHomeAbout = () => {
+            const aboutSection = document.getElementById('home-about-section');
+            if (aboutSection) {
+                aboutSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                return;
+            }
+            window.location.href = '/#home-about-section';
+        };
         const scrollToFooter = () => {
             const footer = document.querySelector('.site-footer') || document.querySelector('footer');
             if (footer) footer.scrollIntoView({ behavior: 'smooth' });
@@ -340,7 +438,12 @@
             item.addEventListener('click', (event) => {
                 document.getElementById('mobileMenuDrop')?.classList.remove('open');
                 document.body.classList.remove('menu-open');
-                if (item.dataset.page === 'about' || item.dataset.page === 'contacts' || item.dataset.page === 'squads') {
+                if (item.dataset.page === 'about') {
+                    event.preventDefault();
+                    scrollToHomeAbout();
+                    return;
+                }
+                if (item.dataset.page === 'contacts' || item.dataset.page === 'squads') {
                     event.preventDefault();
                     scrollToFooter();
                     return;

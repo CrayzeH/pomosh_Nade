@@ -48,7 +48,10 @@
             </div>
           </div>
 
-          <button class="profile-edit" id="profile-edit-btn" type="button">Редактировать</button>
+          <div class="profile-head-actions">
+            <p class="profile-bio" id="profile-bio" hidden></p>
+            <button class="profile-edit" id="profile-edit-btn" type="button">Редактировать</button>
+          </div>
         </div>
 
         <div class="profile-tabs">
@@ -136,7 +139,7 @@
             <div class="settings-field-stack">
               <p class="settings-field-label">О себе</p>
               <p class="settings-field-hint">Расскажите немного о себе</p>
-              <textarea class="settings-textarea" id="settings-about-input" placeholder="Напишите что-нибудь о себе..."></textarea>
+              <textarea class="settings-textarea" id="settings-about-input" maxlength="80" placeholder="Напишите что-нибудь о себе..."></textarea>
             </div>
           </div>
           <div class="settings-pane" id="settings-security-pane" hidden>

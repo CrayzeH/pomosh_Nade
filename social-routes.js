@@ -180,7 +180,7 @@ module.exports = function registerSocialRoutes(ctx) {
             await dbRun(
                 `UPDATE users SET full_name = ?, username = ?, bio = ?, avatar = ?, cover = ?, is_profile_complete = 1, updated_at = datetime('now')
                  WHERE id = ?`,
-                [nextName, nextUsername, String(bio || '').slice(0, 500), avatar || user.avatar, cover || user.cover, user.id]
+                [nextName, nextUsername, String(bio || '').slice(0, 80), avatar || user.avatar, cover || user.cover, user.id]
             );
 
             res.json({ success: true, user: await getCurrentUser(req) });

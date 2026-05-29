@@ -4873,7 +4873,7 @@
         </div>
         <div class="header-bottom">
             <div class="bottom-nav" id="bottomNav">
-                <span data-page="about" onclick="document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'})">О нас</span>
+                <span data-page="about" onclick="document.getElementById('home-about-section')?.scrollIntoView({behavior: 'smooth', block: 'start'})">О нас</span>
                 <span data-page="squads" onclick="document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'})">Отряды</span>
                 <span data-page="create">Создавай</span>
                 <span data-page="contacts">Контакты</span>
@@ -4884,7 +4884,7 @@
 
 <!-- Мобильное меню (выезжающее) -->
 <div class="mobile-menu-drop" id="mobileMenuDrop">
-    <span data-page="about" onclick="document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'})">О нас</span>
+    <span data-page="about" onclick="document.getElementById('home-about-section')?.scrollIntoView({behavior: 'smooth', block: 'start'})">О нас</span>
     <span data-page="squads" onclick="document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'}); closeMobileMenu();">Отряды</span>
     <span data-page="create">Создавай</span>
     <span data-page="contacts">Контакты</span>
@@ -4929,7 +4929,7 @@
         </div>
     </section>
 
-    <section class="success-stories">
+    <section class="success-stories" id="home-about-section">
         <div class="stories-container">
             <div class="stories-title">Ребята, у которых получилось</div>
             <div class="three-columns">
@@ -5382,7 +5382,7 @@
     function handleHeaderNav(page) {
         switch (page) {
             case 'about':
-                document.querySelector('footer')?.scrollIntoView({behavior: 'smooth'});
+                document.getElementById('home-about-section')?.scrollIntoView({behavior: 'smooth', block: 'start'});
                 break;
             case 'directions':
                 alert('Раздел "Направления" в разработке');
