@@ -23,20 +23,28 @@ const HOST = '0.0.0.0';
 const isProduction = process.env.NODE_ENV === 'production';
 const sessionSecret = process.env.SESSION_SECRET || 'sozvezdie_secret_key_2026';
 const sessionStoreType = String(process.env.SESSION_STORE || 'memory').toLowerCase();
+const appDataDir = process.env.APP_DATA_DIR || (isProduction ? '/home/app/data' : __dirname);
+function resolveAppPath(value, fallbackDir = __dirname) {
+    return path.isAbsolute(value) ? value : path.join(fallbackDir, value);
+}
+
+function ensureWritableDir(dir) {
+    if (!fs.existsSync(dir)) {
+        fs.mkdirSync(dir, { recursive: true });
+    }
+    fs.accessSync(dir, fs.constants.R_OK | fs.constants.W_OK);
+}
+
 const configuredSessionDbDir = process.env.SESSION_DB_DIR || '';
 const sessionDbDir = configuredSessionDbDir
-    ? (path.isAbsolute(configuredSessionDbDir) ? configuredSessionDbDir : path.join(__dirname, configuredSessionDbDir))
-    : __dirname;
+    ? resolveAppPath(configuredSessionDbDir, __dirname)
+    : appDataDir;
 const sessionDbPath = path.join(sessionDbDir, 'sessions.db');
 
 let sessionStore = null;
 if (sessionStoreType === 'sqlite') {
-    if (!fs.existsSync(sessionDbDir)) {
-        fs.mkdirSync(sessionDbDir, { recursive: true });
-    }
-
     try {
-        fs.accessSync(sessionDbDir, fs.constants.R_OK | fs.constants.W_OK);
+        ensureWritableDir(sessionDbDir);
         fs.closeSync(fs.openSync(sessionDbPath, 'a'));
         sessionStore = new SQLiteStore({ db: 'sessions.db', dir: sessionDbDir, table: 'sessions' });
     } catch (err) {
@@ -59,17 +67,18 @@ if (!fs.existsSync(publicDir)) {
 // =============================================
 // ПОДКЛЮЧЕНИЕ К БД
 // =============================================
-const configuredDbPath = process.env.SQLITE_DB_PATH || process.env.DB_PATH || 'soz.db';
-const dbPath = path.isAbsolute(configuredDbPath)
-    ? configuredDbPath
-    : path.join(__dirname, configuredDbPath);
+const configuredDbPath = process.env.SQLITE_DB_PATH || process.env.DB_PATH || '';
+const dbPath = configuredDbPath
+    ? resolveAppPath(configuredDbPath, __dirname)
+    : path.join(appDataDir, 'soz.db');
 const dbDir = path.dirname(dbPath);
-if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
-}
 
 try {
-    fs.accessSync(dbDir, fs.constants.R_OK | fs.constants.W_OK);
+    ensureWritableDir(dbDir);
+    const bundledDbPath = path.join(__dirname, 'soz.db');
+    if (!fs.existsSync(dbPath) && bundledDbPath !== dbPath && fs.existsSync(bundledDbPath)) {
+        fs.copyFileSync(bundledDbPath, dbPath);
+    }
     fs.closeSync(fs.openSync(dbPath, 'a'));
 } catch (err) {
     console.error('SQLite database path is not writable:', dbPath, err.message);
@@ -645,6 +654,7 @@ checkDatabaseWritable()
 app.use(express.json({ limit: '25mb' }));
 app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 app.use(express.static(publicDir));
+app.use('/uploads', express.static(path.join(appDataDir, 'uploads')));
 
 app.use(express.static(path.join(__dirname, 'public/css')));
 
@@ -667,7 +677,7 @@ app.use(session({
 // Настройка загрузки файлов (аватары)
 const storage = multer.diskStorage({
     destination: (req, file, cb) => {
-        const uploadDir = path.join(__dirname, 'public/uploads/avatars');
+        const uploadDir = path.join(appDataDir, 'uploads/avatars');
         if (!fs.existsSync(uploadDir)) {
             fs.mkdirSync(uploadDir, { recursive: true });
         }
