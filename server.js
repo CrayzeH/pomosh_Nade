@@ -19,6 +19,7 @@ try {
 
 const app = express();
 const PORT = Number(process.env.PORT || 3000);
+const HOST = '0.0.0.0';
 const isProduction = process.env.NODE_ENV === 'production';
 const sessionSecret = process.env.SESSION_SECRET || 'sozvezdie_secret_key_2026';
 const sessionStoreType = String(process.env.SESSION_STORE || 'memory').toLowerCase();
@@ -2504,7 +2505,7 @@ app.get('/group_ever.html', (req, res) => {
 // =============================================
 // ЗАПУСК СЕРВЕРА
 // =============================================
-app.listen(PORT, () => {
+app.listen(PORT, HOST, () => {
     console.log(`Сервер запущен на http://localhost:${PORT}`);
     console.log(`Доступные страницы:`);
     console.log(`  - http://localhost:${PORT}/`);
