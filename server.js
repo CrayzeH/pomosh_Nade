@@ -22,7 +22,7 @@ const PORT = Number(process.env.PORT || 3000);
 const HOST = '0.0.0.0';
 const isProduction = process.env.NODE_ENV === 'production';
 const sessionSecret = process.env.SESSION_SECRET || 'sozvezdie_secret_key_2026';
-const sessionStoreType = String(process.env.SESSION_STORE || 'memory').toLowerCase();
+const sessionStoreType = String(process.env.SESSION_STORE || (isProduction ? 'sqlite' : 'memory')).toLowerCase();
 const appDataDir = process.env.APP_DATA_DIR || (isProduction ? '/home/app/data' : __dirname);
 function resolveAppPath(value, fallbackDir = __dirname) {
     return path.isAbsolute(value) ? value : path.join(fallbackDir, value);
