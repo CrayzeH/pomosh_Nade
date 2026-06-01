@@ -394,7 +394,7 @@
             });
         });
         document.getElementById('loginHeaderBtn')?.addEventListener('click', () => {
-            window.location.href = '/register.html';
+            window.location.href = '/login_new.html';
         });
         document.getElementById('userProfile')?.addEventListener('click', () => {
             window.location.href = '/profile_new.html';

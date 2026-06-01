@@ -87,6 +87,7 @@
         <button data-page="merch">Мерч</button>
         <button data-page="merchOrders">Заказы мерча</button>
         <button data-page="tests">Баллы за тесты</button>
+        <button data-page="essaySubmissions">Задания</button>
       </nav>
     </aside>
     <main class="main">
@@ -169,6 +170,7 @@
       if (page === 'merch') return loadMerch();
       if (page === 'merchOrders') return loadMerchOrders();
       if (page === 'tests') return loadTests();
+      if (page === 'essaySubmissions') return loadEssaySubmissions();
     }
 
     async function loadDashboard() {
@@ -554,6 +556,32 @@
       });
     }
 
+    async function loadEssaySubmissions() {
+      const data = await api('/api/admin/essay-submissions');
+      const submissions = data.submissions || [];
+      setExportData('essaySubmissions', 'zadaniya-na-proverke', ['ID', 'Задание', 'Пользователь', 'Email', 'Статус', 'Баллы', 'Дата'], submissions.map((item) => [
+        item.id,
+        item.task_title,
+        item.user_name,
+        item.user_email,
+        item.status,
+        item.points_awarded || 0,
+        dateText(item.created_at)
+      ]));
+      content.innerHTML = `${exportButton('essaySubmissions')}${table(['ID', 'Задание', 'Пользователь', 'Текст', 'Статус', 'Баллы', 'Комментарий', 'Действия'], submissions.map((item) => [
+        item.id,
+        `${esc(item.task_title)}<br><small>макс. ${Number(item.max_reward || 0)} баллов</small>`,
+        `${esc(item.user_name)}<br><small>${esc(item.user_email)}</small>`,
+        `<div class="question-text">${esc(item.text)}</div>`,
+        `<span class="badge ${esc(item.status)}">${esc(item.status)}</span>`,
+        `<input class="input" id="essay-points-${item.id}" type="number" min="0" max="${Number(item.max_reward || 0)}" value="${Number(item.points_awarded || 0)}" ${item.status !== 'pending' ? 'disabled' : ''}>`,
+        `<textarea class="input" id="essay-comment-${item.id}" ${item.status !== 'pending' ? 'disabled' : ''}>${esc(item.admin_comment || '')}</textarea>`,
+        item.status === 'pending'
+          ? `<div class="actions"><button class="btn ok small" onclick="reviewEssay(${item.id}, 'approved')">Принять</button><button class="btn danger small" onclick="reviewEssay(${item.id}, 'rejected')">Отклонить</button></div>`
+          : `${dateText(item.reviewed_at)}<br><small>${esc(item.reviewer_name || '')}</small>`
+      ]))}`;
+    }
+
     function setExportData(key, fileName, headers, rows) {
       exportsData[key] = { fileName, headers, rows };
     }
@@ -682,6 +710,18 @@
       } catch (err) {
         alert(err.message || 'Не удалось сохранить тест');
       }
+    }
+
+    async function reviewEssay(id, status) {
+      await api(`/api/admin/essay-submissions/${id}/review`, {
+        method: 'PUT',
+        body: JSON.stringify({
+          status,
+          points: asNumber(fieldValue(`essay-points-${id}`)),
+          comment: fieldValue(`essay-comment-${id}`)
+        })
+      });
+      await loadEssaySubmissions();
     }
 
     async function deleteTest(id) {

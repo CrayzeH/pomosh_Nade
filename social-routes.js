@@ -20,10 +20,11 @@ module.exports = function registerSocialRoutes(ctx) {
     }
 
     async function getPostWithDetails(post, viewerId, viewerIsAdmin = false) {
-        const [images, likeRow, likesRow] = await Promise.all([
+        const [images, likeRow, likesRow, viewsRow] = await Promise.all([
             dbAll(`SELECT image_url FROM post_images WHERE post_id = ? ORDER BY order_index, id`, [post.id]),
             viewerId ? dbGet(`SELECT id FROM post_likes WHERE post_id = ? AND user_id = ?`, [post.id, viewerId]) : null,
-            dbGet(`SELECT COUNT(*) AS count FROM post_likes WHERE post_id = ?`, [post.id])
+            dbGet(`SELECT COUNT(*) AS count FROM post_likes WHERE post_id = ?`, [post.id]),
+            dbGet(`SELECT COUNT(*) AS count FROM post_views WHERE post_id = ?`, [post.id])
         ]);
 
         return {
@@ -60,7 +61,7 @@ module.exports = function registerSocialRoutes(ctx) {
             images: images.map((item) => item.image_url),
             likes: Number(likesRow?.count || 0),
             liked: Boolean(likeRow),
-            views: 1,
+            views: Number(viewsRow?.count || 0),
             canModerate: viewerIsAdmin
         };
     }
@@ -86,6 +87,14 @@ module.exports = function registerSocialRoutes(ctx) {
              ORDER BY datetime(p.created_at) DESC, p.id DESC`,
             params
         );
+
+        if (viewerId && posts.length) {
+            for (const post of posts) {
+                if (Number(post.author_id) !== Number(viewerId)) {
+                    await dbRun(`INSERT OR IGNORE INTO post_views (post_id, user_id) VALUES (?, ?)`, [post.id, viewerId]);
+                }
+            }
+        }
 
         return Promise.all(posts.map((post) => getPostWithDetails(post, viewerId, viewerIsAdmin)));
     }
@@ -114,6 +123,7 @@ module.exports = function registerSocialRoutes(ctx) {
         const rows = await dbAll(
             `SELECT m.*, u.full_name, u.email, u.role, u.is_banned, u.banned_at, u.username, u.avatar, u.points,
                     (SELECT COUNT(*) FROM chat_message_likes cml WHERE cml.message_id = m.id) AS likes_count,
+                    (SELECT COUNT(*) FROM chat_message_views cmv WHERE cmv.message_id = m.id) AS views_count,
                     (SELECT id FROM chat_message_likes cml WHERE cml.message_id = m.id AND cml.user_id = ?) AS viewer_like_id
              FROM chat_messages m JOIN users u ON u.id = m.user_id
              WHERE m.chat_id = ?
@@ -153,7 +163,7 @@ module.exports = function registerSocialRoutes(ctx) {
                 images: images.map((item) => item.image_url),
                 likes: Number(row.likes_count || 0),
                 liked: Boolean(row.viewer_like_id),
-                views: Number(row.views || 1),
+                views: Number(row.views_count || 0),
                 canModerate: viewerIsAdmin
             });
         }
@@ -255,7 +265,10 @@ module.exports = function registerSocialRoutes(ctx) {
             const user = await requireUser(req, res);
             if (!user) return;
             const chat = await getFeedChat();
-            await dbRun(`UPDATE chat_messages SET views = COALESCE(views, 0) + 1 WHERE chat_id = ? AND user_id != ?`, [chat.id, user.id]);
+            const visibleMessages = await dbAll(`SELECT id FROM chat_messages WHERE chat_id = ? AND user_id != ?`, [chat.id, user.id]);
+            for (const message of visibleMessages) {
+                await dbRun(`INSERT OR IGNORE INTO chat_message_views (message_id, user_id) VALUES (?, ?)`, [message.id, user.id]);
+            }
             res.json({ chat: await formatChat(chat, user.id), messages: await listChatMessages(chat.id, user.id, isAdmin(user)) });
         } catch {
             res.status(500).json({ error: 'Ошибка сервера' });
@@ -452,9 +465,11 @@ module.exports = function registerSocialRoutes(ctx) {
         try {
             const user = await requireUser(req, res);
             if (!user) return;
-            const [tests, results, merch, squads, freshUser] = await Promise.all([
+            const [tests, results, essayTasks, essaySubmissions, merch, squads, freshUser] = await Promise.all([
                 dbAll(`SELECT * FROM social_tests WHERE is_active = 1 ORDER BY order_index`),
                 dbAll(`SELECT test_id, score, max_score, points_awarded FROM user_test_results WHERE user_id = ?`, [user.id]),
+                dbAll(`SELECT * FROM essay_tasks WHERE is_active = 1 ORDER BY order_index, title`),
+                dbAll(`SELECT task_id, status, points_awarded, admin_comment, created_at, reviewed_at FROM essay_submissions WHERE user_id = ?`, [user.id]),
                 dbAll(`SELECT * FROM merch_items WHERE is_active = 1 ORDER BY order_index, id`),
                 dbAll(`SELECT id, name, short_name FROM squads WHERE is_active = 1 ORDER BY order_index, id`),
                 getCurrentUser(req)
@@ -469,6 +484,13 @@ module.exports = function registerSocialRoutes(ctx) {
                     reward: test.reward,
                     questions: JSON.parse(test.questions_json)
                 })),
+                essayTasks: essayTasks.map((task) => ({
+                    id: task.id,
+                    title: task.title,
+                    prompt: task.prompt,
+                    maxReward: task.max_reward
+                })),
+                essaySubmissions,
                 merch: merch.map((item) => ({
                     id: item.id,
                     name: item.name,
@@ -483,6 +505,36 @@ module.exports = function registerSocialRoutes(ctx) {
             });
         } catch {
             res.status(500).json({ error: 'Ошибка сервера' });
+        }
+    });
+
+    app.post('/api/social/essay-tasks/:id/submit', async (req, res) => {
+        try {
+            const user = await requireUser(req, res);
+            if (!user) return;
+            const task = await dbGet(`SELECT * FROM essay_tasks WHERE id = ? AND is_active = 1`, [req.params.id]);
+            if (!task) return res.status(404).json({ error: 'Задание не найдено' });
+            const text = String(req.body.text || '').trim();
+            if (text.length < 1200) return res.status(400).json({ error: 'Сочинение должно быть не короче 1200 символов.' });
+            if (text.length > 3000) return res.status(400).json({ error: 'Сочинение должно быть не длиннее 3000 символов.' });
+            const existing = await dbGet(`SELECT id, status FROM essay_submissions WHERE task_id = ? AND user_id = ?`, [task.id, user.id]);
+            if (existing) return res.status(409).json({ error: 'Вы уже отправили это задание на проверку.' });
+            const result = await dbRun(
+                `INSERT INTO essay_submissions (task_id, user_id, text, status) VALUES (?, ?, ?, 'pending')`,
+                [task.id, user.id, text]
+            );
+            await createNotification({
+                userId: user.id,
+                actorId: null,
+                type: 'essay',
+                body: `Задание "${task.title}" отправлено на проверку`,
+                entityType: 'essay_submission',
+                entityId: result.lastID,
+                actionState: 'pending'
+            });
+            res.json({ success: true, submissionId: result.lastID });
+        } catch (err) {
+            res.status(500).json({ error: err.message || 'Ошибка сервера' });
         }
     });
 
@@ -727,6 +779,10 @@ module.exports = function registerSocialRoutes(ctx) {
                 if (!member) return res.status(403).json({ error: 'Нет доступа' });
             }
 
+            const visibleMessages = await dbAll(`SELECT id FROM chat_messages WHERE chat_id = ? AND user_id != ?`, [chat.id, user.id]);
+            for (const message of visibleMessages) {
+                await dbRun(`INSERT OR IGNORE INTO chat_message_views (message_id, user_id) VALUES (?, ?)`, [message.id, user.id]);
+            }
             res.json({ chat: await formatChat(chat, user.id), messages: await listChatMessages(chat.id, user.id, isAdmin(user)) });
         } catch {
             res.status(500).json({ error: 'Ошибка сервера' });

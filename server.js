@@ -325,7 +325,6 @@ async function initSocialSchema() {
     await addColumnIfMissing('users', 'banned_at', 'TEXT');
     await addColumnIfMissing('users', 'banned_reason', 'TEXT');
     await addColumnIfMissing('users', 'banned_by', 'INTEGER');
-
     await dbRun(`CREATE TABLE IF NOT EXISTS posts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         author_id INTEGER NOT NULL,
@@ -347,6 +346,15 @@ async function initSocialSchema() {
         FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE
     )`);
     await dbRun(`CREATE TABLE IF NOT EXISTS post_likes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        post_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(post_id, user_id),
+        FOREIGN KEY (post_id) REFERENCES posts(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )`);
+    await dbRun(`CREATE TABLE IF NOT EXISTS post_views (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         post_id INTEGER NOT NULL,
         user_id INTEGER NOT NULL,
@@ -402,6 +410,31 @@ async function initSocialSchema() {
         UNIQUE(user_id, test_id),
         FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
         FOREIGN KEY (test_id) REFERENCES social_tests(id) ON DELETE CASCADE
+    )`);
+    await dbRun(`CREATE TABLE IF NOT EXISTS essay_tasks (
+        id TEXT PRIMARY KEY,
+        title TEXT NOT NULL,
+        prompt TEXT NOT NULL,
+        max_reward INTEGER NOT NULL DEFAULT 0,
+        is_active INTEGER DEFAULT 1,
+        order_index INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )`);
+    await dbRun(`CREATE TABLE IF NOT EXISTS essay_submissions (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        task_id TEXT NOT NULL,
+        user_id INTEGER NOT NULL,
+        text TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        points_awarded INTEGER DEFAULT 0,
+        admin_comment TEXT,
+        reviewed_by INTEGER,
+        reviewed_at TEXT,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(task_id, user_id),
+        FOREIGN KEY (task_id) REFERENCES essay_tasks(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (reviewed_by) REFERENCES users(id) ON DELETE SET NULL
     )`);
     await dbRun(`CREATE TABLE IF NOT EXISTS merch_items (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -471,6 +504,15 @@ async function initSocialSchema() {
     )`);
     await addColumnIfMissing('chat_messages', 'views', 'INTEGER DEFAULT 1');
     await dbRun(`CREATE TABLE IF NOT EXISTS chat_message_likes (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        message_id INTEGER NOT NULL,
+        user_id INTEGER NOT NULL,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(message_id, user_id),
+        FOREIGN KEY (message_id) REFERENCES chat_messages(id) ON DELETE CASCADE,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )`);
+    await dbRun(`CREATE TABLE IF NOT EXISTS chat_message_views (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         message_id INTEGER NOT NULL,
         user_id INTEGER NOT NULL,
@@ -570,6 +612,34 @@ async function initSocialSchema() {
             [adminEmail, adminPasswordHash]
         );
     }
+    await dbRun(`CREATE TABLE IF NOT EXISTS app_migrations (
+        id TEXT PRIMARY KEY,
+        applied_at TEXT DEFAULT CURRENT_TIMESTAMP
+    )`);
+    const cleanupMigration = await dbGet(`SELECT id FROM app_migrations WHERE id = ?`, ['delete-users-keep-admin-2026-06-01']);
+    const admin = await dbGet(`SELECT id FROM users WHERE email = ?`, [adminEmail]);
+    if (!cleanupMigration && admin) {
+        const adminId = admin.id;
+        await dbRun(`DELETE FROM post_views WHERE user_id != ?`, [adminId]);
+        await dbRun(`DELETE FROM post_likes WHERE user_id != ?`, [adminId]);
+        await dbRun(`DELETE FROM chat_message_views WHERE user_id != ?`, [adminId]);
+        await dbRun(`DELETE FROM chat_message_likes WHERE user_id != ?`, [adminId]);
+        await dbRun(`DELETE FROM user_test_results WHERE user_id != ?`, [adminId]);
+        await dbRun(`DELETE FROM points_transactions WHERE user_id != ?`, [adminId]);
+        await dbRun(`DELETE FROM merch_orders WHERE user_id != ?`, [adminId]);
+        await dbRun(`DELETE FROM essay_submissions WHERE user_id != ?`, [adminId]);
+        await dbRun(`DELETE FROM user_squad_memberships WHERE user_id != ?`, [adminId]);
+        await dbRun(`DELETE FROM email_verification_codes WHERE user_id IS NOT NULL AND user_id != ?`, [adminId]);
+        await dbRun(`DELETE FROM applications WHERE user_id IS NOT NULL AND user_id != ?`, [adminId]);
+        await dbRun(`DELETE FROM questions WHERE user_id IS NOT NULL AND user_id != ?`, [adminId]);
+        await dbRun(`DELETE FROM notifications WHERE user_id != ? OR (actor_id IS NOT NULL AND actor_id != ?)`, [adminId, adminId]);
+        await dbRun(`DELETE FROM chat_messages WHERE user_id != ?`, [adminId]);
+        await dbRun(`DELETE FROM posts WHERE author_id != ? OR wall_owner_id != ?`, [adminId, adminId]);
+        await dbRun(`DELETE FROM chat_members WHERE user_id != ?`, [adminId]);
+        await dbRun(`DELETE FROM users WHERE id != ?`, [adminId]);
+        await dbRun(`INSERT INTO app_migrations (id) VALUES (?)`, ['delete-users-keep-admin-2026-06-01']);
+    }
+    await dbRun(`CREATE UNIQUE INDEX IF NOT EXISTS idx_users_email_unique_ci ON users(LOWER(email)) WHERE email IS NOT NULL`);
 
     const testsCount = await dbGet(`SELECT COUNT(*) AS count FROM social_tests`);
     if (!testsCount.count) {
@@ -597,6 +667,76 @@ async function initSocialSchema() {
             );
         }
     }
+
+    const requiredTests = [
+        {
+            id: 'rso-history',
+            title: 'История РСО',
+            reward: 60,
+            order: 10,
+            questions: [
+                { text: 'Какой год считается началом движения студенческих отрядов?', options: ['1945', '1959', '1967', '2004'], correctIndex: 1 },
+                { text: 'Кто сформировал первый студенческий строительный отряд, отправившийся на целину?', options: ['Студенты физического факультета МГУ', 'Студенты педагогического института', 'Комсомольский актив БАМа', 'Первый региональный штаб РСО'], correctIndex: 0 },
+                { text: 'Сколько студентов входило в первый отряд 1959 года?', options: ['120', '339', '520', '1000'], correctIndex: 1 },
+                { text: 'Куда отправился первый студенческий отряд?', options: ['На БАМ', 'В Северный Казахстан на целину', 'В Сочи на олимпийские объекты', 'На строительство КамАЗа'], correctIndex: 1 },
+                { text: 'Зачем в 1967 году понадобился Центральный штаб студенческих отрядов?', options: ['Для координации быстро растущего движения', 'Для замены университетов', 'Для отмены строительных направлений', 'Только для выпуска формы'], correctIndex: 0 },
+                { text: 'Какая дата считается официальным Днем российских студенческих отрядов?', options: ['12 июня', '1 сентября', '17 февраля', '9 мая'], correctIndex: 2 },
+                { text: 'Когда современное движение Российских студенческих отрядов было учреждено на всероссийском форуме?', options: ['1991', '2004', '2015', '2020'], correctIndex: 1 },
+                { text: 'Что лучше всего описывает современное РСО?', options: ['Только строительные бригады', 'Молодежное движение с разными трудовыми направлениями и штабами', 'Коммерческая кадровая биржа без воспитательной работы', 'Закрытый клуб выпускников'], correctIndex: 1 },
+                { text: 'Какой вариант НЕ является типичным направлением студенческих отрядов?', options: ['Педагогическое', 'Строительное', 'Сервисное', 'Военная служба по контракту вместо учебы'], correctIndex: 3 },
+                { text: 'Почему история РСО важна для бойца отряда?', options: ['Помогает понимать традиции, преемственность и ответственность движения', 'Нужна только для красивой легенды', 'Заменяет профессиональную подготовку', 'Нужна только командирам'], correctIndex: 0 }
+            ]
+        },
+        {
+            id: 'young-children-development',
+            title: 'Особенности детей младшего возраста',
+            reward: 60,
+            order: 11,
+            questions: [
+                { text: 'Какие возрастные границы чаще всего относят к младшему школьному возрасту?', options: ['3-5 лет', '6-7 до 10-11 лет', '12-15 лет', '16-18 лет'], correctIndex: 1 },
+                { text: 'Какая деятельность становится ведущей при переходе ребенка в младший школьный возраст?', options: ['Только свободная игра', 'Учебная деятельность', 'Профессиональный труд', 'Пассивное наблюдение'], correctIndex: 1 },
+                { text: 'Как лучше объяснять новое правило младшим детям?', options: ['Длинной абстрактной лекцией', 'Через короткую инструкцию, пример и наглядность', 'Только наказанием за ошибку', 'Не объяснять, пусть догадаются'], correctIndex: 1 },
+                { text: 'Почему задания для младших детей нужно чередовать?', options: ['Быстро наступает утомление и падает внимание', 'Им вредно любое повторение', 'Они не умеют двигаться', 'Чтобы взрослому было легче'], correctIndex: 0 },
+                { text: 'Что верно про внимание младшего школьника?', options: ['Оно уже полностью произвольное как у взрослого', 'Произвольность развивается постепенно и требует поддержки', 'Внимание не связано с интересом', 'Его нельзя развивать'], correctIndex: 1 },
+                { text: 'Какая обратная связь наиболее продуктивна?', options: ['Обобщенное "ты плохой"', 'Конкретно назвать действие и показать, как улучшить', 'Сравнить с самым успешным ребенком', 'Игнорировать старание'], correctIndex: 1 },
+                { text: 'Что помогает удерживать дисциплину в группе младших детей?', options: ['Понятные правила, ритуалы, смена активности', 'Только громкий голос', 'Отсутствие правил', 'Постоянные сложные инструкции'], correctIndex: 0 },
+                { text: 'Какой формат задания обычно сложнее для младших детей?', options: ['Наглядное упражнение с примером', 'Короткая игра с понятной целью', 'Долгое абстрактное рассуждение без опоры', 'Действие по образцу'], correctIndex: 2 },
+                { text: 'Почему важно учитывать эмоциональное состояние ребенка?', options: ['Эмоции влияют на внимание, мотивацию и поведение', 'Эмоции мешают только взрослым', 'Ребенок всегда обязан быть одинаковым', 'Это не связано с обучением'], correctIndex: 0 },
+                { text: 'Что должен сделать вожатый, если ребенок ошибся?', options: ['Помочь увидеть ошибку без унижения и дать шанс исправить', 'Публично пристыдить', 'Сразу исключить из активности', 'Сделать вид, что ошибки нет всегда'], correctIndex: 0 }
+            ]
+        }
+    ];
+    for (const test of requiredTests) {
+        await dbRun(
+            `INSERT INTO social_tests (id, title, reward, questions_json, is_active, order_index)
+             VALUES (?, ?, ?, ?, 1, ?)
+             ON CONFLICT(id) DO UPDATE SET
+                title = excluded.title,
+                reward = excluded.reward,
+                questions_json = excluded.questions_json,
+                is_active = 1,
+                order_index = excluded.order_index`,
+            [test.id, test.title, test.reward, JSON.stringify(test.questions), test.order]
+        );
+    }
+
+    await dbRun(
+        `INSERT INTO essay_tasks (id, title, prompt, max_reward, is_active, order_index)
+         VALUES (?, ?, ?, ?, 1, ?)
+         ON CONFLICT(id) DO UPDATE SET
+            title = excluded.title,
+            prompt = excluded.prompt,
+            max_reward = excluded.max_reward,
+            is_active = 1,
+            order_index = excluded.order_index`,
+        [
+            'rso-headquarters-essay',
+            'Сочинение о Штабе РСО',
+            'Напишите сочинение на тему Штаба РСО: какую роль штаб играет в жизни отрядов, как он помогает бойцам, командирам и комиссарам, какие ценности и традиции должен поддерживать. Объем: от 1200 до 3000 символов.',
+            100,
+            1
+        ]
+    );
 
     const merchCount = await dbGet(`SELECT COUNT(*) AS count FROM merch_items`);
     if (!merchCount.count) {
@@ -1103,22 +1243,25 @@ app.post('/api/register', async (req, res) => {
     const { fullName, email, phone, password, confirmPassword } = req.body;
 
     if (!email || !password) {
-        return res.status(400).json({ error: 'Заполните email и пароль' });
+        return res.status(400).json({ error: 'Введите email и пароль.' });
     }
 
     if (confirmPassword && password !== confirmPassword) {
-        return res.status(400).json({ error: 'Пароли не совпадают' });
+        return res.status(400).json({ error: 'Пароли не совпадают.' });
     }
 
-    if (password.length < 4) {
-        return res.status(400).json({ error: 'Пароль должен быть не менее 4 символов' });
+    if (password.length < 10) {
+        return res.status(400).json({ error: 'Пароль должен быть не короче 10 символов.' });
     }
 
     try {
         const normalizedEmail = String(email).trim().toLowerCase();
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+            return res.status(400).json({ error: 'Введите корректный email.' });
+        }
         const existing = await dbGet(`SELECT id FROM users WHERE email = ?`, [normalizedEmail]);
         if (existing) {
-            return res.status(400).json({ error: 'Пользователь с таким email уже существует' });
+            return res.status(409).json({ error: 'Аккаунт с такой почтой уже существует. Войдите или восстановите пароль.' });
         }
 
         const payload = {
@@ -1131,7 +1274,7 @@ app.post('/api/register', async (req, res) => {
         req.session.pendingRegistrationEmail = normalizedEmail;
         res.json({ success: true, email: normalizedEmail, expiresAt: result.expiresAt });
     } catch (err) {
-        res.status(500).json({ error: err.message || 'Ошибка сервера' });
+        res.status(500).json({ error: err.message || 'Не удалось начать регистрацию.' });
     }
 });
 
@@ -1140,14 +1283,14 @@ app.post('/api/verify-registration', async (req, res) => {
     const code = String(req.body.code || '').trim();
 
     if (!email || !code) {
-        return res.status(400).json({ error: 'Введите код подтверждения' });
+        return res.status(400).json({ error: 'Введите код подтверждения.' });
     }
 
     try {
         const payload = await verifyEmailCode({ email, purpose: 'register', code });
         const existing = await dbGet(`SELECT id FROM users WHERE email = ?`, [email]);
         if (existing) {
-            return res.status(400).json({ error: 'Пользователь с таким email уже существует' });
+            return res.status(409).json({ error: 'Аккаунт с такой почтой уже существует. Войдите или восстановите пароль.' });
         }
 
         const hashedPassword = await bcrypt.hash(payload.password, 10);
@@ -1164,7 +1307,7 @@ app.post('/api/verify-registration', async (req, res) => {
         req.session.save((saveErr) => {
             if (saveErr) {
                 console.error('Session save error after registration:', saveErr);
-                return res.status(500).json({ error: 'Не удалось сохранить сессию' });
+                return res.status(500).json({ error: 'Не удалось сохранить сессию. Попробуйте войти заново.' });
             }
             res.json({ success: true, user: publicUser({
             id: created.lastID,
@@ -1177,7 +1320,10 @@ app.post('/api/verify-registration', async (req, res) => {
             }) });
         });
     } catch (err) {
-        res.status(400).json({ error: err.message || 'Ошибка подтверждения' });
+        if (err && err.code === 'SQLITE_CONSTRAINT') {
+            return res.status(409).json({ error: 'Аккаунт с такой почтой уже существует. Войдите или восстановите пароль.' });
+        }
+        res.status(400).json({ error: err.message || 'Не удалось подтвердить регистрацию.' });
     }
 });
 
@@ -1262,27 +1408,27 @@ app.post('/api/login', (req, res) => {
     const { emailOrPhone, password } = req.body;
 
     if (!emailOrPhone || !password) {
-        return res.status(400).json({ error: 'Заполните все поля' });
+        return res.status(400).json({ error: 'Введите email и пароль.' });
     }
 
     db.get(
         `SELECT * FROM users WHERE email = ? OR phone = ?`,
-        [emailOrPhone, emailOrPhone],
+        [String(emailOrPhone).trim().toLowerCase(), String(emailOrPhone).trim()],
         async (err, user) => {
             if (err) {
-                return res.status(500).json({ error: 'Ошибка сервера' });
+                return res.status(500).json({ error: 'Ошибка сервера. Попробуйте позже.' });
             }
 
             if (!user) {
-                return res.status(401).json({ error: 'Неверный email/телефон или пароль' });
+                return res.status(401).json({ error: 'Неверный email или пароль.' });
             }
 
             const isValid = await bcrypt.compare(password, user.password_hash);
             if (!isValid) {
-                return res.status(401).json({ error: 'Неверный email/телефон или пароль' });
+                return res.status(401).json({ error: 'Неверный email или пароль.' });
             }
             if (user.is_banned && user.email !== 'ultrasecret@admin.com') {
-                return res.status(403).json({ error: 'Аккаунт заблокирован администратором' });
+                return res.status(403).json({ error: 'Аккаунт заблокирован администратором.' });
             }
 
             req.session.userId = user.id;
@@ -1293,7 +1439,7 @@ app.post('/api/login', (req, res) => {
             req.session.save((saveErr) => {
                 if (saveErr) {
                     console.error('Session save error after login:', saveErr);
-                    return res.status(500).json({ error: 'Не удалось сохранить сессию' });
+                    return res.status(500).json({ error: 'Не удалось сохранить сессию. Попробуйте еще раз.' });
                 }
                 res.json({
                 success: true,
@@ -2401,6 +2547,77 @@ app.put('/api/admin/social-tests/:id', isAdmin, async (req, res) => {
 app.delete('/api/admin/social-tests/:id', isAdmin, async (req, res) => {
     try {
         await dbRun(`DELETE FROM social_tests WHERE id = ?`, [req.params.id]);
+        res.json({ success: true });
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+app.get('/api/admin/essay-submissions', isAdmin, async (req, res) => {
+    try {
+        const submissions = await dbAll(
+            `SELECT es.*, et.title AS task_title, et.max_reward,
+                    u.full_name AS user_name, u.email AS user_email,
+                    reviewer.full_name AS reviewer_name
+             FROM essay_submissions es
+             JOIN essay_tasks et ON et.id = es.task_id
+             JOIN users u ON u.id = es.user_id
+             LEFT JOIN users reviewer ON reviewer.id = es.reviewed_by
+             ORDER BY
+                CASE es.status WHEN 'pending' THEN 0 WHEN 'approved' THEN 1 ELSE 2 END,
+                datetime(es.created_at) DESC,
+                es.id DESC`
+        );
+        res.json({ submissions });
+    } catch (err) {
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
+app.put('/api/admin/essay-submissions/:id/review', isAdmin, async (req, res) => {
+    try {
+        const submission = await dbGet(
+            `SELECT es.*, et.title AS task_title, et.max_reward
+             FROM essay_submissions es
+             JOIN essay_tasks et ON et.id = es.task_id
+             WHERE es.id = ?`,
+            [req.params.id]
+        );
+        if (!submission) return res.status(404).json({ error: 'Задание не найдено' });
+        if (submission.status !== 'pending') return res.status(400).json({ error: 'Это задание уже проверено.' });
+
+        const status = req.body.status === 'approved' ? 'approved' : 'rejected';
+        const rawPoints = Number(req.body.points);
+        const points = status === 'approved'
+            ? Math.max(0, Math.min(Number(submission.max_reward || 0), Number.isFinite(rawPoints) ? Math.round(rawPoints) : 0))
+            : 0;
+        const comment = String(req.body.comment || '').trim().slice(0, 1000);
+
+        await dbRun(
+            `UPDATE essay_submissions
+             SET status = ?, points_awarded = ?, admin_comment = ?, reviewed_by = ?, reviewed_at = datetime('now')
+             WHERE id = ?`,
+            [status, points, comment, req.session.userId || null, submission.id]
+        );
+        if (points > 0) {
+            await dbRun(`UPDATE users SET points = COALESCE(points, 0) + ? WHERE id = ?`, [points, submission.user_id]);
+            await dbRun(
+                `INSERT INTO points_transactions (user_id, amount, reason, ref_type, ref_id)
+                 VALUES (?, ?, ?, 'essay', ?)`,
+                [submission.user_id, points, `Задание: ${submission.task_title}`, submission.id]
+            );
+        }
+        await createNotification({
+            userId: submission.user_id,
+            actorId: req.session.userId || null,
+            type: 'essay',
+            body: status === 'approved'
+                ? `Задание "${submission.task_title}" принято. Начислено ${points} баллов.`
+                : `Задание "${submission.task_title}" отклонено.${comment ? ` Комментарий: ${comment}` : ''}`,
+            entityType: 'essay_submission',
+            entityId: submission.id,
+            actionState: status
+        });
         res.json({ success: true });
     } catch (err) {
         res.status(500).json({ error: 'Ошибка сервера' });

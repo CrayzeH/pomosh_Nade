@@ -1917,6 +1917,93 @@ h1 {
   color: #e6ebf8;
 }
 
+.assignment-list {
+  align-content: start;
+}
+
+.assignment-card {
+  display: grid;
+  gap: 14px;
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.16);
+  color: #f6f8ff;
+}
+
+.assignment-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.assignment-head h3 {
+  margin: 0;
+  font-size: 21px;
+}
+
+.assignment-head span {
+  flex: 0 0 auto;
+  color: #fff2a8;
+  font-weight: 800;
+}
+
+.assignment-card p {
+  margin: 0;
+  line-height: 1.45;
+}
+
+.assignment-comment {
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.assignment-text {
+  width: 100%;
+  min-height: 220px;
+  padding: 14px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  font-family: inherit;
+  font-size: 16px;
+  line-height: 1.45;
+  resize: vertical;
+}
+
+.assignment-text::placeholder {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+.assignment-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+@media (max-width: 640px) {
+  .assignment-head,
+  .assignment-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .assignment-head span {
+    align-self: flex-start;
+  }
+
+  .assignment-card {
+    padding: 14px;
+  }
+
+  .assignment-text {
+    min-height: 180px;
+  }
+}
+
 .merch-grid {
   height: 884px;
   overflow-y: auto;

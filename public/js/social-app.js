@@ -14,6 +14,12 @@
     return data;
   };
 
+  const humanError = (message, fallback = 'Произошла ошибка. Попробуйте еще раз.') => {
+    const text = String(message || '').trim();
+    if (!text || /SQLITE_|constraint|stack|undefined|null/i.test(text)) return fallback;
+    return text;
+  };
+
   const escapeHtml = (value) => String(value || '')
     .replaceAll('&', '&amp;')
     .replaceAll('<', '&lt;')
@@ -65,7 +71,7 @@
   async function loadMe({ required = true } = {}) {
     const data = await api('/api/social/bootstrap');
     me = data.user;
-    if (required && !me) window.location.replace('/register.html');
+    if (required && !me) window.location.replace('/login_new.html');
     return me;
   }
 
@@ -283,7 +289,7 @@
           <button class="like-btn ${post.liked ? 'is-liked' : ''}" type="button" data-like-id="${post.id}">
             <span class="stat"><img class="stat-icon" src="${post.liked ? '/images/лайк при нажатии.png' : '/images/лайк.png'}" alt="" />${post.likes}</span>
           </button>
-          <span class="stat stat--views"><img class="stat-icon" src="/images/просмотры.png" alt="" />${post.views || 1}</span>
+          <span class="stat stat--views"><img class="stat-icon" src="/images/просмотры.png" alt="" />${post.views ?? 0}</span>
         </div>
       </article>
     `;
@@ -315,7 +321,7 @@
           <button class="like-btn ${message.liked ? 'is-liked' : ''}" type="button" data-like-message-id="${message.id}">
             <span class="stat"><img class="stat-icon" src="${message.liked ? '/images/лайк при нажатии.png' : '/images/лайк.png'}" alt="" />${message.likes || 0}</span>
           </button>
-          <span class="stat stat--views"><img class="stat-icon" src="/images/просмотры.png" alt="" />${message.views || 1}</span>
+          <span class="stat stat--views"><img class="stat-icon" src="/images/просмотры.png" alt="" />${message.views ?? 0}</span>
         </div>
       </article>
     `;
@@ -408,10 +414,13 @@
         try {
           const emailOrPhone = $('#login-email').value.trim();
           const password = $('#login-password').value;
+          if (!emailOrPhone || !password) throw new Error('Введите email и пароль.');
           await api('/api/login', { method: 'POST', body: JSON.stringify({ emailOrPhone, password }) });
           window.location.href = '/feed.html';
         } catch (err) {
-          if (error) error.textContent = err.message;
+          const text = humanError(err.message, 'Не удалось войти. Проверьте email и пароль.');
+          if (error) error.textContent = text;
+          alert(text);
         }
       });
       resetRequestForm?.addEventListener('submit', async (event) => {
@@ -462,17 +471,21 @@
       form?.addEventListener('submit', async (event) => {
         event.preventDefault();
         try {
+          const email = $('#email').value.trim().toLowerCase();
+          const password = $('#password').value;
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error('Введите корректный email.');
+          if (password.length < 10) throw new Error('Пароль должен быть не короче 10 символов.');
           const result = await api('/api/register', {
             method: 'POST',
             body: JSON.stringify({
-              email: $('#email').value.trim(),
-              password: $('#password').value
+              email,
+              password
             })
           });
           const params = new URLSearchParams({ email: result.email });
           window.location.href = `/verify.html?${params.toString()}`;
         } catch (err) {
-          alert(err.message);
+          alert(humanError(err.message, 'Не удалось зарегистрироваться. Проверьте данные и попробуйте еще раз.'));
         }
       });
     }
@@ -1004,6 +1017,38 @@
         </article>`).join('')}</div>`;
     }
 
+    function renderAssignments() {
+      const submissions = new Map((data.essaySubmissions || []).map((item) => [item.task_id, item]));
+      const tasks = data.essayTasks || [];
+      shell.innerHTML = `<div class="quiz-list assignment-list"><h2 class="quiz-title">Письменные задания</h2>${tasks.length ? tasks.map((task) => {
+        const submission = submissions.get(task.id);
+        const status = submission
+          ? submission.status === 'approved'
+            ? `Принято · +${submission.points_awarded || 0}`
+            : submission.status === 'rejected'
+              ? 'Отклонено'
+              : 'На проверке'
+          : `до ${task.maxReward} баллов`;
+        return `<article class="assignment-card">
+          <div class="assignment-head">
+            <h3>${escapeHtml(task.title)}</h3>
+            <span>${escapeHtml(status)}</span>
+          </div>
+          <p>${escapeHtml(task.prompt)}</p>
+          ${submission?.admin_comment ? `<p class="assignment-comment">Комментарий: ${escapeHtml(submission.admin_comment)}</p>` : ''}
+          ${submission ? '' : `<textarea class="assignment-text" id="assignment-text-${task.id}" maxlength="3000" placeholder="Напишите сочинение здесь"></textarea>
+          <div class="assignment-actions"><span id="assignment-count-${task.id}">0 / 3000</span><button class="quiz-nav quiz-nav--primary" type="button" data-assignment-submit="${task.id}">Отправить на проверку</button></div>`}
+        </article>`;
+      }).join('') : '<p class="quiz-result-desc">Письменных заданий пока нет.</p>'}</div>`;
+      tasks.forEach((task) => {
+        const textarea = document.getElementById(`assignment-text-${task.id}`);
+        const counter = document.getElementById(`assignment-count-${task.id}`);
+        textarea?.addEventListener('input', () => {
+          if (counter) counter.textContent = `${textarea.value.length} / 3000`;
+        });
+      });
+    }
+
     function renderMerchOrder(item) {
       const squadOptions = (data.squads || []).map((squad) => `<option value="${escapeHtml(squad.name)}">${escapeHtml(squad.name)}</option>`).join('');
       shell.innerHTML = `<form class="merch-order-form" id="merch-order-form" data-merch-order-id="${item.id}">
@@ -1078,6 +1123,23 @@
         return;
       }
       if (event.target.closest('#quiz-again')) renderTests();
+      const assignmentButton = event.target.closest('[data-assignment-submit]');
+      if (assignmentButton) {
+        const taskId = assignmentButton.dataset.assignmentSubmit;
+        const text = document.getElementById(`assignment-text-${taskId}`)?.value.trim() || '';
+        try {
+          await api(`/api/social/essay-tasks/${taskId}/submit`, {
+            method: 'POST',
+            body: JSON.stringify({ text })
+          });
+          alert('Задание отправлено на проверку.');
+          data = await api('/api/social/create-data');
+          renderAssignments();
+        } catch (err) {
+          alert(humanError(err.message, 'Не удалось отправить задание.'));
+        }
+        return;
+      }
       const merchButton = event.target.closest('[data-merch-id]');
       if (merchButton) {
         const item = data.merch.find((entry) => String(entry.id) === String(merchButton.dataset.merchId));
@@ -1111,11 +1173,19 @@
     $('#tab-tasks')?.addEventListener('click', () => {
       $('#tab-tasks')?.classList.add('is-active');
       $('#tab-merch')?.classList.remove('is-active');
+      $('#tab-assignments')?.classList.remove('is-active');
       renderTests();
+    });
+    $('#tab-assignments')?.addEventListener('click', () => {
+      $('#tab-assignments')?.classList.add('is-active');
+      $('#tab-tasks')?.classList.remove('is-active');
+      $('#tab-merch')?.classList.remove('is-active');
+      renderAssignments();
     });
     $('#tab-merch')?.addEventListener('click', () => {
       $('#tab-merch')?.classList.add('is-active');
       $('#tab-tasks')?.classList.remove('is-active');
+      $('#tab-assignments')?.classList.remove('is-active');
       renderMerch();
     });
     renderTests();
