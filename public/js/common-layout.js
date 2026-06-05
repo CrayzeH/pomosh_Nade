@@ -279,14 +279,102 @@
                 .mobile-menu-drop { top: 66px !important; }
             }
             @media (max-width: 420px) {
-                .header .header-container { padding: 0 10px !important; }
-                .header .logo { font-size: clamp(18px, 5.8vw, 24px) !important; }
-                .header .header-actions { gap: 5px !important; }
+                body { padding-top: 64px !important; }
+                .header .header-container {
+                    width: 100% !important;
+                    max-width: none !important;
+                    padding: 0 12px !important;
+                    margin: 0 !important;
+                    box-sizing: border-box !important;
+                }
+                .header {
+                    left: 0 !important;
+                    right: 0 !important;
+                    width: 100% !important;
+                    max-width: 100vw !important;
+                    transform: none !important;
+                }
+                .header .header-top {
+                    min-height: 64px !important;
+                    padding: 8px 0 !important;
+                    display: flex !important;
+                    align-items: center !important;
+                    justify-content: flex-start !important;
+                    gap: 8px !important;
+                    flex-wrap: nowrap !important;
+                }
+                .header .logo-area { display: contents !important; }
+                .header .logo {
+                    order: 1 !important;
+                    flex: 0 1 auto !important;
+                    width: auto !important;
+                    min-width: 0 !important;
+                    max-width: calc(100vw - 174px) !important;
+                    margin: 0 !important;
+                    padding: 0 !important;
+                    position: static !important;
+                    left: auto !important;
+                    right: auto !important;
+                    transform: none !important;
+                    translate: none !important;
+                    font-size: clamp(18px, 5.4vw, 23px) !important;
+                    line-height: 1 !important;
+                    white-space: nowrap !important;
+                    overflow: hidden !important;
+                    text-overflow: clip !important;
+                }
+                .header .search-wrapper,
+                .header .pick-header-btn,
+                .header .header-bottom { display: none !important; }
+                .header .header-actions {
+                    order: 2 !important;
+                    flex: 0 0 auto !important;
+                    margin-left: auto !important;
+                    gap: 6px !important;
+                    min-width: 0 !important;
+                }
+                .header .header-search-icon {
+                    display: inline-flex !important;
+                    width: 34px !important;
+                    height: 34px !important;
+                    padding: 0 !important;
+                    flex: 0 0 34px !important;
+                }
+                .header .header-search-icon img {
+                    width: 25px !important;
+                    height: 25px !important;
+                }
+                .header .login-header-btn {
+                    width: 30px !important;
+                    min-width: 30px !important;
+                    min-height: 0 !important;
+                    padding: 0 !important;
+                    border: 0 !important;
+                    background: transparent !important;
+                }
+                .header .login-header-btn img {
+                    width: 30px !important;
+                    height: 30px !important;
+                }
                 .header .menu-btn-black {
+                    order: 3 !important;
                     width: 48px !important;
+                    height: 40px !important;
                     min-width: 48px !important;
+                    max-width: 48px !important;
+                    min-height: 40px !important;
+                    padding: 0 !important;
+                    border-radius: 999px !important;
+                    gap: 0 !important;
                     flex-basis: 48px !important;
                 }
+                .header .menu-btn-black img {
+                    width: 26px !important;
+                    height: 26px !important;
+                }
+                .header .menu-btn-label,
+                .header .login-header-btn span { display: none !important; }
+                .mobile-menu-drop { top: 64px !important; }
             }
         `;
         document.head.appendChild(styles);
