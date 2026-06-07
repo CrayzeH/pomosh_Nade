@@ -92,6 +92,13 @@
         </div>
     </div>
 </header>
+<div class="mobile-search-panel" id="mobileSearchPanel" aria-hidden="true">
+    <div class="mobile-search-inner">
+        <input type="text" class="mobile-search-input" id="mobileGlobalSearchInput" placeholder="Найти отряд" autocomplete="off">
+        <button class="mobile-search-close" id="mobileSearchClose" type="button" aria-label="Закрыть поиск">&times;</button>
+    </div>
+    <div id="mobileSearchResultsDropdown" class="mobile-search-dropdown" style="display: none;"></div>
+</div>
 <div class="mobile-menu-drop" id="mobileMenuDrop">
     <span data-mobile-pick>Подобрать отряд</span>
     <span data-page="about">О нас</span>
@@ -199,6 +206,68 @@
             .search-dropdown-item .squad-type { font-size: 12px; color: #6b6b73; margin-left: 8px; }
             .search-dropdown-item .squad-slug { font-size: 11px; color: #999; display: block; margin-top: 4px; }
             .search-no-results { padding: 16px; text-align: center; color: #6b6b73; }
+            .mobile-search-panel {
+                display: none;
+                position: fixed;
+                top: 66px;
+                left: 0;
+                right: 0;
+                z-index: 1002;
+                background: #fff;
+                border-bottom: 1px solid #ececf2;
+                box-shadow: 0 10px 24px rgba(15, 10, 35, 0.12);
+                padding: 10px 14px 12px;
+            }
+            .mobile-search-panel.open { display: block; }
+            .mobile-search-inner {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .mobile-search-input {
+                flex: 1;
+                min-width: 0;
+                width: 100%;
+                height: 42px;
+                padding: 0 16px;
+                border: 1.5px solid #e0d9f0;
+                border-radius: 999px;
+                background: #fff;
+                color: #1f1a2e;
+                font-family: Inter, sans-serif;
+                font-size: 16px;
+                outline: none;
+            }
+            .mobile-search-close {
+                width: 42px;
+                height: 42px;
+                border: 0;
+                border-radius: 50%;
+                background: #1f1a2e;
+                color: #fff;
+                font-size: 26px;
+                line-height: 1;
+                cursor: pointer;
+            }
+            .mobile-search-dropdown {
+                position: static;
+                margin-top: 8px;
+                background: #fff;
+                border: 1px solid #e0d9f0;
+                border-radius: 12px;
+                box-shadow: none;
+                max-height: min(52vh, 320px);
+                overflow-y: auto;
+            }
+            @media (max-width: 420px) {
+                .mobile-search-panel {
+                    top: 64px;
+                    padding: 10px 12px 12px;
+                }
+            }
+            @media (min-width: 901px) {
+                .mobile-search-panel { display: none !important; }
+            }
         `;
         document.head.appendChild(styles);
     }
@@ -435,6 +504,97 @@
         });
     }
 
+    function initMobileSearch() {
+        const searchButton = document.querySelector('.header-search-icon');
+        const panel = document.getElementById('mobileSearchPanel');
+        const input = document.getElementById('mobileGlobalSearchInput');
+        const dropdown = document.getElementById('mobileSearchResultsDropdown');
+        const closeButton = document.getElementById('mobileSearchClose');
+        if (!searchButton || !panel || !input || !dropdown) return;
+
+        function filterSquads(query) {
+            const lowerQuery = query.toLowerCase().trim();
+            if (!lowerQuery) return [];
+            return squadsList.filter(squad =>
+                squad.name.toLowerCase().includes(lowerQuery) ||
+                squad.slug.toLowerCase().includes(lowerQuery)
+            );
+        }
+
+        function renderResults(results, query) {
+            if (!query.trim()) {
+                dropdown.style.display = 'none';
+                return;
+            }
+            if (!results.length) {
+                dropdown.innerHTML = '<div class="search-no-results">Ничего не найдено</div>';
+                dropdown.style.display = 'block';
+                return;
+            }
+            dropdown.innerHTML = results.map(squad => `
+                <div class="search-dropdown-item" data-slug="${squad.slug}">
+                    <span class="squad-name">${squad.name}</span>
+                    <span class="squad-type">${squad.type}</span>
+                    <span class="squad-slug">/${squad.slug}</span>
+                </div>
+            `).join('');
+            dropdown.style.display = 'block';
+            dropdown.querySelectorAll('.search-dropdown-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    window.location.href = `/squad/${item.dataset.slug}`;
+                });
+            });
+        }
+
+        function closeSearch() {
+            panel.classList.remove('open');
+            panel.setAttribute('aria-hidden', 'true');
+            dropdown.style.display = 'none';
+        }
+
+        function openSearch() {
+            document.getElementById('mobileMenuDrop')?.classList.remove('open');
+            document.body.classList.remove('menu-open');
+            panel.classList.add('open');
+            panel.setAttribute('aria-hidden', 'false');
+            setTimeout(() => input.focus(), 0);
+            renderResults(filterSquads(input.value), input.value);
+        }
+
+        let debounceTimer;
+        input.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                renderResults(filterSquads(input.value), input.value);
+            }, 180);
+        });
+
+        input.addEventListener('keydown', (event) => {
+            if (event.key !== 'Enter') return;
+            const firstResult = filterSquads(input.value)[0];
+            if (firstResult) window.location.href = `/squad/${firstResult.slug}`;
+        });
+
+        searchButton.addEventListener('click', (event) => {
+            if (!window.matchMedia('(max-width: 900px)').matches) return;
+            event.preventDefault();
+            event.stopPropagation();
+            if (panel.classList.contains('open')) {
+                closeSearch();
+            } else {
+                openSearch();
+            }
+        });
+
+        closeButton?.addEventListener('click', closeSearch);
+
+        document.addEventListener('click', (event) => {
+            if (!panel.classList.contains('open')) return;
+            if (panel.contains(event.target) || searchButton.contains(event.target)) return;
+            closeSearch();
+        });
+    }
+
     function initLayout() {
         if (document.body.dataset.commonLayoutApplied === 'true') return;
         document.body.dataset.commonLayoutApplied = 'true';
@@ -467,6 +627,7 @@
 
         // Инициализация
         initSearch();
+        initMobileSearch();
         loadCurrentUser();
 
         // Кнопки
