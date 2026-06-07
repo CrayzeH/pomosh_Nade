@@ -207,22 +207,33 @@
             .search-dropdown-item .squad-slug { font-size: 11px; color: #999; display: block; margin-top: 4px; }
             .search-no-results { padding: 16px; text-align: center; color: #6b6b73; }
             .mobile-search-panel {
-                display: none;
+                display: none !important;
                 position: fixed;
                 top: 66px;
                 left: 0;
                 right: 0;
-                z-index: 1002;
+                z-index: 10000;
                 background: #fff;
                 border-bottom: 1px solid #ececf2;
                 box-shadow: 0 10px 24px rgba(15, 10, 35, 0.12);
                 padding: 10px 14px 12px;
+                opacity: 0;
+                visibility: hidden;
+                pointer-events: none;
+                box-sizing: border-box;
             }
-            .mobile-search-panel.open { display: block; }
+            .mobile-search-panel.open,
+            body.mobile-search-open .mobile-search-panel {
+                display: block !important;
+                opacity: 1 !important;
+                visibility: visible !important;
+                pointer-events: auto !important;
+            }
             .mobile-search-inner {
                 display: flex;
                 align-items: center;
                 gap: 8px;
+                width: 100%;
             }
             .mobile-search-input {
                 flex: 1;
@@ -237,6 +248,7 @@
                 font-family: Inter, sans-serif;
                 font-size: 16px;
                 outline: none;
+                box-sizing: border-box;
             }
             .mobile-search-close {
                 width: 42px;
@@ -263,6 +275,22 @@
                 .mobile-search-panel {
                     top: 64px;
                     padding: 10px 12px 12px;
+                }
+                .header .header-search-icon.is-search-open {
+                    background: #1f1a2e !important;
+                    border-radius: 999px !important;
+                    color: #fff !important;
+                }
+                .header .header-search-icon.is-search-open img {
+                    display: none !important;
+                }
+                .header .header-search-icon.is-search-open::before {
+                    content: "×";
+                    display: block;
+                    color: #fff;
+                    font-size: 28px;
+                    line-height: 1;
+                    font-weight: 500;
                 }
             }
             @media (min-width: 901px) {
@@ -548,6 +576,9 @@
 
         function closeSearch() {
             panel.classList.remove('open');
+            document.body.classList.remove('mobile-search-open');
+            searchButton.classList.remove('is-search-open');
+            searchButton.setAttribute('aria-expanded', 'false');
             panel.setAttribute('aria-hidden', 'true');
             dropdown.style.display = 'none';
         }
@@ -556,6 +587,9 @@
             document.getElementById('mobileMenuDrop')?.classList.remove('open');
             document.body.classList.remove('menu-open');
             panel.classList.add('open');
+            document.body.classList.add('mobile-search-open');
+            searchButton.classList.add('is-search-open');
+            searchButton.setAttribute('aria-expanded', 'true');
             panel.setAttribute('aria-hidden', 'false');
             setTimeout(() => input.focus(), 0);
             renderResults(filterSquads(input.value), input.value);
@@ -587,6 +621,10 @@
         });
 
         closeButton?.addEventListener('click', closeSearch);
+
+        window.matchMedia('(min-width: 901px)').addEventListener('change', (event) => {
+            if (event.matches) closeSearch();
+        });
 
         document.addEventListener('click', (event) => {
             if (!panel.classList.contains('open')) return;
